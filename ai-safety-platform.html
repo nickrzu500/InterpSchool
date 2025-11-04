@@ -317,6 +317,38 @@
             flex-shrink: 0;
             white-space: pre-wrap;
         }
+
+        .expected-output-section {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .expected-output-label {
+            font-size: 0.9rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .expected-output-panel {
+            background: #1a202c;
+            color: #48bb78;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-size: 13px;
+            line-height: 1.4;
+            border: 1px solid #2d3748;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .expected-output-panel::before {
+            content: '$ ';
+            color: #9ca3af;
+        }
         
         .status-indicator {
             display: inline-block;
@@ -761,6 +793,13 @@
                         <div class="code-example" id="code-example">
                             print('Code example here')
                         </div>
+                        <div id="expected-output-section" class="expected-output-section" style="display: none;">
+                            <div class="expected-output-label">
+                                Expected Console Output:
+                            </div>
+                            <div class="expected-output-panel" id="expected-output-panel">
+                            </div>
+                        </div>
                         <div class="step-actions">
                             <button class="btn btn-primary" onclick="checkCode()">Check Code</button>
                             <button class="btn btn-secondary" onclick="showHint()">Hint</button>
@@ -1039,7 +1078,17 @@
             } else {
                 whyDiv.style.display = 'none';
             }
-            
+
+            // Display expected console output if present
+            const expectedOutputSection = document.getElementById('expected-output-section');
+            const expectedOutputPanel = document.getElementById('expected-output-panel');
+            if (step.expectedOutput) {
+                expectedOutputSection.style.display = 'block';
+                expectedOutputPanel.textContent = step.expectedOutput;
+            } else {
+                expectedOutputSection.style.display = 'none';
+            }
+
             // Update UI based on exercise type
             const exerciseType = step.type || 'copy';
             const codeExample = document.getElementById('code-example');
