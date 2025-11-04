@@ -15,6 +15,13 @@
             font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            padding: 0 1rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0 0.5rem;
+            }
         }
         
         .nav-link-pill {
@@ -28,10 +35,10 @@
 			background: rgba(255, 255, 255, 0.1);
 			backdrop-filter: blur(10px);
 			transition: all 0.3s ease;
-			display: inline-block;
 			display: block;
-			margin: 1rem auto 0;
+			margin: 1.5rem auto 0;
 			width: fit-content;
+			max-width: calc(100% - 2rem);
 		}
 
 		.nav-link-pill:hover {
@@ -44,7 +51,13 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 2rem 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem 1rem;
+            }
         }
         
         .header {
@@ -70,6 +83,19 @@
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
             margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .card-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .card-grid {
+                gap: 1rem;
+            }
         }
         
         .card {
@@ -133,15 +159,24 @@
         .lesson-ide {
             display: flex;
             height: 100vh;
-            margin: -2rem;
+            margin: 0;
+            max-width: 100%;
         }
         
         .lesson-panel {
             width: 40%;
             background: rgba(255, 255, 255, 0.95);
             color: #2d3748;
-            padding: 2rem;
+            padding: 2rem 1.5rem;
             overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .lesson-panel {
+                width: 100%;
+                padding: 1.5rem 1rem;
+            }
         }
         
         .lesson-title {
@@ -272,10 +307,16 @@
         .editor-header {
             background: rgba(0, 0, 0, 0.8);
             color: white;
-            padding: 1rem;
+            padding: 1rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .editor-header {
+                padding: 1rem;
+            }
         }
         
         .run-button {
@@ -298,12 +339,18 @@
             background: #1e1e1e;
             color: #d4d4d4;
             font-family: monospace;
-            padding: 1rem;
+            padding: 1.5rem;
             border: none;
             resize: none;
             font-size: 14px;
             line-height: 1.5;
             overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+            .simple-editor {
+                padding: 1rem;
+            }
         }
         
         .output-panel {
@@ -311,11 +358,17 @@
             background: #1a202c;
             color: #e2e8f0;
             font-family: monospace;
-            padding: 1rem;
+            padding: 1.5rem;
             overflow-y: auto;
             overflow-x: auto;
             flex-shrink: 0;
             white-space: pre-wrap;
+        }
+
+        @media (max-width: 768px) {
+            .output-panel {
+                padding: 1rem;
+            }
         }
 
         .expected-output-section {
@@ -367,6 +420,12 @@
             text-align: center;
             padding: 4rem 2rem;
         }
+
+        @media (max-width: 768px) {
+            .badge-page {
+                padding: 3rem 1.5rem;
+            }
+        }
         
         .badge-icon {
             font-size: 4rem;
@@ -399,10 +458,17 @@
 		.about-section {
 			background: rgba(255, 255, 255, 0.95);
 			border-radius: 16px;
-			padding: 2rem;
+			padding: 2rem 1.5rem;
 			margin-bottom: 2rem;
 			backdrop-filter: blur(10px);
 			border: 1px solid rgba(255, 255, 255, 0.2);
+			overflow-wrap: break-word;
+		}
+
+		@media (max-width: 768px) {
+			.about-section {
+				padding: 1.5rem 1rem;
+			}
 		}
 
 		.about-section h2 {
@@ -487,6 +553,51 @@
 			margin-top: 1rem;
 			color: #718096;
 			font-size: 0.9rem;
+		}
+
+		/* Prevent code overflow in about section */
+		.about-section pre,
+		.about-section code {
+			overflow-x: auto;
+			max-width: 100%;
+			display: block;
+			word-wrap: break-word;
+		}
+
+		.about-section pre {
+			background: #f7fafc;
+			padding: 1rem;
+			border-radius: 8px;
+			margin: 1rem 0;
+		}
+
+		/* Ensure lesson IDE is responsive */
+		@media (max-width: 1024px) {
+			.lesson-ide {
+				flex-direction: column;
+			}
+
+			.lesson-panel,
+			.editor-panel {
+				width: 100% !important;
+			}
+
+			.lesson-ide {
+				height: auto;
+			}
+
+			.editor-container {
+				min-height: 400px;
+			}
+		}
+
+		/* Ensure text doesn't overflow */
+		.main-title,
+		.subtitle,
+		.card-title,
+		.card-description {
+			word-wrap: break-word;
+			overflow-wrap: break-word;
 		}
     </style>
 </head>
