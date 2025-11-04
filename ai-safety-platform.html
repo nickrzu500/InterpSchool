@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Safety Learning Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .nav-link-pill {
+			color: white;
+			text-decoration: none;
+			font-weight: 500;
+			font-size: 0.9rem;
+			padding: 0.6rem 1.2rem;
+			border: 1px solid rgba(255, 255, 255, 0.3);
+			border-radius: 20px;
+			background: rgba(255, 255, 255, 0.1);
+			backdrop-filter: blur(10px);
+			transition: all 0.3s ease;
+			display: inline-block;
+			display: block;
+			margin: 1rem auto 0;
+			width: fit-content;
+		}
+
+		.nav-link-pill:hover {
+			background: rgba(255, 255, 255, 0.2);
+			border-color: rgba(255, 255, 255, 0.5);
+			transform: translateY(-2px);
+			box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+		}
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+        
+        .main-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 1);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+        
+        .card-description {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .card-meta {
+            font-size: 0.9rem;
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        .back-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-bottom: 1rem;
+        }
+        
+        .back-button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* IDE Styles */
+        .lesson-ide {
+            display: flex;
+            height: 100vh;
+            margin: -2rem;
+        }
+        
+        .lesson-panel {
+            width: 40%;
+            background: rgba(255, 255, 255, 0.95);
+            color: #2d3748;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        
+        .lesson-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #667eea;
+        }
+        
+        .step-number {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .step-instruction {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        .step-why {
+            background: #e6f7ff;
+            border-left: 4px solid #1890ff;
+            padding: 0.75rem 1rem;
+            margin: 0.75rem 0;
+            font-size: 0.9rem;
+            color: #0050b3;
+            line-height: 1.5;
+            border-radius: 4px;
+        }
+        
+        .step-why strong {
+            font-weight: 600;
+        }
+        
+        .code-example {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+            white-space: pre;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+        
+        .code-example strong {
+            color: #667eea;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .code-example input[type="radio"] {
+            margin: 0 8px 0 0;
+        }
+        
+        .code-example label {
+            font-family: monospace;
+            background: #f7f7f7;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .code-example label:hover {
+            background: #e7e7e7;
+        }
+        
+        .previous-code-indicator {
+            background: #e6f3ff;
+            color: #2563eb;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            display: none;
+        }
+        
+        .step-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .btn-dev {
+            background: #f56565;
+            color: white;
+        }
+        
+        .editor-panel {
+            width: 60%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .editor-header {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .run-button {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .editor-container {
+            flex: 1;
+        }
+        
+        .simple-editor {
+            width: 100%;
+            height: 100%;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: monospace;
+            padding: 1rem;
+            border: none;
+            resize: none;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        
+        .output-panel {
+            height: 200px;
+            background: #1a202c;
+            color: #e2e8f0;
+            font-family: monospace;
+            padding: 1rem;
+            overflow-y: auto;
+            overflow-x: auto;
+            flex-shrink: 0;
+            white-space: pre-wrap;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-waiting { background: #ed8936; }
+        .status-correct { background: #48bb78; }
+        .status-error { background: #f56565; }
+        
+        /* Badge Page */
+        .badge-page {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .badge-icon {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+        }
+        
+        .badge-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .badge-cta {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 2rem;
+        }
+        
+        .about-content {
+			max-width: 800px;
+			margin: 0 auto;
+		}
+
+		.about-section {
+			background: rgba(255, 255, 255, 0.95);
+			border-radius: 16px;
+			padding: 2rem;
+			margin-bottom: 2rem;
+			backdrop-filter: blur(10px);
+			border: 1px solid rgba(255, 255, 255, 0.2);
+		}
+
+		.about-section h2 {
+			color: #2d3748;
+			margin-bottom: 1rem;
+			font-size: 1.5rem;
+		}
+
+		.about-section p {
+			color: #4a5568;
+			line-height: 1.8;
+			margin-bottom: 1rem;
+		}
+
+		.about-section ul {
+			color: #4a5568;
+			line-height: 1.8;
+			margin-left: 2rem;
+		}
+
+		.about-section ul li {
+			margin-bottom: 0.5rem;
+		}
+
+		.attribution-links {
+			margin-top: 1.5rem;
+		}
+
+		.attribution-link {
+			display: inline-block;
+			background: #667eea;
+			color: white;
+			padding: 0.75rem 1.5rem;
+			border-radius: 8px;
+			text-decoration: none;
+			font-weight: 500;
+			transition: all 0.2s;
+		}
+
+		.attribution-link:hover {
+			background: #5a67d8;
+			transform: translateY(-1px);
+		}
+
+		.support-section {
+			background: rgba(102, 126, 234, 0.1);
+			border-radius: 16px;
+			padding: 2rem;
+			margin-bottom: 2rem;
+			border: 2px solid rgba(102, 126, 234, 0.2);
+		}
+
+		.support-section h2 {
+			color: #2d3748;
+			margin-bottom: 1rem;
+		}
+
+		.donation-container {
+			text-align: center;
+			margin-top: 2rem;
+		}
+
+		.donation-button {
+			display: inline-block;
+			background: #48bb78;
+			color: white;
+			padding: 1rem 2rem;
+			border-radius: 12px;
+			text-decoration: none;
+			font-weight: 600;
+			font-size: 1.1rem;
+			transition: all 0.2s;
+		}
+
+		.donation-button:hover {
+			background: #38a169;
+			transform: translateY(-2px);
+			box-shadow: 0 10px 20px rgba(72, 187, 120, 0.2);
+		}
+
+		.donation-note {
+			margin-top: 1rem;
+			color: #718096;
+			font-size: 0.9rem;
+		}
+    </style>
+</head>
+<body>
+    <div id="app">
+	    <a href="#" onclick="showAbout()" class="nav-link-pill">About this platform</a>
+        <!-- Welcome Page -->
+        <div id="welcome-page" class="container">
+            <div class="header">
+                <h1 class="main-title">AI Safety Learning Platform</h1>
+                <p class="subtitle">Learn technical AI safety through hands-on coding experience</p>
+            </div>
+            
+            <div class="card-grid">
+                <div class="card" onclick="showAgenda('transformer-scratch')">
+                    <h2 class="card-title">Transformer from Scratch</h2>
+                    <p class="card-description">
+                        Build and understand transformers from the ground up. Learn both the conceptual foundations 
+                        and hands-on implementation of every component in a transformer.
+                    </p>
+                    <p class="card-meta">14 lessons • Basic to Advanced Implementation</p>
+                </div>
+                
+                <div class="card" onclick="showAgenda('basic-interpretability')">
+                    <h2 class="card-title">Basic Interpretability</h2>
+                    <p class="card-description">
+                        Learn to peek inside transformer models. Visualize attention patterns, analyze neuron activations, 
+                        and understand how models make decisions - essential skills for AI safety research.
+                    </p>
+                    <p class="card-meta">5 lessons • Hands-on Analysis</p>
+                </div>
+                
+                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
+                    <h2 class="card-title">
+                        Advanced Interpretability 
+                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
+                            Under Construction
+                        </span>
+                    </h2>
+                    <p class="card-description">
+                        Explore cutting-edge interpretability research including circuits, superposition, 
+                        and advanced mechanistic interpretability techniques.
+                    </p>
+                    <p class="card-meta">Coming Soon</p>
+                </div>
+                
+                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
+                    <h2 class="card-title">
+                        Developmental Interpretability 
+                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
+                            Under Construction
+                        </span>
+                    </h2>
+                    <p class="card-description">
+                        Study how AI systems learn and develop capabilities over time, including 
+                        training dynamics and emergent behaviors.
+                    </p>
+                    <p class="card-meta">Coming Soon</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transformer from Scratch Module Page -->
+        <div id="transformer-scratch-page" class="container hidden">
+            <button class="back-button" onclick="showWelcome()">← Back to Home</button>
+            
+            <div class="header">
+                <h1 class="main-title">Transformer from Scratch</h1>
+                <p class="subtitle">Build and understand every component of a transformer step by step</p>
+            </div>
+            
+            <div class="card-grid">
+                <div class="card" onclick="showDifficulty('transformer-scratch', 'basic')">
+                    <h2 class="card-title">Basic: Understanding Transformers</h2>
+                    <p class="card-description">
+                        Learn the fundamental concepts behind transformers. Perfect for beginners who want to 
+                        understand how these powerful models work conceptually.
+                    </p>
+                    <p class="card-meta">6 lessons • 15-25 min each</p>
+                </div>
+                
+                <div class="card" onclick="showDifficulty('transformer-scratch', 'intermediate')">
+                    <h2 class="card-title">Intermediate: Implementation</h2>
+                    <p class="card-description">
+                        Build every transformer component from scratch with real PyTorch code. 
+                        Implement attention, MLPs, training loops, and advanced sampling.
+                    </p>
+                    <p class="card-meta">8 lessons • 20-50 min each</p>
+                </div>
+                
+                <div class="card" style="opacity: 0.6; cursor: not-allowed;">
+                    <h2 class="card-title">Advanced: Optimization & Scaling</h2>
+                    <p class="card-description">
+                        Learn advanced techniques like gradient checkpointing, mixed precision training, 
+                        and distributed training for large-scale transformers.
+                    </p>
+                    <p class="card-meta">Coming Soon</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Basic Lessons Page -->
+        <div id="basic-lessons-page" class="container hidden">
+            <button class="back-button" onclick="showAgenda('transformer-scratch')">← Back to Transformer from Scratch</button>
+            
+            <div class="header">
+                <h1 class="main-title">Understanding Transformers</h1>
+                <p class="subtitle">Conceptual foundations of transformer architecture</p>
+            </div>
+            
+            <div class="card-grid">
+                <div class="card" onclick="showLesson('tokenization-basics')">
+                    <h2 class="card-title">Tokenization & Text Processing</h2>
+                    <p class="card-description">
+                        Learn how text becomes numbers that AI models can understand. This is the foundation of all language models.
+                    </p>
+                    <p class="card-meta">15 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('embeddings-positional')">
+                    <h2 class="card-title">Embeddings & Positional Encoding</h2>
+                    <p class="card-description">
+                        Understand how tokens become vectors and how models know word positions in sequences.
+                    </p>
+                    <p class="card-meta">20 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('attention-mechanism')">
+                    <h2 class="card-title">Attention Mechanism Basics</h2>
+                    <p class="card-description">
+                        Discover the core mechanism that allows transformers to focus on relevant parts of text.
+                    </p>
+                    <p class="card-meta">25 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('mlp-layers')">
+                    <h2 class="card-title">MLP Layers</h2>
+                    <p class="card-description">
+                        Learn about the feed-forward networks where transformers do their computational processing.
+                    </p>
+                    <p class="card-meta">20 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('complete-transformer')">
+                    <h2 class="card-title">Putting It All Together</h2>
+                    <p class="card-description">
+                        See how all transformer components work together to process and generate text.
+                    </p>
+                    <p class="card-meta">25 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('text-generation')">
+                    <h2 class="card-title">Text Generation</h2>
+                    <p class="card-description">
+                        Understand how transformers convert internal representations back into human-readable text.
+                    </p>
+                    <p class="card-meta">20 minutes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Intermediate Lessons Page -->
+        <div id="intermediate-lessons-page" class="container hidden">
+            <button class="back-button" onclick="showAgenda('transformer-scratch')">← Back to Transformer from Scratch</button>
+            
+            <div class="header">
+                <h1 class="main-title">Transformer Implementation</h1>
+                <p class="subtitle">Build every component from scratch with PyTorch</p>
+            </div>
+            
+            <div class="card-grid">
+                <div class="card" onclick="showLesson('layernorm-implementation')">
+                    <h2 class="card-title">LayerNorm Implementation</h2>
+                    <p class="card-description">
+                        Build LayerNorm from scratch with proper variance calculation and learn why it's crucial for training stability.
+                    </p>
+                    <p class="card-meta">25 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('embedding-layers')">
+                    <h2 class="card-title">Embedding & Positional Layers</h2>
+                    <p class="card-description">
+                        Implement token embeddings and positional encodings exactly as used in GPT-2.
+                    </p>
+                    <p class="card-meta">20 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('attention-implementation')">
+                    <h2 class="card-title">Attention Implementation</h2>
+                    <p class="card-description">
+                        Code the full attention mechanism with causal masking, scaling, and multi-head architecture.
+                    </p>
+                    <p class="card-meta">45 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('mlp-implementation')">
+                    <h2 class="card-title">MLP Implementation</h2>
+                    <p class="card-description">
+                        Build the complete MLP layer with GELU activation and proper weight initialization.
+                    </p>
+                    <p class="card-meta">25 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('transformer-blocks')">
+                    <h2 class="card-title">Transformer Blocks</h2>
+                    <p class="card-description">
+                        Assemble attention and MLP into complete transformer blocks with residual connections.
+                    </p>
+                    <p class="card-meta">30 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('complete-transformer')">
+                    <h2 class="card-title">Complete Transformer Model</h2>
+                    <p class="card-description">
+                        Build the full transformer architecture and load real GPT-2 weights for testing.
+                    </p>
+                    <p class="card-meta">35 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('sampling-methods-safety')">
+                    <h2 class="card-title">Sampling Methods for AI Safety</h2>
+                    <p class="card-description">
+                        Understand how temperature, top-k/p, and beam search affect model safety. Learn to identify and defend against sampling-based attacks.
+                    </p>
+                    <p class="card-meta">35 minutes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Basic Interpretability Page -->
+        <div id="basic-interpretability-page" class="container hidden">
+            <button class="back-button" onclick="showWelcome()">← Back to Home</button>
+            
+            <div class="header">
+                <h1 class="main-title">Basic Interpretability</h1>
+                <p class="subtitle">Learn to understand what's happening inside transformer models</p>
+            </div>
+            
+            <div class="card-grid">
+                <div class="card" onclick="showLesson('attention-patterns')">
+                    <h2 class="card-title">Visualizing Attention Patterns</h2>
+                    <p class="card-description">
+                        Extract and visualize what tokens the model pays attention to. See how information flows between words.
+                    </p>
+                    <p class="card-meta">20 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('logit-lens')">
+                    <h2 class="card-title">The Logit Lens</h2>
+                    <p class="card-description">
+                        Look at predictions from intermediate layers to understand how the model builds up its understanding.
+                    </p>
+                    <p class="card-meta">25 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('activation-analysis')">
+                    <h2 class="card-title">Activation Analysis</h2>
+                    <p class="card-description">
+                        Find which neurons activate on specific concepts and understand what different layers detect.
+                    </p>
+                    <p class="card-meta">30 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('probing-experiments')">
+                    <h2 class="card-title">Simple Probing</h2>
+                    <p class="card-description">
+                        Build linear probes to extract information from model representations. Discover what the model "knows".
+                    </p>
+                    <p class="card-meta">25 minutes</p>
+                </div>
+                
+                <div class="card" onclick="showLesson('finding-features')">
+                    <h2 class="card-title">Finding Safety-Relevant Features</h2>
+                    <p class="card-description">
+                        Look for neurons and attention patterns that respond to harmful vs helpful content.
+                    </p>
+                    <p class="card-meta">30 minutes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lesson IDE -->
+        <div id="lesson-page" class="hidden">
+            <div class="lesson-ide">
+                <div class="lesson-panel">
+                    <button class="back-button" onclick="goBackToLessons()" style="margin-bottom: 1rem;">← Back to Lessons</button>
+                    
+                    <h1 id="lesson-title" class="lesson-title">Lesson Title</h1>
+                    
+                    <div class="step-container">
+                        <div class="step-number">
+                            <span id="status-indicator" class="status-indicator status-waiting"></span>
+                            Step <span id="current-step">1</span> of <span id="total-steps">6</span>
+                        </div>
+                        <div class="step-instruction" id="step-instruction">
+                            Lesson instruction will appear here...
+                        </div>
+                        <div class="step-why" id="step-why" style="display: none;">
+                            <strong>Why?</strong> <span id="step-why-text"></span>
+                        </div>
+                        <div id="exercise-label" style="font-size: 0.9rem; color: #667eea; margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                            <strong>Add this code:</strong>
+                        </div>
+                        <div class="code-example" id="code-example">
+                            print('Code example here')
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn btn-primary" onclick="checkCode()">Check Code</button>
+                            <button class="btn btn-secondary" onclick="showHint()">Hint</button>
+                            <button class="btn btn-dev" onclick="copyCode()">Copy Code (Dev)</button>
+                            <button id="next-btn" class="btn btn-primary hidden" onclick="nextStep()">Next Step →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="editor-panel">
+                    <div class="editor-header">
+                        <span>AI Safety Code Editor</span>
+                        <button class="run-button" onclick="runCode()">▶ Run Code</button>
+                    </div>
+                    <div id="previous-code-indicator" class="previous-code-indicator">
+                        ⚠️ Editor contains code from previous steps - add new code at the end
+                    </div>
+                    <div class="editor-container">
+                        <textarea id="code-editor" class="simple-editor" placeholder="Type your Python code here..."></textarea>
+                    </div>
+                    <div class="output-panel">
+                        <pre id="output">Add the new code shown above to your existing code, then click "Check Code" to continue...</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Badge Page -->
+        <div id="badge-page" class="container hidden">
+            <div class="badge-page">
+                <div class="badge-icon">🏆</div>
+                <h1 class="badge-title">Congratulations!</h1>
+                <p>You've completed your AI Safety lesson!</p>
+                <p>You've taken an important step into understanding how AI systems work.</p>
+                <button class="badge-cta" onclick="showWelcome()">Continue Your AI Safety Journey</button>
+            </div>
+        </div>
+        
+        <!-- About Page -->
+		<div id="about-page" class="container hidden">
+			<button class="back-button" onclick="showWelcome()">← Back to Home</button>
+			
+			<div class="header">
+				<h1 class="main-title">About This Platform</h1>
+				<p class="subtitle">A collaborative effort to democratize AI safety education</p>
+			</div>
+			
+			<div class="about-content">
+				<div class="about-section">
+				    <h2>Our Mission</h2>
+				    <p>
+				        This platform was collaboratively built as a <strong>free resource</strong> for anyone wishing to learn more about technical AI safety or take their first steps into this crucial field. We believe that understanding how AI systems work is essential for ensuring they remain beneficial and aligned with human values.
+				    </p>
+				</div>
+
+				<div class="about-section">
+				    <h2>How It Was Built</h2>
+				    <p>
+				        This interactive learning platform was created through a unique collaboration between human and AI. The technical content, code examples, and explanations were generated by <strong>Anthropic's Claude AI assistant</strong> with human oversight, curation, and direction. This collaboration demonstrates how AI can be used to accelerate education and lower barriers to important technical knowledge.
+				    </p>
+				</div>
+
+				<div class="about-section">
+				    <h2>Attribution & Inspiration</h2>
+				    <p>
+				        The transformer lessons draw substantial inspiration from <strong>ARENA (AI Alignment Research Engineers Accelerator)</strong>, specifically their excellent Lesson 1.1 on building a transformer from scratch. ARENA's comprehensive curriculum has been invaluable in shaping our understanding of how to teach these concepts effectively.
+				    </p>
+				    <p>
+				        We encourage learners who complete our interactive exercises to explore ARENA's full curriculum for deeper study and more advanced topics.
+				    </p>
+				    <div class="attribution-links">
+				        <a href="https://www.arena.education/" target="_blank" class="attribution-link">
+				            Visit ARENA's Website →
+				        </a>
+				    </div>
+				</div>
+
+				<div class="about-section">
+				    <h2>Open Source & Community</h2>
+				    <p>
+				        This platform is built on the principle that AI safety education should be accessible to everyone. We believe in:
+				    </p>
+				    <ul>
+				        <li>Free access to technical knowledge</li>
+				        <li>Interactive, hands-on learning experiences</li>
+				        <li>Building on and attributing community work</li>
+				        <li>Lowering barriers to AI safety research</li>
+				    </ul>
+				</div>
+
+				<div class="about-section">
+				    <h2>Get Involved</h2>
+				    <p>
+				        This is an open project aimed at expanding access to AI safety knowledge. We welcome:
+				    </p>
+				    <ul>
+				        <li>Feedback on existing lessons</li>
+				        <li>Suggestions for new topics</li>
+				        <li>Bug reports and fixes</li>
+				        <li>Contributions to the curriculum</li>
+				    </ul>
+				    <p>
+				        Together, we can build a community of informed researchers working toward beneficial AI.
+				    </p>
+
+                    <h2>Project Structure</h2>
+                    
+                    <pre><code>ai-safety-platform/
+            ├── index.html       # Main platform interface
+            ├── lessons.js       # All lesson content
+            └── README.md        # This file</code></pre>
+                    
+                    <h2>Features</h2>
+                    
+                    <ul>
+                        <li><strong>Interactive Coding Exercises</strong>: Multiple exercise types including copy, fill-in-the-blank, multiple choice, and construct</li>
+                        <li><strong>Progressive Learning</strong>: Start with conceptual understanding, then move to implementation</li>
+                        <li><strong>AI Safety Focus</strong>: Every lesson connects technical concepts to AI safety implications</li>
+                        <li><strong>No Setup Required</strong>: Works directly in the browser</li>
+                    </ul>
+                    
+                    <h2>Adding New Lessons</h2>
+                    
+                    <p>To add new lessons, edit <code>lessons.js</code> and add your lesson to the <code>LESSONS</code> object:</p>
+                    
+                    <pre><code>LESSONS['your-lesson-id'] = {
+                title: "Your Lesson Title",
+                steps: [
+                    {
+                        instruction: "Step instruction",
+                        code: "example code",
+                        explanation: "Why this matters",
+                        type: "copy", // or "fill-in", "multiple-choice", "construct"
+                        // Additional properties based on type
+                    }
+                ]
+            };</code></pre>
+                    
+                    <h2>Exercise Types</h2>
+                    
+                    <ol>
+                        <li><strong>Copy</strong>: Users type the exact code shown</li>
+                        <li><strong>Fill-in</strong>: Complete code with blanks (<code>___</code>)</li>
+                        <li><strong>Multiple Choice</strong>: Select from options then type the complete line</li>
+                        <li><strong>Construct</strong>: Write code based on a description</li>
+                    </ol>
+                    
+                    <h2>Future Enhancements</h2>
+                    
+                    <ul>
+                        <li>Real Python execution using Pyodide</li>
+                        <li>User accounts and progress tracking</li>
+                        <li>Interactive visualizations</li>
+                        <li>Community discussions</li>
+                        <li>More interpretability experiments</li>
+                    </ul>
+                    
+                    <h2>Contributing</h2>
+                    
+                    <p>This is an open project aimed at lowering barriers to AI safety research. Contributions welcome!</p>
+                </div>
+			</div>
+		</div>
+    </div>
+
+    <!--Lesson Database-->
+    <script src="lessons-content.js"></script>
+
+    <script>
+        // Exercise Types:
+        // 1. "copy" (default) - User types the exact code shown
+        // 2. "fill-in" - User fills in blanks (___) in a template
+        // 3. "multiple-choice" - User selects from options then types the complete line
+        // 4. "construct" - User writes code based on a description
+        
+        // Global state
+        let currentStep = 0;
+        let stepStatus = 'waiting';
+        let currentLessonId = 'tokenization-basics';
+        
+        //About Page Show
+        function showAbout() {
+			hideAll();
+			document.getElementById('about-page').classList.remove('hidden');
+		}
+
+        // Navigation functions
+        function showWelcome() {
+            hideAll();
+            document.getElementById('welcome-page').classList.remove('hidden');
+        }
+
+        function showAgenda(type) {
+            hideAll();
+            if (type === 'transformer-scratch') {
+                document.getElementById('transformer-scratch-page').classList.remove('hidden');
+            } else if (type === 'basic-interpretability') {
+                document.getElementById('basic-interpretability-page').classList.remove('hidden');
+            }
+        }
+
+        function showDifficulty(agenda, difficulty) {
+            hideAll();
+            if (agenda === 'transformer-scratch' && difficulty === 'basic') {
+                document.getElementById('basic-lessons-page').classList.remove('hidden');
+            } else if (agenda === 'transformer-scratch' && difficulty === 'intermediate') {
+                document.getElementById('intermediate-lessons-page').classList.remove('hidden');
+            }
+        }
+
+        function showLesson(lessonId) {
+            currentLessonId = lessonId || 'tokenization-basics';
+            currentStep = 0;
+            hideAll();
+
+            // Hide the about button when showing a lesson
+            const aboutButton = document.querySelector('.nav-link-pill');
+            if (aboutButton) {
+                aboutButton.style.display = 'none';
+            }
+
+            document.getElementById('lesson-page').classList.remove('hidden');
+            updateStep();
+        }
+
+        function goBackToLessons() {
+          
+    // Make sure to show the about button here too
+    const aboutButton = document.querySelector('.nav-link-pill');
+    if (aboutButton) {
+        aboutButton.style.display = 'block';
+    }
+            
+            const basicLessons = ['tokenization-basics', 'embeddings-positional', 'attention-mechanism', 'mlp-layers', 'complete-transformer', 'text-generation'];
+            const interpretabilityLessons = ['attention-patterns', 'logit-lens', 'activation-patching', 'probing-experiments', 'finding-features'];
+            
+            if (basicLessons.includes(currentLessonId)) {
+                showDifficulty('transformer-scratch', 'basic');
+            } else if (interpretabilityLessons.includes(currentLessonId)) {
+                showAgenda('basic-interpretability');
+            } else {
+                showDifficulty('transformer-scratch', 'intermediate');
+            }
+        }
+
+        function showBadge() {
+            hideAll();
+            document.getElementById('badge-page').classList.remove('hidden');
+        }
+
+        function hideAll() {
+            const pages = ['welcome-page', 'transformer-scratch-page', 'basic-lessons-page', 'intermediate-lessons-page', 'basic-interpretability-page', 'lesson-page', 'badge-page', 'about-page'];
+            pages.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+        }
+
+        // Lesson functions
+        function updateStep() {
+            const currentLesson = LESSONS[currentLessonId];
+            if (!currentLesson) return;
+            
+            const step = currentLesson.steps[currentStep];
+            
+            document.getElementById('lesson-title').textContent = currentLesson.title;
+            document.getElementById('current-step').textContent = currentStep + 1;
+            document.getElementById('total-steps').textContent = currentLesson.steps.length;
+            document.getElementById('step-instruction').textContent = step.instruction;
+            
+            // Display "why" explanation if present
+            const whyDiv = document.getElementById('step-why');
+            const whyText = document.getElementById('step-why-text');
+            if (step.why) {
+                whyDiv.style.display = 'block';
+                whyText.textContent = step.why;
+            } else {
+                whyDiv.style.display = 'none';
+            }
+            
+            // Update UI based on exercise type
+            const exerciseType = step.type || 'copy';
+            const codeExample = document.getElementById('code-example');
+            const exerciseLabel = document.getElementById('exercise-label');
+            
+            // Update the exercise label
+            if (exerciseType === 'fill-in') {
+                exerciseLabel.innerHTML = '<strong>Fill in the blanks:</strong>';
+            } else if (exerciseType === 'multiple-choice') {
+                exerciseLabel.innerHTML = '<strong>Choose the correct option:</strong>';
+            } else if (exerciseType === 'construct') {
+                exerciseLabel.innerHTML = '<strong>Write code based on this description:</strong>';
+            } else {
+                exerciseLabel.innerHTML = '<strong>Add this code:</strong>';
+            }
+            
+            // Update the code example area
+            if (exerciseType === 'fill-in') {
+                codeExample.innerHTML = `${step.template.replace(/___/g, '<span style="background: #ffe4b5; padding: 2px 8px; border-radius: 3px;">___</span>')}`;
+            } else if (exerciseType === 'multiple-choice') {
+                let choicesHtml = `${step.template.replace(/___/g, '<span style="background: #ffe4b5; padding: 2px 8px; border-radius: 3px;">___</span>')}<br><br>`;
+                step.choices.forEach((choice, i) => {
+                    choicesHtml += `<label style="display: block; margin: 5px 0; cursor: pointer;">
+                        <input type="radio" name="mc-choice" value="${i}" style="margin-right: 8px;">
+                        ${String.fromCharCode(97 + i)}) ${choice}
+                    </label>`;
+                });
+                codeExample.innerHTML = choicesHtml;
+            } else if (exerciseType === 'construct') {
+                codeExample.innerHTML = `<div style="color: #4a5568; margin-bottom: 10px;">${step.description}</div><strong>Template:</strong><br>${step.template}`;
+            } else {
+                codeExample.textContent = step.code;
+            }
+            
+            // Reset status
+            stepStatus = 'waiting';
+            document.getElementById('status-indicator').className = 'status-indicator status-waiting';
+            document.getElementById('next-btn').classList.add('hidden');
+            
+            // Set the code editor to show accumulated code from previous steps
+            let accumulatedCode = '';
+            for (let i = 0; i < currentStep; i++) {
+                if (currentLesson.steps[i].code) {
+                    accumulatedCode += currentLesson.steps[i].code;
+                    if (!accumulatedCode.endsWith('\n') && i < currentStep - 1) {
+                        accumulatedCode += '\n';
+                    }
+                }
+            }
+            document.getElementById('code-editor').value = accumulatedCode;
+            
+            // Move cursor to end of accumulated code
+            const editor = document.getElementById('code-editor');
+            editor.focus();
+            editor.setSelectionRange(editor.value.length, editor.value.length);
+            
+            // Show/hide the previous code indicator
+            const indicator = document.getElementById('previous-code-indicator');
+            if (currentStep > 0 && accumulatedCode.length > 0) {
+                indicator.style.display = 'block';
+            } else {
+                indicator.style.display = 'none';
+            }
+            
+            // Update output message based on exercise type
+            let outputMessage = '';
+            if (currentStep === 0) {
+                outputMessage = 'Type the code shown above, then click "Check Code" to continue...';
+            } else {
+                switch (exerciseType) {
+                    case 'fill-in':
+                        outputMessage = 'Fill in the blanks in the code, then click "Check Code" to continue...';
+                        break;
+                    case 'multiple-choice':
+                        outputMessage = 'First select an option above, then type the complete line in the editor and click "Check Code"...';
+                        break;
+                    case 'construct':
+                        outputMessage = 'Write the code based on the description, then click "Check Code" to continue...';
+                        break;
+                    default:
+                        outputMessage = 'Add the new code shown above to your existing code, then click "Check Code" to continue...';
+                }
+            }
+            document.getElementById('output').textContent = outputMessage;
+        }
+
+        function checkCode() {
+            const currentLesson = LESSONS[currentLessonId];
+            if (!currentLesson) return;
+            
+            const step = currentLesson.steps[currentStep];
+            const exerciseType = step.type || 'copy';
+            const userCode = document.getElementById('code-editor').value;
+            
+            // Build expected code by accumulating all steps up to current
+            let expectedCode = '';
+            for (let i = 0; i <= currentStep; i++) {
+                if (currentLesson.steps[i].code) {
+                    expectedCode += currentLesson.steps[i].code;
+                    if (!expectedCode.endsWith('\n') && i < currentStep) {
+                        expectedCode += '\n';
+                    }
+                }
+            }
+            
+            // For multiple choice, check if they selected the right option first
+            if (exerciseType === 'multiple-choice') {
+                const selectedOption = document.querySelector('input[name="mc-choice"]:checked');
+                if (!selectedOption) {
+                    document.getElementById('output').textContent = 'Please select an option first!';
+                    return;
+                }
+                if (parseInt(selectedOption.value) !== step.correct) {
+                    stepStatus = 'error';
+                    document.getElementById('status-indicator').className = 'status-indicator status-error';
+                    document.getElementById('output').textContent = `That's not quite right. Think about ${step.hint || 'which option makes the most sense'}`;
+                    return;
+                }
+            }
+            
+            // Normalize whitespace for comparison
+            const normalizeCode = (code) => code.trim().replace(/\s+/g, ' ');
+            
+            if (normalizeCode(userCode) === normalizeCode(expectedCode)) {
+                stepStatus = 'correct';
+                document.getElementById('status-indicator').className = 'status-indicator status-correct';
+                document.getElementById('output').textContent = '✓ Perfect! ' + currentLesson.steps[currentStep].explanation;
+                document.getElementById('next-btn').classList.remove('hidden');
+                document.getElementById('next-btn').textContent = currentStep === currentLesson.steps.length - 1 ? 'Complete Lesson 🎉' : 'Next Step →';
+            } else {
+                stepStatus = 'error';
+                document.getElementById('status-indicator').className = 'status-indicator status-error';
+                
+                // Provide helpful error messages based on exercise type
+                if (exerciseType === 'fill-in') {
+                    const currentStepCode = currentLesson.steps[currentStep].code;
+                    const missingParts = currentStepCode.split('\n').slice(-3).join('\n'); // Show last few lines
+                    document.getElementById('output').textContent = `Not quite right. Expected something like:\n${missingParts}\n\nHint: ${step.hints ? step.hints[0] : 'Check the template carefully'}`;
+                } else if (exerciseType === 'construct') {
+                    document.getElementById('output').textContent = `Not quite right. Remember: ${step.description}\n\nTry to match the expected pattern.`;
+                } else {
+                    const currentStepCode = currentLesson.steps[currentStep].code;
+                    document.getElementById('output').textContent = `Not quite right. Make sure you added:\n${currentStepCode}`;
+                }
+            }
+        }
+
+        function showHint() {
+            const currentLesson = LESSONS[currentLessonId];
+            if (!currentLesson) return;
+            
+            const step = currentLesson.steps[currentStep];
+            const exerciseType = step.type || 'copy';
+            
+            let hintText = '';
+            if (exerciseType === 'fill-in' && step.hints) {
+                hintText = `Hint: ${step.hints.join(' | ')}`;
+            } else if (exerciseType === 'multiple-choice') {
+                hintText = `Hint: ${step.hint || 'Think about what each option does'}`;
+            } else if (exerciseType === 'construct') {
+                hintText = `Hint: ${step.description}. The code should look similar to the template.`;
+            } else {
+                if (currentStep === 0) {
+                    hintText = `Hint: Type exactly: ${step.code}`;
+                } else {
+                    hintText = `Hint: Add this to the end of your existing code:\n${step.code}`;
+                }
+            }
+            
+            document.getElementById('output').textContent = hintText;
+        }
+
+        function copyCode() {
+            const currentLesson = LESSONS[currentLessonId];
+            if (!currentLesson) return;
+            
+            // Get the accumulated code including current step
+            let fullCode = '';
+            for (let i = 0; i <= currentStep; i++) {
+                if (currentLesson.steps[i].code) {
+                    fullCode += currentLesson.steps[i].code;
+                    if (!fullCode.endsWith('\n') && i < currentStep) {
+                        fullCode += '\n';
+                    }
+                }
+            }
+            
+            document.getElementById('code-editor').value = fullCode;
+            document.getElementById('output').textContent = 'Code completed! Click "Check Code" to continue.';
+        }
+
+        function nextStep() {
+            const currentLesson = LESSONS[currentLessonId];
+            if (!currentLesson) return;
+            
+            if (currentStep < currentLesson.steps.length - 1) {
+                currentStep++;
+                updateStep();
+            } else {
+                showBadge();
+            }
+        }
+
+        function runCode() {
+            const userCode = document.getElementById('code-editor').value;
+            document.getElementById('output').textContent = 'Demo Mode: Code would execute here\nYour code:\n' + userCode + '\n(To enable real execution, add your API keys)';
+        }
+
+        // Initialize
+        showWelcome();
+
+        // Simple Router for AI Safety Platform
+        // Add this to your ai-safety-platform.html after your existing JavaScript
+
+        class SimpleRouter {
+            constructor() {
+                this.routes = {};
+                this.currentRoute = null;
+                
+                // Listen for URL changes
+                window.addEventListener('popstate', () => this.handleRoute());
+                window.addEventListener('DOMContentLoaded', () => this.handleRoute());
+            }
+            
+            // Parse URL parameters
+            parseParams() {
+                const params = new URLSearchParams(window.location.search);
+                return {
+                    lesson: params.get('lesson'),
+                    step: params.get('step') ? parseInt(params.get('step')) : null
+                };
+            }
+            
+            // Handle routing based on URL
+            handleRoute() {
+                const { lesson, step } = this.parseParams();
+                
+                // No lesson specified - show welcome
+                if (!lesson) {
+                    showWelcome();
+                    return;
+                }
+                
+                // Check if lesson exists
+                if (!LESSONS[lesson]) {
+                    console.error(`Lesson '${lesson}' not found. Available lessons:`, Object.keys(LESSONS));
+                    showWelcome();
+                    return;
+                }
+                
+                // Navigate to lesson
+                showLesson(lesson);
+                
+                // Navigate to specific step if provided
+                if (step !== null) {
+                    this.navigateToStep(lesson, step);
+                }
+            }
+            
+            // Navigate to a specific step within a lesson
+            navigateToStep(lessonId, stepNumber) {
+                const lesson = LESSONS[lessonId];
+                if (!lesson) return;
+                
+                // Convert to 0-based index
+                const stepIndex = stepNumber - 1;
+                
+                // Validate step number
+                if (stepIndex < 0 || stepIndex >= lesson.steps.length) {
+                    console.warn(`Step ${stepNumber} out of range. Lesson '${lessonId}' has ${lesson.steps.length} steps.`);
+                    return;
+                }
+                
+                // Wait for lesson to load, then jump to step
+                setTimeout(() => {
+                    currentStep = stepIndex;
+                    
+                    // Reconstruct code up to this step
+                    let accumulatedCode = '';
+                    for (let i = 0; i <= stepIndex; i++) {
+                        if (lesson.steps[i].code) {
+                            accumulatedCode += lesson.steps[i].code;
+                            if (!accumulatedCode.endsWith('\n') && i < stepIndex) {
+                                accumulatedCode += '\n';
+                            }
+                        }
+                    }
+                    
+                    // Update editor and UI
+                    const editor = document.getElementById('code-editor');
+                    if (editor) {
+                        editor.value = accumulatedCode;
+                    }
+                    
+                    // Show previous code indicator if not first step
+                    const indicator = document.getElementById('previous-code-indicator');
+                    if (indicator) {
+                        indicator.style.display = stepIndex > 0 ? 'block' : 'none';
+                    }
+                    
+                    // Update the step display
+                    updateStep();
+                    
+                    console.log(`Navigated to: ${lessonId} - Step ${stepNumber}/${lesson.steps.length}`);
+                }, 100);
+            }
+            
+            // Programmatic navigation (updates URL)
+            navigate(lessonId, stepNumber = null) {
+                let url = '?lesson=' + lessonId;
+                if (stepNumber !== null) {
+                    url += '&step=' + stepNumber;
+                }
+                
+                // Update URL without page reload
+                window.history.pushState({}, '', url);
+                this.handleRoute();
+            }
+            
+            // Get current position
+            getCurrentPosition() {
+                return {
+                    lesson: currentLessonId,
+                    step: currentStep + 1,
+                    totalSteps: LESSONS[currentLessonId]?.steps.length || 0
+                };
+            }
+        }
+
+        // Initialize router
+        const router = new SimpleRouter();
+
+        // Global navigation helpers
+        window.goTo = (lessonId, stepNumber = null) => {
+            router.navigate(lessonId, stepNumber);
+        };
+
+        window.goToStep = (stepNumber) => {
+            if (!currentLessonId) {
+                console.error('No lesson currently loaded');
+                return;
+            }
+            router.navigate(currentLessonId, stepNumber);
+        };
+
+        // Override the existing showLesson to update URL
+        const originalShowLesson = window.showLesson;
+        window.showLesson = function(lessonId) {
+            originalShowLesson(lessonId);
+            // Update URL to match current state
+            if (window.location.search !== `?lesson=${lessonId}`) {
+                window.history.pushState({}, '', `?lesson=${lessonId}`);
+            }
+        };
+
+        // Debug helper
+        window.routerDebug = () => {
+            const pos = router.getCurrentPosition();
+            console.log('Current position:', pos);
+            console.log('Available lessons:', Object.keys(LESSONS));
+            console.log('URL params:', router.parseParams());
+        };
+
+        /*
+        ai-safety-platform.html?lesson=tokenization-basics
+        ai-safety-platform.html?lesson=attention-patterns&step=4
+        ai-safety-platform.html?lesson=probing-experiments&step=7
+        */
+    </script>
+</body>
+</html>
+
