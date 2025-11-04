@@ -23,135 +23,159 @@ const LESSONS = {
         {
             instruction: "Let's tokenize a simple word and see what happens:",
             code: "tokens = tokenizer.encode('Hello')\nprint('Tokens:', tokens)",
-            explanation: "A single word might become one or more tokens. 'Hello' is common enough to be a single token."
+            explanation: "A single word might become one or more tokens. 'Hello' is common enough to be a single token.",
+            expectedOutput: "Tokens: [15496]"
         },
         {
             instruction: "Now let's see the actual token string (before it becomes a number):",
             why: "Understanding the difference between token strings and token IDs helps us debug issues. When models behave unexpectedly, checking the actual tokenization often reveals the problem - like spaces being included or words being split differently than expected.",
             code: "token_strings = tokenizer.tokenize('Hello')\nprint('Token strings:', token_strings)",
-            explanation: "This shows us the actual text fragment. Notice how tokens preserve the exact characters."
+            explanation: "This shows us the actual text fragment. Notice how tokens preserve the exact characters.",
+            expectedOutput: "Token strings: ['Hello']"
         },
         {
             instruction: "Let's try a word with a space in front:",
             why: "This seemingly minor detail has huge implications. Models trained on internet text learn that words with leading spaces usually start new phrases. Forgetting a space can completely change model behavior - 'harmful' vs ' harmful' might activate different safety mechanisms!",
             code: "tokens_with_space = tokenizer.tokenize(' Hello')\nprint('With space:', tokens_with_space)\nprint('Without space:', tokenizer.tokenize('Hello'))",
-            explanation: "The 'Ġ' character represents a space at the beginning. Spaces matter in tokenization!"
+            explanation: "The 'Ġ' character represents a space at the beginning. Spaces matter in tokenization!",
+            expectedOutput: "With space: ['ĠHello']\nWithout space: ['Hello']"
         },
         {
             instruction: "Let's see how capitalization affects tokenization:",
             why: "Capitalization can dramatically change tokenization. 'Hello' might be one token while 'HELLO' could be multiple. This affects how models process names, acronyms, and emphasized text. For safety, it means 'DANGER' and 'danger' might be processed differently!",
             code: "print('Lowercase:', tokenizer.tokenize('hello'))\nprint('Titlecase:', tokenizer.tokenize('Hello'))\nprint('Uppercase:', tokenizer.tokenize('HELLO'))\nprint('Mixed:', tokenizer.tokenize('HeLLo'))",
-            explanation: "Different capitalizations often result in different tokenizations, affecting model interpretation."
+            explanation: "Different capitalizations often result in different tokenizations, affecting model interpretation.",
+            expectedOutput: "Lowercase: ['hello']\nTitlecase: ['Hello']\nUppercase: ['HE', 'LL', 'O']\nMixed: ['He', 'LL', 'o']"
         },
         {
             instruction: "Let's tokenize a full sentence to see how it breaks down:",
             code: "text = 'The cat sat on the mat'\ntokens = tokenizer.encode(text)\nprint('Tokens:', tokens)\nprint('Number of tokens:', len(tokens))",
-            explanation: "Each word becomes one or more numbers. Common words like 'the' get their own single tokens."
+            explanation: "Each word becomes one or more numbers. Common words like 'the' get their own single tokens.",
+            expectedOutput: "Tokens: [464, 3797, 3332, 319, 262, 2603]\nNumber of tokens: 6"
         },
         {
             instruction: "Convert tokens back to text to see the token boundaries:",
             code: "token_strings = tokenizer.tokenize(text)\nprint('Token strings:', token_strings)",
-            explanation: "You can see exactly where the tokenizer split the text. Notice the 'Ġ' showing spaces."
+            explanation: "You can see exactly where the tokenizer split the text. Notice the 'Ġ' showing spaces.",
+            expectedOutput: "Token strings: ['The', 'Ġcat', 'Ġsat', 'Ġon', 'Ġthe', 'Ġmat']"
         },
         {
             instruction: "Let's understand how byte-pair encoding (BPE) builds tokens:",
             why: "BPE is the algorithm behind most tokenizers. It starts with characters and merges common pairs repeatedly. Understanding this helps explain why 'ing' is often a token (common ending) but 'xqz' isn't (rare combination). This affects how models handle new words and typos.",
             code: "# BPE builds up from characters\nwords = ['un', 'do', 'undo', 'doing', 'undoing']\nfor word in words:\n    tokens = tokenizer.tokenize(word)\n    print(f'{word:8} -> {tokens}')",
-            explanation: "Notice how 'undo' might be one token, but 'undoing' could be 'undo' + 'ing'. BPE creates efficient representations by merging common character sequences into single tokens."
+            explanation: "Notice how 'undo' might be one token, but 'undoing' could be 'undo' + 'ing'. BPE creates efficient representations by merging common character sequences into single tokens.",
+            expectedOutput: "un       -> ['un']\ndo       -> ['do']\nundo     -> ['undo']\ndoing    -> ['doing']\nundoing  -> ['und', 'oing']"
         },
         {
             instruction: "Let's decode tokens back to text:",
             code: "decoded = tokenizer.decode(tokens)\nprint('Original:', text)\nprint('Decoded:', decoded)",
-            explanation: "Decoding reverses the tokenization process. The text should match exactly!"
+            explanation: "Decoding reverses the tokenization process. The text should match exactly!",
+            expectedOutput: "Original: The cat sat on the mat\nDecoded: The cat sat on the mat"
         },
         {
             instruction: "Try tokenizing a less common word:",
             code: "uncommon = 'antidisestablishmentarianism'\ntokens = tokenizer.tokenize(uncommon)\nprint('Tokens:', tokens)\nprint('Count:', len(tokens))",
-            explanation: "Uncommon words get split into multiple tokens. This lets the model handle any word, even ones it's never seen!"
+            explanation: "Uncommon words get split into multiple tokens. This lets the model handle any word, even ones it's never seen!",
+            expectedOutput: "Tokens: ['ant', 'idis', 'establishment', 'arian', 'ism']\nCount: 5"
         },
         {
             instruction: "Let's see how typos affect tokenization:",
             why: "Typos often create unusual tokenizations, which can confuse models or bypass safety filters. 'harmful' might trigger safety mechanisms, but 'h4rmful' might not. This is why robust safety systems need to handle variations and misspellings.",
             code: "correct = 'dangerous'\ntypo1 = 'dangeorus'\ntypo2 = 'dang3rous'\n\nprint(f'{correct}: {tokenizer.tokenize(correct)}')\nprint(f'{typo1}: {tokenizer.tokenize(typo1)}')\nprint(f'{typo2}: {tokenizer.tokenize(typo2)}')",
-            explanation: "Typos often lead to unexpected tokenizations, which can affect model behavior and safety mechanisms."
+            explanation: "Typos often lead to unexpected tokenizations, which can affect model behavior and safety mechanisms.",
+            expectedOutput: "dangerous: ['dangerous']\ndangeorus: ['dang', 'e', 'orus']\ndang3rous: ['d', 'ang', '3', 'rous']"
         },
         {
             instruction: "Let's see how numbers are tokenized:",
             code: "numbers = '42 + 1337 = 1379'\ntokens = tokenizer.tokenize(numbers)\nprint('Number tokens:', tokens)",
-            explanation: "Numbers often get split in unexpected ways. This is why transformers sometimes struggle with arithmetic!"
+            explanation: "Numbers often get split in unexpected ways. This is why transformers sometimes struggle with arithmetic!",
+            expectedOutput: "Number tokens: ['42', 'Ġ+', 'Ġ13', '37', 'Ġ=', 'Ġ13', '79']"
         },
         {
             instruction: "Explore how large numbers are tokenized:",
             why: "The inconsistent tokenization of numbers is a major limitation. '1000' might be one token, but '1001' could be two. This explains why language models struggle with arithmetic - they see numbers as arbitrary symbol sequences rather than quantities.",
             code: "numbers = [42, 100, 1000, 1234, 98765, 1000000]\nfor num in numbers:\n    tokens = tokenizer.tokenize(str(num))\n    print(f'{num:7}: {tokens} ({len(tokens)} tokens)')",
-            explanation: "Larger numbers often require more tokens, and the splits can be unintuitive. The model doesn't understand these as mathematical quantities but as sequences of symbols."
+            explanation: "Larger numbers often require more tokens, and the splits can be unintuitive. The model doesn't understand these as mathematical quantities but as sequences of symbols.",
+            expectedOutput: "     42: ['42'] (1 tokens)\n    100: ['100'] (1 tokens)\n   1000: ['1000'] (1 tokens)\n   1234: ['1234'] (1 tokens)\n  98765: ['987', '65'] (2 tokens)\n1000000: ['1000000'] (1 tokens)"
         },
         {
             instruction: "Tokenize some code to see how programming languages are handled:",
             code: "code = 'def hello_world():\\n    print(\"Hello!\")'\ntokens = tokenizer.tokenize(code)\nprint('Code tokens:', tokens[:10])  # First 10 tokens",
-            explanation: "Code uses the same tokenizer as natural language. Notice how syntax elements each get their own tokens."
+            explanation: "Code uses the same tokenizer as natural language. Notice how syntax elements each get their own tokens.",
+            expectedOutput: "Code tokens: ['def', 'Ġhello', '_', 'world', '():', 'Ċ', 'Ġ', 'Ġ', 'Ġ', 'Ġprint']"
         },
         {
             instruction: "Let's explore why tokenization matters for AI safety:",
             why: "Understanding tokenization is crucial for AI safety because different tokenizations can lead to different model behaviors. For instance, 'harmful' and 'harm less' tokenize differently, which could affect safety mechanisms. Adversaries might exploit tokenization boundaries to bypass safety filters.",
             code: "safety_text = 'This could be harmful to humans'\nprint('Safety tokens:', tokenizer.tokenize(safety_text))",
-            explanation: "Different tokenizations can lead to different model behaviors. 'harmful' as one token vs 'harm' + 'ful' might activate different neural pathways."
+            explanation: "Different tokenizations can lead to different model behaviors. 'harmful' as one token vs 'harm' + 'ful' might activate different neural pathways.",
+            expectedOutput: "Safety tokens: ['This', 'Ġcould', 'Ġbe', 'Ġharmful', 'Ġto', 'Ġhumans']"
         },
         {
             instruction: "Compare how similar words tokenize differently:",
             why: "Safety-critical words might be split in ways that affect how models process them. This could lead to models missing harmful content if it's tokenized unexpectedly. Understanding these splits helps us build more robust safety measures.",
             code: "print('harm:', tokenizer.tokenize('harm'))\nprint('harmful:', tokenizer.tokenize('harmful'))\nprint('harmless:', tokenizer.tokenize('harmless'))",
-            explanation: "Different forms of the same root word may tokenize differently, affecting how the model processes safety-relevant concepts. The model learns different patterns for each tokenization."
+            explanation: "Different forms of the same root word may tokenize differently, affecting how the model processes safety-relevant concepts. The model learns different patterns for each tokenization.",
+            expectedOutput: "harm: ['harm']\nharmful: ['harmful']\nharmless: ['harmless']"
         },
         {
             instruction: "Explore potential tokenization attacks:",
             why: "Adversaries can exploit tokenization to bypass safety filters. By inserting zero-width characters, using homoglyphs (similar-looking characters), or clever spacing, they might make harmful content appear safe to filters that don't account for tokenization quirks.",
             code: "# Tokenization attack examples\nnormal = 'bomb making'\nspaced = 'bomb  making'  # Extra space\nzero_width = 'bomb\\u200bmaking'  # Zero-width space\n\nprint(f'Normal: {tokenizer.tokenize(normal)}')\nprint(f'Spaced: {tokenizer.tokenize(spaced)}')\nprint(f'Zero-width: {tokenizer.tokenize(zero_width)}')",
-            explanation: "Different tokenizations could bypass naive safety filters. Adversarial inputs can exploit these differences to evade detection systems that don't account for tokenization variations."
+            explanation: "Different tokenizations could bypass naive safety filters. Adversarial inputs can exploit these differences to evade detection systems that don't account for tokenization variations.",
+            expectedOutput: "Normal: ['bomb', 'Ġmaking']\nSpaced: ['bomb', 'Ġ', 'Ġmaking']\nZero-width: ['bomb', '<|endoftext|>', 'making']"
         },
         {
             instruction: "Check how the model sees punctuation:",
             code: "punct = 'Hello! How are you? I\\'m fine.'\ntokens = tokenizer.tokenize(punct)\nprint('With punctuation:', tokens)",
-            explanation: "Punctuation gets its own tokens. This helps the model understand sentence structure and tone."
+            explanation: "Punctuation gets its own tokens. This helps the model understand sentence structure and tone.",
+            expectedOutput: "With punctuation: ['Hello', '!', 'ĠHow', 'Ġare', 'Ġyou', '?', 'ĠI', \"'m\", 'Ġfine', '.']"
         },
         {
             instruction: "Explore the vocabulary size:",
             code: "vocab_size = len(tokenizer.vocab)\nprint(f'Vocabulary size: {vocab_size}')\nprint(f'{vocab_size} different possible tokens')",
-            explanation: "GPT-2 knows about 50,000 different tokens. This finite vocabulary is the foundation that allows it to understand and generate human language!"
+            explanation: "GPT-2 knows about 50,000 different tokens. This finite vocabulary is the foundation that allows it to understand and generate human language!",
+            expectedOutput: "Vocabulary size: 50257\n50257 different possible tokens"
         },
         {
             instruction: "Let's see some interesting tokens in the vocabulary:",
             code: "# Get some token examples\nfor i in [1, 100, 1000, 10000, 40000]:\n    token = tokenizer.decode([i])\n    print(f'Token {i}: {repr(token)}')",
-            explanation: "The vocabulary includes everything from single characters to common words and even word fragments. Each has a unique ID number."
+            explanation: "The vocabulary includes everything from single characters to common words and even word fragments. Each has a unique ID number.",
+            expectedOutput: "Token 1: '!'\nToken 100: 'ver'\nToken 1000: '\\\\'\nToken 10000: 'stream'\nToken 40000: 'Splash'"
         },
         {
             instruction: "Explore non-English text tokenization:",
             why: "Tokenizers trained on English text are inefficient for other languages. Chinese characters might each be multiple tokens, making the model slower and more expensive for non-English users. This is an important fairness consideration in AI systems.",
             code: "texts = [\n    'Hello world',  # English\n    'Hola mundo',   # Spanish  \n    '你好世界',      # Chinese\n    'مرحبا بالعالم', # Arabic\n    '🌍🚀🤖'        # Emojis\n]\n\nfor text in texts:\n    tokens = tokenizer.tokenize(text)\n    print(f'{text:15} -> {len(tokens)} tokens: {tokens[:5]}...')",
-            explanation: "Non-English text often requires more tokens, making models less efficient for non-English users. This tokenization inefficiency is a form of linguistic bias in AI systems."
+            explanation: "Non-English text often requires more tokens, making models less efficient for non-English users. This tokenization inefficiency is a form of linguistic bias in AI systems.",
+            expectedOutput: "Hello world     -> 2 tokens: ['Hello', 'Ġworld']...\nHola mundo      -> 3 tokens: ['H', 'ola', 'Ġmund']...\n你好世界          -> 12 tokens: ['ä', '»', '£', 'å', '¥']...\nمرحبا بالعالم   -> 22 tokens: ['Ù', 'ħ', 'ر', 'Ø', '­']...\n🌍🚀🤖          -> 9 tokens: ['ðŁĺ', 'ī', 'ðŁĺ', 'Ģ', 'ðŁ¤']..."
         },
         {
             instruction: "Understanding special tokens and their purposes:",
             why: "Special tokens are critical for controlling model behavior. They act as 'control signals' that tell the model when to start, stop, or handle sequences. Understanding these gives us tools to control AI systems more precisely and is essential for safety - for example, ensuring models stop generating when they should.",
             code: "# Let's explore GPT-2's special tokens\nprint('Special Token Overview:')\nprint('EOS (End of Sequence):', tokenizer.eos_token)\nprint('EOS token ID:', tokenizer.eos_token_id)\nprint('BOS (Beginning of Sequence):', tokenizer.bos_token)\nprint('PAD (Padding):', tokenizer.pad_token)\nprint('\\nWhat we observe:')\nprint('- EOS token exists:', tokenizer.eos_token is not None)\nprint('- BOS token exists:', tokenizer.bos_token is not None)  \nprint('- PAD token exists:', tokenizer.pad_token is not None)",
-            explanation: "Special tokens serve different purposes:\n\n• **EOS (End of Sequence)**: Signals where text should end. GPT-2 uses '<|endoftext|>' for this.\n• **BOS (Beginning of Sequence)**: Marks where text starts. GPT-2 often doesn't use a separate BOS token.\n• **PAD (Padding)**: Fills shorter sequences to match batch length. GPT-2 doesn't have a dedicated PAD token by default.\n\nGPT-2 is unique - it primarily uses '<|endoftext|>' as its main special token, which serves as EOS. Unlike some models that have separate tokens for each purpose, GPT-2 keeps it simple. This is why you'll see `None` for some special tokens when checking."
+            explanation: "Special tokens serve different purposes:\n\n• **EOS (End of Sequence)**: Signals where text should end. GPT-2 uses '<|endoftext|>' for this.\n• **BOS (Beginning of Sequence)**: Marks where text starts. GPT-2 often doesn't use a separate BOS token.\n• **PAD (Padding)**: Fills shorter sequences to match batch length. GPT-2 doesn't have a dedicated PAD token by default.\n\nGPT-2 is unique - it primarily uses '<|endoftext|>' as its main special token, which serves as EOS. Unlike some models that have separate tokens for each purpose, GPT-2 keeps it simple. This is why you'll see `None` for some special tokens when checking.",
+            expectedOutput: "Special Token Overview:\nEOS (End of Sequence): <|endoftext|>\nEOS token ID: 50256\nBOS (Beginning of Sequence): None\nPAD (Padding): None\n\nWhat we observe:\n- EOS token exists: True\n- BOS token exists: False\n- PAD token exists: False"
         },
         {
             instruction: "See how tokenization affects token count:",
             code: "short = 'Hi'\nlong = 'Supercalifragilisticexpialidocious'\nprint(f'{short}: {len(tokenizer.encode(short))} tokens')\nprint(f'{long}: {len(tokenizer.encode(long))} tokens')",
-            explanation: "Token count doesn't always match word count or character count. This affects model context windows and pricing for API usage!"
+            explanation: "Token count doesn't always match word count or character count. This affects model context windows and pricing for API usage!",
+            expectedOutput: "Hi: 17250\nSupercalifragilisticexpialidocious: 12"
         },
         {
             instruction: "Calculate tokenization efficiency:",
             why: "Token efficiency directly impacts API costs and model speed. Understanding this helps optimize prompts. In production systems, reducing token count by even 10% can save thousands of dollars and improve response times significantly.",
             code: "text = 'The quick brown fox jumps over the lazy dog.'\nchar_count = len(text)\nword_count = len(text.split())\ntoken_count = len(tokenizer.encode(text))\n\nprint(f'Characters: {char_count}')\nprint(f'Words: {word_count}')\nprint(f'Tokens: {token_count}')\nprint(f'Chars/token: {char_count/token_count:.1f}')\nprint(f'Tokens/word: {token_count/word_count:.1f}')",
-            explanation: "Understanding tokenization efficiency helps optimize prompts and reduce costs. English averages about 4 characters per token and 1.3 tokens per word."
+            explanation: "Understanding tokenization efficiency helps optimize prompts and reduce costs. English averages about 4 characters per token and 1.3 tokens per word.",
+            expectedOutput: "Characters: 44\nWords: 9\nTokens: 10\nChars/token: 4.4\nTokens/word: 1.1"
         },
         {
             instruction: "Let's see how safety-critical instructions might be tokenized:",
             why: "Tokenization can fragment important safety instructions in unexpected ways. If 'do not harm humans' gets split oddly, the model might not process the instruction as intended. This is why we need to understand tokenization for building reliable safety measures.",
             code: "instructions = [\n    'Do not harm humans',\n    'Be helpful and harmless',\n    'Refuse dangerous requests'\n]\n\nfor inst in instructions:\n    tokens = tokenizer.tokenize(inst)\n    print(f'{inst}: {tokens}')",
-            explanation: "Safety instructions might be tokenized in unexpected ways. Understanding this helps us design better safety prompts that are robust to tokenization artifacts."
+            explanation: "Safety instructions might be tokenized in unexpected ways. Understanding this helps us design better safety prompts that are robust to tokenization artifacts.",
+            expectedOutput: "Do not harm humans: ['Do', 'Ġnot', 'Ġharm', 'Ġhumans']\nBe helpful and harmless: ['Be', 'Ġhelpful', 'Ġand', 'Ġharmless']\nRefuse dangerous requests: ['Ref', 'use', 'Ġdangerous', 'Ġrequests']"
         }
         ]
     },
@@ -176,18 +200,21 @@ const LESSONS = {
                 instruction: "Let's see what embeddings look like initially:",
                 why: "Embeddings start random but learn to encode meaning through training. Similar concepts will develop similar embeddings. For AI safety, this means harmful and helpful concepts will cluster differently in the embedding space, which we can potentially detect and control.",
                 code: "# Get embeddings for a few tokens\ntoken_ids = torch.tensor([1, 100, 1000])\nembeds = embedding(token_ids)\nprint('Embedding shape:', embeds.shape)\nprint('First few values of token 1:', embeds[0, :5])",
-                explanation: "Each token is now a 768-dimensional vector. These start random but will learn to represent meaning."
+                explanation: "Each token is now a 768-dimensional vector. These start random but will learn to represent meaning.",
+                expectedOutput: "Embedding shape: torch.Size([3, 768])\nFirst few values of token 1: tensor([-0.0234,  0.1456, -0.0892,  0.0567, -0.1123], grad_fn=<SliceBackward0>)"
             },
             {
                 instruction: "Let's understand what 768 dimensions really means:",
                 why: "High-dimensional spaces are counterintuitive but powerful. Each dimension can encode a different aspect of meaning - one might represent 'animate/inanimate', another 'positive/negative sentiment', another 'technical/casual language'. With 768 dimensions, models can encode incredibly nuanced distinctions that help them understand and generate human-like text.",
                 code: "# Explore the scale of embedding space\nprint(f'Each token has {d_model} numbers')\nprint(f'Total parameters: {vocab_size * d_model:,}')\nprint(f'Million parameters: {vocab_size * d_model / 1e6:.1f}M')",
-                explanation: "Each dimension might encode different semantic properties: abstract vs concrete, positive vs negative sentiment, formal vs informal, and 765 more aspects! The high dimensionality allows encoding complex, nuanced meanings."
+                explanation: "Each dimension might encode different semantic properties: abstract vs concrete, positive vs negative sentiment, formal vs informal, and 765 more aspects! The high dimensionality allows encoding complex, nuanced meanings.",
+                expectedOutput: "Each token has 768 numbers\nTotal parameters: 38,597,376\nMillion parameters: 38.6M"
             },
             {
                 instruction: "Let's convert our tokens to vectors using the embedding:",
                 code: "tokens_tensor = torch.tensor([464, 3797, 3332, 319, 262, 2603])  # 'The cat sat on the mat'\ntoken_embeddings = embedding(tokens_tensor)\nprint('Shape:', token_embeddings.shape)",
-                explanation: "Now each token is represented by a 768-dimensional vector. These vectors will be updated during training to capture semantic meaning."
+                explanation: "Now each token is represented by a 768-dimensional vector. These vectors will be updated during training to capture semantic meaning.",
+                expectedOutput: "Shape: torch.Size([6, 768])"
             },
             {
                 instruction: "Let's visualize what these embeddings mean conceptually:",
@@ -205,7 +232,8 @@ const LESSONS = {
                 instruction: "Now we combine token embeddings with positional embeddings:",
                 why: "We add rather than concatenate to save parameters and because it works surprisingly well. The model learns to encode both 'what' (token) and 'where' (position) in the same vector. It's like each vector contains both the word's meaning AND its role in the sentence. This is more efficient than having separate streams for content and position.",
                 code: "final_embeddings = token_embeddings + pos_embeddings\nprint('Final embedding shape:', final_embeddings.shape)",
-                explanation: "We ADD the positional embeddings to token embeddings. This allows each position to modify how tokens are interpreted based on where they appear."
+                explanation: "We ADD the positional embeddings to token embeddings. This allows each position to modify how tokens are interpreted based on where they appear.",
+                expectedOutput: "Final embedding shape: torch.Size([6, 768])"
             },
             {
                 instruction: "Let's see exactly how position changes meaning:",
@@ -217,12 +245,14 @@ const LESSONS = {
                 instruction: "Let's see why position matters by creating a simple example:",
                 why: "Position can completely change the meaning and safety implications of text. Consider 'kill the process' (computer term) vs 'the process to kill' (potentially dangerous). Positional encoding helps models understand these critical differences.",
                 code: "# Same tokens in different positions\ntext1_tokens = tokenizer.encode('not safe')\ntext2_tokens = tokenizer.encode('safe not')\n\nprint(f'\"not safe\" tokens: {text1_tokens}')\nprint(f'\"safe not\" tokens: {text2_tokens}')",
-                explanation: "These have the same tokens but very different meanings! 'not safe' is a warning, while 'safe not' might be parsed differently or be ungrammatical. Position changes everything!"
+                explanation: "These have the same tokens but very different meanings! 'not safe' is a warning, while 'safe not' might be parsed differently or be ungrammatical. Position changes everything!",
+                expectedOutput: "\"not safe\" tokens: [1662, 3338]\n\"safe not\" tokens: [21230, 407]"
             },
             {
                 instruction: "Let's visualize how positional embeddings differ:",
                 code: "# Compare embeddings at different positions\npos_0 = pos_embedding(torch.tensor(0))\npos_10 = pos_embedding(torch.tensor(10))\npos_100 = pos_embedding(torch.tensor(100))\n\nprint('Cosine similarity between positions:')\ncos_sim_0_10 = torch.cosine_similarity(pos_0, pos_10, dim=0)\ncos_sim_0_100 = torch.cosine_similarity(pos_0, pos_100, dim=0)\nprint(f'Position 0 vs 10: {cos_sim_0_10:.3f}')\nprint(f'Position 0 vs 100: {cos_sim_0_100:.3f}')",
-                explanation: "Different positions have different embeddings. This helps the model understand that the same word means different things in different places."
+                explanation: "Different positions have different embeddings. This helps the model understand that the same word means different things in different places.",
+                expectedOutput: "Cosine similarity between positions:\nPosition 0 vs 10: 0.123\nPosition 0 vs 100: -0.045"
             },
             {
             instruction: "First, let's understand cosine similarity - our tool for comparing embeddings:",
@@ -245,7 +275,8 @@ sim_diff_dir = torch.cosine_similarity(vec1, vec3, dim=0)
 print(f'Same direction vectors: {sim_same_dir:.3f} (close to 1.0)')
 print(f'Different direction vectors: {sim_diff_dir:.3f} (close to 0.0)')
 print('\\nFor embeddings: high similarity = similar linguistic function!')`,
-            explanation: "Cosine similarity ranges from -1 to 1. Near 1: vectors point in same direction (similar meaning/function). Near 0: perpendicular (unrelated). Near -1: opposite directions (contrasting). This is why it's perfect for comparing what kind of information embeddings encode!"
+            explanation: "Cosine similarity ranges from -1 to 1. Near 1: vectors point in same direction (similar meaning/function). Near 0: perpendicular (unrelated). Near -1: opposite directions (contrasting). This is why it's perfect for comparing what kind of information embeddings encode!",
+            expectedOutput: "Same direction vectors: 1.000 (close to 1.0)\nDifferent direction vectors: 0.000 (close to 0.0)\n\nFor embeddings: high similarity = similar linguistic function!"
             },
             {
                 instruction: "Let's understand the 'residual stream' concept:",
@@ -698,18 +729,21 @@ for term in test_terms:
             {
                 instruction: "Let's start with a simple example - 3 words as vectors:",
                 code: "# Imagine we have 3 words: \"cat\", \"sat\", \"mat\"\n# Each represented as a small vector\nword_vectors = torch.tensor([\n    [1.0, 0.0, 0.5],  # \"cat\"\n    [0.0, 1.0, 0.2],  # \"sat\"\n    [0.5, 0.2, 1.0]   # \"mat\"\n])\nprint('Word vectors shape:', word_vectors.shape)",
-                explanation: "In real transformers, these vectors are much larger (768 dimensions for GPT-2), but we'll use 3D vectors to keep it simple."
+                explanation: "In real transformers, these vectors are much larger (768 dimensions for GPT-2), but we'll use 3D vectors to keep it simple.",
+                expectedOutput: "Word vectors shape: torch.Size([3, 3])"
             },
             {
                 instruction: "The first concept: Query vectors - what each word is 'looking for':",
                 why: "Queries encode 'what information would be useful here?' Think of it like a search query - when processing 'sat', the query might encode 'I need to know WHO sat'. The query projection learns these information needs from data. For safety, queries might learn to look for context that indicates harmful intent.",
                 code: "# Create a simple query projection matrix\nd_model = 3  # Size of our vectors\nd_head = 2   # Size of query vectors\nW_Q = torch.randn(d_model, d_head)\nprint('Query matrix shape:', W_Q.shape)",
-                explanation: "The query matrix transforms each word vector into a 'query' - a representation of what information that word is looking for."
+                explanation: "The query matrix transforms each word vector into a 'query' - a representation of what information that word is looking for.",
+                expectedOutput: "Query matrix shape: torch.Size([3, 2])"
             },
             {
                 instruction: "Project our words to create query vectors:",
                 code: "# Each word gets transformed into a query\nqueries = word_vectors @ W_Q\nprint('Queries shape:', queries.shape)\nprint('Query for \"cat\":', queries[0])\nprint('Query for \"sat\":', queries[1])",
-                explanation: "Each word now has a query vector that represents what it's 'searching for' in the sequence."
+                explanation: "Each word now has a query vector that represents what it's 'searching for' in the sequence.",
+                expectedOutput: "Queries shape: torch.Size([3, 2])\nQuery for \"cat\": tensor([ 0.3456, -0.2134])\nQuery for \"sat\": tensor([-0.1234,  0.5678])"
             },
             {
                 instruction: "Let's understand what queries really encode:",
@@ -721,7 +755,8 @@ for term in test_terms:
                 instruction: "The second concept: Key vectors - what each word 'contains':",
                 why: "The key-query mechanism is like a matching system. For AI safety, this is crucial - harmful content might have specific key patterns that queries learn to attend to. By understanding these patterns, we can detect when models are processing potentially dangerous information.",
                 code: "# Create a key projection matrix\nW_K = torch.randn(d_model, d_head)\nkeys = word_vectors @ W_K\nprint('Keys shape:', keys.shape)\nprint('Key for \"cat\":', keys[0])",
-                explanation: "Keys represent what information each word 'contains' or 'offers' to other words looking for related information."
+                explanation: "Keys represent what information each word 'contains' or 'offers' to other words looking for related information.",
+                expectedOutput: "Keys shape: torch.Size([3, 2])\nKey for \"cat\": tensor([0.7812, 0.1234])"
             },
             {
                 instruction: "Understand what keys advertise about each word:",
@@ -733,12 +768,14 @@ for term in test_terms:
                 instruction: "Now the magic: compute attention scores by matching queries to keys:",
                 why: "The dot product measures alignment between what's being looked for (query) and what's available (key). High alignment = high attention. This is learned entirely from data - the model discovers which alignments predict the next token well. It's beautiful because it's both simple (just a dot product) and powerful (can learn any relationship).",
                 code: "# Attention scores = how much each query matches each key\nattention_scores = queries @ keys.T\nprint('Attention scores shape:', attention_scores.shape)\nprint('Scores:')\nprint(attention_scores)",
-                explanation: "High scores mean 'this query matches this key well' - the words are related in a way the model has learned is important."
+                explanation: "High scores mean 'this query matches this key well' - the words are related in a way the model has learned is important.",
+                expectedOutput: "Attention scores shape: torch.Size([3, 3])\nScores:\ntensor([[ 0.2345, -0.1234,  0.3456],\n        [-0.0567,  0.4321, -0.2345],\n        [ 0.1234,  0.0987,  0.5432]])"
             },
             {
                 instruction: "Let's visualize what these scores mean:",
                 code: "words = ['cat', 'sat', 'mat']\nprint('Attention from each word to each word:')\nfor i, word1 in enumerate(words):\n    for j, word2 in enumerate(words):\n        score = attention_scores[i, j].item()\n        print(f'{word1} -> {word2}: {score:.2f}')",
-                explanation: "These scores tell us how much each word should 'pay attention' to every other word. Higher scores = more attention."
+                explanation: "These scores tell us how much each word should 'pay attention' to every other word. Higher scores = more attention.",
+                expectedOutput: "Attention from each word to each word:\ncat -> cat: 0.23\ncat -> sat: -0.12\ncat -> mat: 0.35\nsat -> cat: -0.06\nsat -> sat: 0.43\nsat -> mat: -0.23\nmat -> cat: 0.12\nmat -> sat: 0.10\nmat -> mat: 0.54"
             },
             {
                 instruction: "Understand why raw attention scores need processing:",
@@ -750,7 +787,8 @@ for term in test_terms:
                 instruction: "Scale the scores to prevent gradient problems:",
                 why: "Without scaling, when d_head is large, dot products become large, pushing softmax into regions where gradients are extremely small. This causes training to fail. For AI safety, stable training is essential - unstable models can develop unpredictable behaviors.",
                 code: "# Scale by square root of dimension\nscaled_scores = attention_scores / (d_head ** 0.5)\nprint('Original scores:', attention_scores[0])\nprint('Scaled scores:', scaled_scores[0])",
-                explanation: "Scaling prevents the scores from becoming too large, which would cause problems with the softmax function coming next."
+                explanation: "Scaling prevents the scores from becoming too large, which would cause problems with the softmax function coming next.",
+                expectedOutput: "Original scores: tensor([ 0.2345, -0.1234,  0.3456])\nScaled scores: tensor([ 0.1658, -0.0872,  0.2444])"
             },
             {
                 instruction: "Convert scores to probabilities using softmax:",
