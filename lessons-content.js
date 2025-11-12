@@ -1032,7 +1032,7 @@ for term in test_terms:
     },
 
     // Complete Transformer
-    'complete-transformer': {
+    'complete-transformer-basic': {
         title: "Putting It All Together",
         steps: [
             {
