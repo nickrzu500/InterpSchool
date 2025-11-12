@@ -630,29 +630,33 @@
                     <p class="card-meta">5 lessons • Hands-on Analysis</p>
                 </div>
                 
-                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
-                    <h2 class="card-title">
-                        Advanced Interpretability 
-                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
-                            Under Construction
-                        </span>
-                    </h2>
+                <div class="card" onclick="showAgenda('advanced-interpretability')">
+                    <h2 class="card-title">Advanced Interpretability</h2>
                     <p class="card-description">
-                        Explore cutting-edge interpretability research including circuits, superposition, 
+                        Explore cutting-edge interpretability research including circuits, superposition,
                         and advanced mechanistic interpretability techniques.
                     </p>
-                    <p class="card-meta">Coming Soon</p>
+                    <p class="card-meta">1 lesson • Mechanistic Analysis</p>
                 </div>
                 
+                <div class="card" onclick="showAgenda('adversarial-robustness')">
+                    <h2 class="card-title">Advanced: Adversarial Robustness</h2>
+                    <p class="card-description">
+                        Learn about adversarial attacks, jailbreaking techniques, prompt injection,
+                        and defensive measures to keep AI systems safe.
+                    </p>
+                    <p class="card-meta">1 lesson • Security & Safety</p>
+                </div>
+
                 <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
                     <h2 class="card-title">
-                        Developmental Interpretability 
+                        Developmental Interpretability
                         <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
                             Under Construction
                         </span>
                     </h2>
                     <p class="card-description">
-                        Study how AI systems learn and develop capabilities over time, including 
+                        Study how AI systems learn and develop capabilities over time, including
                         training dynamics and emergent behaviors.
                     </p>
                     <p class="card-meta">Coming Soon</p>
@@ -688,13 +692,13 @@
                     <p class="card-meta">8 lessons • 20-50 min each</p>
                 </div>
                 
-                <div class="card" style="opacity: 0.6; cursor: not-allowed;">
+                <div class="card" onclick="showDifficulty('transformer-scratch', 'advanced')">
                     <h2 class="card-title">Advanced: Optimization & Scaling</h2>
                     <p class="card-description">
-                        Learn advanced techniques like gradient checkpointing, mixed precision training, 
-                        and distributed training for large-scale transformers.
+                        Learn advanced techniques like training dynamics, efficient inference with KV caching,
+                        quantization, and model compression for production deployment.
                     </p>
-                    <p class="card-meta">Coming Soon</p>
+                    <p class="card-meta">3 lessons • 30-45 min each</p>
                 </div>
             </div>
         </div>
@@ -875,6 +879,87 @@
                         Look for neurons and attention patterns that respond to harmful vs helpful content.
                     </p>
                     <p class="card-meta">30 minutes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Lessons Page (Optimization & Scaling) -->
+        <div id="advanced-lessons-page" class="container hidden">
+            <button class="back-button" onclick="showAgenda('transformer-scratch')">← Back to Transformer from Scratch</button>
+
+            <div class="header">
+                <h1 class="main-title">Advanced: Optimization & Scaling</h1>
+                <p class="subtitle">Production-ready techniques for training and deploying transformers</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card" onclick="showLesson('training-dynamics')">
+                    <h2 class="card-title">Training Dynamics & Optimization</h2>
+                    <p class="card-description">
+                        Understand how training dynamics affect model behavior and safety. Learn about loss landscapes,
+                        learning rate scheduling, and gradient flow analysis.
+                    </p>
+                    <p class="card-meta">35 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('efficient-inference')">
+                    <h2 class="card-title">Efficient Inference & Scaling</h2>
+                    <p class="card-description">
+                        Implement KV caching for faster generation, quantization for reduced memory, and
+                        understand the trade-offs for production deployment.
+                    </p>
+                    <p class="card-meta">40 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('model-compression')">
+                    <h2 class="card-title">Model Compression & Deployment</h2>
+                    <p class="card-description">
+                        Learn knowledge distillation, pruning, and how to compress models while preserving
+                        safety properties and alignment.
+                    </p>
+                    <p class="card-meta">35 minutes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Interpretability Page -->
+        <div id="advanced-interpretability-page" class="container hidden">
+            <button class="back-button" onclick="showWelcome()">← Back to Home</button>
+
+            <div class="header">
+                <h1 class="main-title">Advanced Interpretability</h1>
+                <p class="subtitle">Cutting-edge mechanistic interpretability techniques</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card" onclick="showLesson('circuit-analysis')">
+                    <h2 class="card-title">Circuit Analysis & Mechanistic Interpretability</h2>
+                    <p class="card-description">
+                        Discover computational circuits in neural networks using activation patching,
+                        causal interventions, and graph analysis to understand how models implement algorithms.
+                    </p>
+                    <p class="card-meta">45 minutes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Adversarial Robustness Page -->
+        <div id="adversarial-robustness-page" class="container hidden">
+            <button class="back-button" onclick="showWelcome()">← Back to Home</button>
+
+            <div class="header">
+                <h1 class="main-title">Advanced: Adversarial Robustness</h1>
+                <p class="subtitle">Understanding and defending against adversarial attacks</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card" onclick="showLesson('jailbreaking-intro')">
+                    <h2 class="card-title">Understanding Jailbreaking & Prompt Injection</h2>
+                    <p class="card-description">
+                        Learn about adversarial prompting techniques, common jailbreaking patterns,
+                        and how to detect and defend against prompt injection attacks.
+                    </p>
+                    <p class="card-meta">35 minutes</p>
                 </div>
             </div>
         </div>
@@ -1109,6 +1194,10 @@
                 document.getElementById('transformer-scratch-page').classList.remove('hidden');
             } else if (type === 'basic-interpretability') {
                 document.getElementById('basic-interpretability-page').classList.remove('hidden');
+            } else if (type === 'advanced-interpretability') {
+                document.getElementById('advanced-interpretability-page').classList.remove('hidden');
+            } else if (type === 'adversarial-robustness') {
+                document.getElementById('adversarial-robustness-page').classList.remove('hidden');
             }
         }
 
@@ -1118,6 +1207,8 @@
                 document.getElementById('basic-lessons-page').classList.remove('hidden');
             } else if (agenda === 'transformer-scratch' && difficulty === 'intermediate') {
                 document.getElementById('intermediate-lessons-page').classList.remove('hidden');
+            } else if (agenda === 'transformer-scratch' && difficulty === 'advanced') {
+                document.getElementById('advanced-lessons-page').classList.remove('hidden');
             }
         }
 
@@ -1137,22 +1228,34 @@
         }
 
         function goBackToLessons() {
-          
+
     // Make sure to show the about button here too
     const aboutButton = document.querySelector('.nav-link-pill');
     if (aboutButton) {
         aboutButton.style.display = 'block';
     }
-            
+
             const basicLessons = ['tokenization-basics', 'embeddings-positional', 'attention-mechanism', 'mlp-layers', 'complete-transformer', 'text-generation'];
-            const interpretabilityLessons = ['attention-patterns', 'logit-lens', 'activation-patching', 'probing-experiments', 'finding-features'];
-            
+            const intermediateLessons = ['layernorm-implementation', 'embedding-layers', 'attention-implementation', 'mlp-implementation', 'transformer-blocks', 'sampling-methods-safety'];
+            const advancedLessons = ['training-dynamics', 'efficient-inference', 'model-compression'];
+            const interpretabilityLessons = ['attention-patterns', 'logit-lens', 'activation-analysis', 'probing-experiments', 'finding-features'];
+            const advancedInterpretabilityLessons = ['circuit-analysis'];
+            const adversarialRobustnessLessons = ['jailbreaking-intro'];
+
             if (basicLessons.includes(currentLessonId)) {
                 showDifficulty('transformer-scratch', 'basic');
+            } else if (intermediateLessons.includes(currentLessonId)) {
+                showDifficulty('transformer-scratch', 'intermediate');
+            } else if (advancedLessons.includes(currentLessonId)) {
+                showDifficulty('transformer-scratch', 'advanced');
             } else if (interpretabilityLessons.includes(currentLessonId)) {
                 showAgenda('basic-interpretability');
+            } else if (advancedInterpretabilityLessons.includes(currentLessonId)) {
+                showAgenda('advanced-interpretability');
+            } else if (adversarialRobustnessLessons.includes(currentLessonId)) {
+                showAgenda('adversarial-robustness');
             } else {
-                showDifficulty('transformer-scratch', 'intermediate');
+                showWelcome();
             }
         }
 
@@ -1162,7 +1265,7 @@
         }
 
         function hideAll() {
-            const pages = ['welcome-page', 'transformer-scratch-page', 'basic-lessons-page', 'intermediate-lessons-page', 'basic-interpretability-page', 'lesson-page', 'badge-page', 'about-page'];
+            const pages = ['welcome-page', 'transformer-scratch-page', 'basic-lessons-page', 'intermediate-lessons-page', 'advanced-lessons-page', 'basic-interpretability-page', 'advanced-interpretability-page', 'adversarial-robustness-page', 'lesson-page', 'badge-page', 'about-page'];
             pages.forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
