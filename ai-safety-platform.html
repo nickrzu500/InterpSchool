@@ -745,7 +745,7 @@
                     <p class="card-meta">20 minutes</p>
                 </div>
                 
-                <div class="card" onclick="showLesson('complete-transformer')">
+                <div class="card" onclick="showLesson('complete-transformer-basic')">
                     <h2 class="card-title">Putting It All Together</h2>
                     <p class="card-description">
                         See how all transformer components work together to process and generate text.
@@ -893,31 +893,46 @@
             </div>
 
             <div class="card-grid">
-                <div class="card" onclick="showLesson('training-dynamics')">
-                    <h2 class="card-title">Training Dynamics & Optimization</h2>
+                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
+                    <h2 class="card-title">
+                        Training Dynamics & Optimization
+                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
+                            Under Construction
+                        </span>
+                    </h2>
                     <p class="card-description">
                         Understand how training dynamics affect model behavior and safety. Learn about loss landscapes,
                         learning rate scheduling, and gradient flow analysis.
                     </p>
-                    <p class="card-meta">35 minutes</p>
+                    <p class="card-meta">Coming Soon</p>
                 </div>
 
-                <div class="card" onclick="showLesson('efficient-inference')">
-                    <h2 class="card-title">Efficient Inference & Scaling</h2>
+                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
+                    <h2 class="card-title">
+                        Efficient Inference & Scaling
+                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
+                            Under Construction
+                        </span>
+                    </h2>
                     <p class="card-description">
                         Implement KV caching for faster generation, quantization for reduced memory, and
                         understand the trade-offs for production deployment.
                     </p>
-                    <p class="card-meta">40 minutes</p>
+                    <p class="card-meta">Coming Soon</p>
                 </div>
 
-                <div class="card" onclick="showLesson('model-compression')">
-                    <h2 class="card-title">Model Compression & Deployment</h2>
+                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
+                    <h2 class="card-title">
+                        Model Compression & Deployment
+                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
+                            Under Construction
+                        </span>
+                    </h2>
                     <p class="card-description">
                         Learn knowledge distillation, pruning, and how to compress models while preserving
                         safety properties and alignment.
                     </p>
-                    <p class="card-meta">35 minutes</p>
+                    <p class="card-meta">Coming Soon</p>
                 </div>
             </div>
         </div>
@@ -932,13 +947,18 @@
             </div>
 
             <div class="card-grid">
-                <div class="card" onclick="showLesson('circuit-analysis')">
-                    <h2 class="card-title">Circuit Analysis & Mechanistic Interpretability</h2>
+                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
+                    <h2 class="card-title">
+                        Circuit Analysis & Mechanistic Interpretability
+                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
+                            Under Construction
+                        </span>
+                    </h2>
                     <p class="card-description">
                         Discover computational circuits in neural networks using activation patching,
                         causal interventions, and graph analysis to understand how models implement algorithms.
                     </p>
-                    <p class="card-meta">45 minutes</p>
+                    <p class="card-meta">Coming Soon</p>
                 </div>
             </div>
         </div>
@@ -953,13 +973,18 @@
             </div>
 
             <div class="card-grid">
-                <div class="card" onclick="showLesson('jailbreaking-intro')">
-                    <h2 class="card-title">Understanding Jailbreaking & Prompt Injection</h2>
+                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
+                    <h2 class="card-title">
+                        Understanding Jailbreaking & Prompt Injection
+                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
+                            Under Construction
+                        </span>
+                    </h2>
                     <p class="card-description">
                         Learn about adversarial prompting techniques, common jailbreaking patterns,
                         and how to detect and defend against prompt injection attacks.
                     </p>
-                    <p class="card-meta">35 minutes</p>
+                    <p class="card-meta">Coming Soon</p>
                 </div>
             </div>
         </div>
@@ -1235,7 +1260,7 @@
         aboutButton.style.display = 'block';
     }
 
-            const basicLessons = ['tokenization-basics', 'embeddings-positional', 'attention-mechanism', 'mlp-layers', 'complete-transformer', 'text-generation'];
+            const basicLessons = ['tokenization-basics', 'embeddings-positional', 'attention-mechanism', 'mlp-layers', 'complete-transformer-basic', 'text-generation'];
             const intermediateLessons = ['layernorm-implementation', 'embedding-layers', 'attention-implementation', 'mlp-implementation', 'transformer-blocks', 'sampling-methods-safety'];
             const advancedLessons = ['training-dynamics', 'efficient-inference', 'model-compression'];
             const interpretabilityLessons = ['attention-patterns', 'logit-lens', 'activation-analysis', 'probing-experiments', 'finding-features'];
