@@ -23,159 +23,135 @@ const LESSONS = {
         {
             instruction: "Let's tokenize a simple word and see what happens:",
             code: "tokens = tokenizer.encode('Hello')\nprint('Tokens:', tokens)",
-            explanation: "A single word might become one or more tokens. 'Hello' is common enough to be a single token.",
-            expectedOutput: "Tokens: [15496]"
+            explanation: "A single word might become one or more tokens. 'Hello' is common enough to be a single token."
         },
         {
             instruction: "Now let's see the actual token string (before it becomes a number):",
             why: "Understanding the difference between token strings and token IDs helps us debug issues. When models behave unexpectedly, checking the actual tokenization often reveals the problem - like spaces being included or words being split differently than expected.",
             code: "token_strings = tokenizer.tokenize('Hello')\nprint('Token strings:', token_strings)",
-            explanation: "This shows us the actual text fragment. Notice how tokens preserve the exact characters.",
-            expectedOutput: "Token strings: ['Hello']"
+            explanation: "This shows us the actual text fragment. Notice how tokens preserve the exact characters."
         },
         {
             instruction: "Let's try a word with a space in front:",
             why: "This seemingly minor detail has huge implications. Models trained on internet text learn that words with leading spaces usually start new phrases. Forgetting a space can completely change model behavior - 'harmful' vs ' harmful' might activate different safety mechanisms!",
             code: "tokens_with_space = tokenizer.tokenize(' Hello')\nprint('With space:', tokens_with_space)\nprint('Without space:', tokenizer.tokenize('Hello'))",
-            explanation: "The 'Ġ' character represents a space at the beginning. Spaces matter in tokenization!",
-            expectedOutput: "With space: ['ĠHello']\nWithout space: ['Hello']"
+            explanation: "The 'Ġ' character represents a space at the beginning. Spaces matter in tokenization!"
         },
         {
             instruction: "Let's see how capitalization affects tokenization:",
             why: "Capitalization can dramatically change tokenization. 'Hello' might be one token while 'HELLO' could be multiple. This affects how models process names, acronyms, and emphasized text. For safety, it means 'DANGER' and 'danger' might be processed differently!",
             code: "print('Lowercase:', tokenizer.tokenize('hello'))\nprint('Titlecase:', tokenizer.tokenize('Hello'))\nprint('Uppercase:', tokenizer.tokenize('HELLO'))\nprint('Mixed:', tokenizer.tokenize('HeLLo'))",
-            explanation: "Different capitalizations often result in different tokenizations, affecting model interpretation.",
-            expectedOutput: "Lowercase: ['hello']\nTitlecase: ['Hello']\nUppercase: ['HE', 'LL', 'O']\nMixed: ['He', 'LL', 'o']"
+            explanation: "Different capitalizations often result in different tokenizations, affecting model interpretation."
         },
         {
             instruction: "Let's tokenize a full sentence to see how it breaks down:",
             code: "text = 'The cat sat on the mat'\ntokens = tokenizer.encode(text)\nprint('Tokens:', tokens)\nprint('Number of tokens:', len(tokens))",
-            explanation: "Each word becomes one or more numbers. Common words like 'the' get their own single tokens.",
-            expectedOutput: "Tokens: [464, 3797, 3332, 319, 262, 2603]\nNumber of tokens: 6"
+            explanation: "Each word becomes one or more numbers. Common words like 'the' get their own single tokens."
         },
         {
             instruction: "Convert tokens back to text to see the token boundaries:",
             code: "token_strings = tokenizer.tokenize(text)\nprint('Token strings:', token_strings)",
-            explanation: "You can see exactly where the tokenizer split the text. Notice the 'Ġ' showing spaces.",
-            expectedOutput: "Token strings: ['The', 'Ġcat', 'Ġsat', 'Ġon', 'Ġthe', 'Ġmat']"
+            explanation: "You can see exactly where the tokenizer split the text. Notice the 'Ġ' showing spaces."
         },
         {
             instruction: "Let's understand how byte-pair encoding (BPE) builds tokens:",
             why: "BPE is the algorithm behind most tokenizers. It starts with characters and merges common pairs repeatedly. Understanding this helps explain why 'ing' is often a token (common ending) but 'xqz' isn't (rare combination). This affects how models handle new words and typos.",
             code: "# BPE builds up from characters\nwords = ['un', 'do', 'undo', 'doing', 'undoing']\nfor word in words:\n    tokens = tokenizer.tokenize(word)\n    print(f'{word:8} -> {tokens}')",
-            explanation: "Notice how 'undo' might be one token, but 'undoing' could be 'undo' + 'ing'. BPE creates efficient representations by merging common character sequences into single tokens.",
-            expectedOutput: "un       -> ['un']\ndo       -> ['do']\nundo     -> ['undo']\ndoing    -> ['doing']\nundoing  -> ['und', 'oing']"
+            explanation: "Notice how 'undo' might be one token, but 'undoing' could be 'undo' + 'ing'. BPE creates efficient representations by merging common character sequences into single tokens."
         },
         {
             instruction: "Let's decode tokens back to text:",
             code: "decoded = tokenizer.decode(tokens)\nprint('Original:', text)\nprint('Decoded:', decoded)",
-            explanation: "Decoding reverses the tokenization process. The text should match exactly!",
-            expectedOutput: "Original: The cat sat on the mat\nDecoded: The cat sat on the mat"
+            explanation: "Decoding reverses the tokenization process. The text should match exactly!"
         },
         {
             instruction: "Try tokenizing a less common word:",
             code: "uncommon = 'antidisestablishmentarianism'\ntokens = tokenizer.tokenize(uncommon)\nprint('Tokens:', tokens)\nprint('Count:', len(tokens))",
-            explanation: "Uncommon words get split into multiple tokens. This lets the model handle any word, even ones it's never seen!",
-            expectedOutput: "Tokens: ['ant', 'idis', 'establishment', 'arian', 'ism']\nCount: 5"
+            explanation: "Uncommon words get split into multiple tokens. This lets the model handle any word, even ones it's never seen!"
         },
         {
             instruction: "Let's see how typos affect tokenization:",
             why: "Typos often create unusual tokenizations, which can confuse models or bypass safety filters. 'harmful' might trigger safety mechanisms, but 'h4rmful' might not. This is why robust safety systems need to handle variations and misspellings.",
             code: "correct = 'dangerous'\ntypo1 = 'dangeorus'\ntypo2 = 'dang3rous'\n\nprint(f'{correct}: {tokenizer.tokenize(correct)}')\nprint(f'{typo1}: {tokenizer.tokenize(typo1)}')\nprint(f'{typo2}: {tokenizer.tokenize(typo2)}')",
-            explanation: "Typos often lead to unexpected tokenizations, which can affect model behavior and safety mechanisms.",
-            expectedOutput: "dangerous: ['dangerous']\ndangeorus: ['dang', 'e', 'orus']\ndang3rous: ['d', 'ang', '3', 'rous']"
+            explanation: "Typos often lead to unexpected tokenizations, which can affect model behavior and safety mechanisms."
         },
         {
             instruction: "Let's see how numbers are tokenized:",
             code: "numbers = '42 + 1337 = 1379'\ntokens = tokenizer.tokenize(numbers)\nprint('Number tokens:', tokens)",
-            explanation: "Numbers often get split in unexpected ways. This is why transformers sometimes struggle with arithmetic!",
-            expectedOutput: "Number tokens: ['42', 'Ġ+', 'Ġ13', '37', 'Ġ=', 'Ġ13', '79']"
+            explanation: "Numbers often get split in unexpected ways. This is why transformers sometimes struggle with arithmetic!"
         },
         {
             instruction: "Explore how large numbers are tokenized:",
             why: "The inconsistent tokenization of numbers is a major limitation. '1000' might be one token, but '1001' could be two. This explains why language models struggle with arithmetic - they see numbers as arbitrary symbol sequences rather than quantities.",
             code: "numbers = [42, 100, 1000, 1234, 98765, 1000000]\nfor num in numbers:\n    tokens = tokenizer.tokenize(str(num))\n    print(f'{num:7}: {tokens} ({len(tokens)} tokens)')",
-            explanation: "Larger numbers often require more tokens, and the splits can be unintuitive. The model doesn't understand these as mathematical quantities but as sequences of symbols.",
-            expectedOutput: "     42: ['42'] (1 tokens)\n    100: ['100'] (1 tokens)\n   1000: ['1000'] (1 tokens)\n   1234: ['1234'] (1 tokens)\n  98765: ['987', '65'] (2 tokens)\n1000000: ['1000000'] (1 tokens)"
+            explanation: "Larger numbers often require more tokens, and the splits can be unintuitive. The model doesn't understand these as mathematical quantities but as sequences of symbols."
         },
         {
             instruction: "Tokenize some code to see how programming languages are handled:",
             code: "code = 'def hello_world():\\n    print(\"Hello!\")'\ntokens = tokenizer.tokenize(code)\nprint('Code tokens:', tokens[:10])  # First 10 tokens",
-            explanation: "Code uses the same tokenizer as natural language. Notice how syntax elements each get their own tokens.",
-            expectedOutput: "Code tokens: ['def', 'Ġhello', '_', 'world', '():', 'Ċ', 'Ġ', 'Ġ', 'Ġ', 'Ġprint']"
+            explanation: "Code uses the same tokenizer as natural language. Notice how syntax elements each get their own tokens."
         },
         {
             instruction: "Let's explore why tokenization matters for AI safety:",
             why: "Understanding tokenization is crucial for AI safety because different tokenizations can lead to different model behaviors. For instance, 'harmful' and 'harm less' tokenize differently, which could affect safety mechanisms. Adversaries might exploit tokenization boundaries to bypass safety filters.",
             code: "safety_text = 'This could be harmful to humans'\nprint('Safety tokens:', tokenizer.tokenize(safety_text))",
-            explanation: "Different tokenizations can lead to different model behaviors. 'harmful' as one token vs 'harm' + 'ful' might activate different neural pathways.",
-            expectedOutput: "Safety tokens: ['This', 'Ġcould', 'Ġbe', 'Ġharmful', 'Ġto', 'Ġhumans']"
+            explanation: "Different tokenizations can lead to different model behaviors. 'harmful' as one token vs 'harm' + 'ful' might activate different neural pathways."
         },
         {
             instruction: "Compare how similar words tokenize differently:",
             why: "Safety-critical words might be split in ways that affect how models process them. This could lead to models missing harmful content if it's tokenized unexpectedly. Understanding these splits helps us build more robust safety measures.",
             code: "print('harm:', tokenizer.tokenize('harm'))\nprint('harmful:', tokenizer.tokenize('harmful'))\nprint('harmless:', tokenizer.tokenize('harmless'))",
-            explanation: "Different forms of the same root word may tokenize differently, affecting how the model processes safety-relevant concepts. The model learns different patterns for each tokenization.",
-            expectedOutput: "harm: ['harm']\nharmful: ['harmful']\nharmless: ['harmless']"
+            explanation: "Different forms of the same root word may tokenize differently, affecting how the model processes safety-relevant concepts. The model learns different patterns for each tokenization."
         },
         {
             instruction: "Explore potential tokenization attacks:",
             why: "Adversaries can exploit tokenization to bypass safety filters. By inserting zero-width characters, using homoglyphs (similar-looking characters), or clever spacing, they might make harmful content appear safe to filters that don't account for tokenization quirks.",
             code: "# Tokenization attack examples\nnormal = 'bomb making'\nspaced = 'bomb  making'  # Extra space\nzero_width = 'bomb\\u200bmaking'  # Zero-width space\n\nprint(f'Normal: {tokenizer.tokenize(normal)}')\nprint(f'Spaced: {tokenizer.tokenize(spaced)}')\nprint(f'Zero-width: {tokenizer.tokenize(zero_width)}')",
-            explanation: "Different tokenizations could bypass naive safety filters. Adversarial inputs can exploit these differences to evade detection systems that don't account for tokenization variations.",
-            expectedOutput: "Normal: ['bomb', 'Ġmaking']\nSpaced: ['bomb', 'Ġ', 'Ġmaking']\nZero-width: ['bomb', '<|endoftext|>', 'making']"
+            explanation: "Different tokenizations could bypass naive safety filters. Adversarial inputs can exploit these differences to evade detection systems that don't account for tokenization variations."
         },
         {
             instruction: "Check how the model sees punctuation:",
             code: "punct = 'Hello! How are you? I\\'m fine.'\ntokens = tokenizer.tokenize(punct)\nprint('With punctuation:', tokens)",
-            explanation: "Punctuation gets its own tokens. This helps the model understand sentence structure and tone.",
-            expectedOutput: "With punctuation: ['Hello', '!', 'ĠHow', 'Ġare', 'Ġyou', '?', 'ĠI', \"'m\", 'Ġfine', '.']"
+            explanation: "Punctuation gets its own tokens. This helps the model understand sentence structure and tone."
         },
         {
             instruction: "Explore the vocabulary size:",
             code: "vocab_size = len(tokenizer.vocab)\nprint(f'Vocabulary size: {vocab_size}')\nprint(f'{vocab_size} different possible tokens')",
-            explanation: "GPT-2 knows about 50,000 different tokens. This finite vocabulary is the foundation that allows it to understand and generate human language!",
-            expectedOutput: "Vocabulary size: 50257\n50257 different possible tokens"
+            explanation: "GPT-2 knows about 50,000 different tokens. This finite vocabulary is the foundation that allows it to understand and generate human language!"
         },
         {
             instruction: "Let's see some interesting tokens in the vocabulary:",
             code: "# Get some token examples\nfor i in [1, 100, 1000, 10000, 40000]:\n    token = tokenizer.decode([i])\n    print(f'Token {i}: {repr(token)}')",
-            explanation: "The vocabulary includes everything from single characters to common words and even word fragments. Each has a unique ID number.",
-            expectedOutput: "Token 1: '!'\nToken 100: 'ver'\nToken 1000: '\\\\'\nToken 10000: 'stream'\nToken 40000: 'Splash'"
+            explanation: "The vocabulary includes everything from single characters to common words and even word fragments. Each has a unique ID number."
         },
         {
             instruction: "Explore non-English text tokenization:",
             why: "Tokenizers trained on English text are inefficient for other languages. Chinese characters might each be multiple tokens, making the model slower and more expensive for non-English users. This is an important fairness consideration in AI systems.",
             code: "texts = [\n    'Hello world',  # English\n    'Hola mundo',   # Spanish  \n    '你好世界',      # Chinese\n    'مرحبا بالعالم', # Arabic\n    '🌍🚀🤖'        # Emojis\n]\n\nfor text in texts:\n    tokens = tokenizer.tokenize(text)\n    print(f'{text:15} -> {len(tokens)} tokens: {tokens[:5]}...')",
-            explanation: "Non-English text often requires more tokens, making models less efficient for non-English users. This tokenization inefficiency is a form of linguistic bias in AI systems.",
-            expectedOutput: "Hello world     -> 2 tokens: ['Hello', 'Ġworld']...\nHola mundo      -> 3 tokens: ['H', 'ola', 'Ġmund']...\n你好世界          -> 12 tokens: ['ä', '»', '£', 'å', '¥']...\nمرحبا بالعالم   -> 22 tokens: ['Ù', 'ħ', 'ر', 'Ø', '­']...\n🌍🚀🤖          -> 9 tokens: ['ðŁĺ', 'ī', 'ðŁĺ', 'Ģ', 'ðŁ¤']..."
+            explanation: "Non-English text often requires more tokens, making models less efficient for non-English users. This tokenization inefficiency is a form of linguistic bias in AI systems."
         },
         {
             instruction: "Understanding special tokens and their purposes:",
             why: "Special tokens are critical for controlling model behavior. They act as 'control signals' that tell the model when to start, stop, or handle sequences. Understanding these gives us tools to control AI systems more precisely and is essential for safety - for example, ensuring models stop generating when they should.",
             code: "# Let's explore GPT-2's special tokens\nprint('Special Token Overview:')\nprint('EOS (End of Sequence):', tokenizer.eos_token)\nprint('EOS token ID:', tokenizer.eos_token_id)\nprint('BOS (Beginning of Sequence):', tokenizer.bos_token)\nprint('PAD (Padding):', tokenizer.pad_token)\nprint('\\nWhat we observe:')\nprint('- EOS token exists:', tokenizer.eos_token is not None)\nprint('- BOS token exists:', tokenizer.bos_token is not None)  \nprint('- PAD token exists:', tokenizer.pad_token is not None)",
-            explanation: "Special tokens serve different purposes:\n\n• **EOS (End of Sequence)**: Signals where text should end. GPT-2 uses '<|endoftext|>' for this.\n• **BOS (Beginning of Sequence)**: Marks where text starts. GPT-2 often doesn't use a separate BOS token.\n• **PAD (Padding)**: Fills shorter sequences to match batch length. GPT-2 doesn't have a dedicated PAD token by default.\n\nGPT-2 is unique - it primarily uses '<|endoftext|>' as its main special token, which serves as EOS. Unlike some models that have separate tokens for each purpose, GPT-2 keeps it simple. This is why you'll see `None` for some special tokens when checking.",
-            expectedOutput: "Special Token Overview:\nEOS (End of Sequence): <|endoftext|>\nEOS token ID: 50256\nBOS (Beginning of Sequence): None\nPAD (Padding): None\n\nWhat we observe:\n- EOS token exists: True\n- BOS token exists: False\n- PAD token exists: False"
+            explanation: "Special tokens serve different purposes:\n\n• **EOS (End of Sequence)**: Signals where text should end. GPT-2 uses '<|endoftext|>' for this.\n• **BOS (Beginning of Sequence)**: Marks where text starts. GPT-2 often doesn't use a separate BOS token.\n• **PAD (Padding)**: Fills shorter sequences to match batch length. GPT-2 doesn't have a dedicated PAD token by default.\n\nGPT-2 is unique - it primarily uses '<|endoftext|>' as its main special token, which serves as EOS. Unlike some models that have separate tokens for each purpose, GPT-2 keeps it simple. This is why you'll see `None` for some special tokens when checking."
         },
         {
             instruction: "See how tokenization affects token count:",
             code: "short = 'Hi'\nlong = 'Supercalifragilisticexpialidocious'\nprint(f'{short}: {len(tokenizer.encode(short))} tokens')\nprint(f'{long}: {len(tokenizer.encode(long))} tokens')",
-            explanation: "Token count doesn't always match word count or character count. This affects model context windows and pricing for API usage!",
-            expectedOutput: "Hi: 17250\nSupercalifragilisticexpialidocious: 12"
+            explanation: "Token count doesn't always match word count or character count. This affects model context windows and pricing for API usage!"
         },
         {
             instruction: "Calculate tokenization efficiency:",
             why: "Token efficiency directly impacts API costs and model speed. Understanding this helps optimize prompts. In production systems, reducing token count by even 10% can save thousands of dollars and improve response times significantly.",
             code: "text = 'The quick brown fox jumps over the lazy dog.'\nchar_count = len(text)\nword_count = len(text.split())\ntoken_count = len(tokenizer.encode(text))\n\nprint(f'Characters: {char_count}')\nprint(f'Words: {word_count}')\nprint(f'Tokens: {token_count}')\nprint(f'Chars/token: {char_count/token_count:.1f}')\nprint(f'Tokens/word: {token_count/word_count:.1f}')",
-            explanation: "Understanding tokenization efficiency helps optimize prompts and reduce costs. English averages about 4 characters per token and 1.3 tokens per word.",
-            expectedOutput: "Characters: 44\nWords: 9\nTokens: 10\nChars/token: 4.4\nTokens/word: 1.1"
+            explanation: "Understanding tokenization efficiency helps optimize prompts and reduce costs. English averages about 4 characters per token and 1.3 tokens per word."
         },
         {
             instruction: "Let's see how safety-critical instructions might be tokenized:",
             why: "Tokenization can fragment important safety instructions in unexpected ways. If 'do not harm humans' gets split oddly, the model might not process the instruction as intended. This is why we need to understand tokenization for building reliable safety measures.",
             code: "instructions = [\n    'Do not harm humans',\n    'Be helpful and harmless',\n    'Refuse dangerous requests'\n]\n\nfor inst in instructions:\n    tokens = tokenizer.tokenize(inst)\n    print(f'{inst}: {tokens}')",
-            explanation: "Safety instructions might be tokenized in unexpected ways. Understanding this helps us design better safety prompts that are robust to tokenization artifacts.",
-            expectedOutput: "Do not harm humans: ['Do', 'Ġnot', 'Ġharm', 'Ġhumans']\nBe helpful and harmless: ['Be', 'Ġhelpful', 'Ġand', 'Ġharmless']\nRefuse dangerous requests: ['Ref', 'use', 'Ġdangerous', 'Ġrequests']"
+            explanation: "Safety instructions might be tokenized in unexpected ways. Understanding this helps us design better safety prompts that are robust to tokenization artifacts."
         }
         ]
     },
@@ -200,21 +176,18 @@ const LESSONS = {
                 instruction: "Let's see what embeddings look like initially:",
                 why: "Embeddings start random but learn to encode meaning through training. Similar concepts will develop similar embeddings. For AI safety, this means harmful and helpful concepts will cluster differently in the embedding space, which we can potentially detect and control.",
                 code: "# Get embeddings for a few tokens\ntoken_ids = torch.tensor([1, 100, 1000])\nembeds = embedding(token_ids)\nprint('Embedding shape:', embeds.shape)\nprint('First few values of token 1:', embeds[0, :5])",
-                explanation: "Each token is now a 768-dimensional vector. These start random but will learn to represent meaning.",
-                expectedOutput: "Embedding shape: torch.Size([3, 768])\nFirst few values of token 1: tensor([-0.0234,  0.1456, -0.0892,  0.0567, -0.1123], grad_fn=<SliceBackward0>)"
+                explanation: "Each token is now a 768-dimensional vector. These start random but will learn to represent meaning."
             },
             {
                 instruction: "Let's understand what 768 dimensions really means:",
                 why: "High-dimensional spaces are counterintuitive but powerful. Each dimension can encode a different aspect of meaning - one might represent 'animate/inanimate', another 'positive/negative sentiment', another 'technical/casual language'. With 768 dimensions, models can encode incredibly nuanced distinctions that help them understand and generate human-like text.",
                 code: "# Explore the scale of embedding space\nprint(f'Each token has {d_model} numbers')\nprint(f'Total parameters: {vocab_size * d_model:,}')\nprint(f'Million parameters: {vocab_size * d_model / 1e6:.1f}M')",
-                explanation: "Each dimension might encode different semantic properties: abstract vs concrete, positive vs negative sentiment, formal vs informal, and 765 more aspects! The high dimensionality allows encoding complex, nuanced meanings.",
-                expectedOutput: "Each token has 768 numbers\nTotal parameters: 38,597,376\nMillion parameters: 38.6M"
+                explanation: "Each dimension might encode different semantic properties: abstract vs concrete, positive vs negative sentiment, formal vs informal, and 765 more aspects! The high dimensionality allows encoding complex, nuanced meanings."
             },
             {
                 instruction: "Let's convert our tokens to vectors using the embedding:",
                 code: "tokens_tensor = torch.tensor([464, 3797, 3332, 319, 262, 2603])  # 'The cat sat on the mat'\ntoken_embeddings = embedding(tokens_tensor)\nprint('Shape:', token_embeddings.shape)",
-                explanation: "Now each token is represented by a 768-dimensional vector. These vectors will be updated during training to capture semantic meaning.",
-                expectedOutput: "Shape: torch.Size([6, 768])"
+                explanation: "Now each token is represented by a 768-dimensional vector. These vectors will be updated during training to capture semantic meaning."
             },
             {
                 instruction: "Let's visualize what these embeddings mean conceptually:",
@@ -232,8 +205,7 @@ const LESSONS = {
                 instruction: "Now we combine token embeddings with positional embeddings:",
                 why: "We add rather than concatenate to save parameters and because it works surprisingly well. The model learns to encode both 'what' (token) and 'where' (position) in the same vector. It's like each vector contains both the word's meaning AND its role in the sentence. This is more efficient than having separate streams for content and position.",
                 code: "final_embeddings = token_embeddings + pos_embeddings\nprint('Final embedding shape:', final_embeddings.shape)",
-                explanation: "We ADD the positional embeddings to token embeddings. This allows each position to modify how tokens are interpreted based on where they appear.",
-                expectedOutput: "Final embedding shape: torch.Size([6, 768])"
+                explanation: "We ADD the positional embeddings to token embeddings. This allows each position to modify how tokens are interpreted based on where they appear."
             },
             {
                 instruction: "Let's see exactly how position changes meaning:",
@@ -245,14 +217,12 @@ const LESSONS = {
                 instruction: "Let's see why position matters by creating a simple example:",
                 why: "Position can completely change the meaning and safety implications of text. Consider 'kill the process' (computer term) vs 'the process to kill' (potentially dangerous). Positional encoding helps models understand these critical differences.",
                 code: "# Same tokens in different positions\ntext1_tokens = tokenizer.encode('not safe')\ntext2_tokens = tokenizer.encode('safe not')\n\nprint(f'\"not safe\" tokens: {text1_tokens}')\nprint(f'\"safe not\" tokens: {text2_tokens}')",
-                explanation: "These have the same tokens but very different meanings! 'not safe' is a warning, while 'safe not' might be parsed differently or be ungrammatical. Position changes everything!",
-                expectedOutput: "\"not safe\" tokens: [1662, 3338]\n\"safe not\" tokens: [21230, 407]"
+                explanation: "These have the same tokens but very different meanings! 'not safe' is a warning, while 'safe not' might be parsed differently or be ungrammatical. Position changes everything!"
             },
             {
                 instruction: "Let's visualize how positional embeddings differ:",
                 code: "# Compare embeddings at different positions\npos_0 = pos_embedding(torch.tensor(0))\npos_10 = pos_embedding(torch.tensor(10))\npos_100 = pos_embedding(torch.tensor(100))\n\nprint('Cosine similarity between positions:')\ncos_sim_0_10 = torch.cosine_similarity(pos_0, pos_10, dim=0)\ncos_sim_0_100 = torch.cosine_similarity(pos_0, pos_100, dim=0)\nprint(f'Position 0 vs 10: {cos_sim_0_10:.3f}')\nprint(f'Position 0 vs 100: {cos_sim_0_100:.3f}')",
-                explanation: "Different positions have different embeddings. This helps the model understand that the same word means different things in different places.",
-                expectedOutput: "Cosine similarity between positions:\nPosition 0 vs 10: 0.123\nPosition 0 vs 100: -0.045"
+                explanation: "Different positions have different embeddings. This helps the model understand that the same word means different things in different places."
             },
             {
             instruction: "First, let's understand cosine similarity - our tool for comparing embeddings:",
@@ -275,8 +245,7 @@ sim_diff_dir = torch.cosine_similarity(vec1, vec3, dim=0)
 print(f'Same direction vectors: {sim_same_dir:.3f} (close to 1.0)')
 print(f'Different direction vectors: {sim_diff_dir:.3f} (close to 0.0)')
 print('\\nFor embeddings: high similarity = similar linguistic function!')`,
-            explanation: "Cosine similarity ranges from -1 to 1. Near 1: vectors point in same direction (similar meaning/function). Near 0: perpendicular (unrelated). Near -1: opposite directions (contrasting). This is why it's perfect for comparing what kind of information embeddings encode!",
-            expectedOutput: "Same direction vectors: 1.000 (close to 1.0)\nDifferent direction vectors: 0.000 (close to 0.0)\n\nFor embeddings: high similarity = similar linguistic function!"
+            explanation: "Cosine similarity ranges from -1 to 1. Near 1: vectors point in same direction (similar meaning/function). Near 0: perpendicular (unrelated). Near -1: opposite directions (contrasting). This is why it's perfect for comparing what kind of information embeddings encode!"
             },
             {
                 instruction: "Let's understand the 'residual stream' concept:",
@@ -729,21 +698,18 @@ for term in test_terms:
             {
                 instruction: "Let's start with a simple example - 3 words as vectors:",
                 code: "# Imagine we have 3 words: \"cat\", \"sat\", \"mat\"\n# Each represented as a small vector\nword_vectors = torch.tensor([\n    [1.0, 0.0, 0.5],  # \"cat\"\n    [0.0, 1.0, 0.2],  # \"sat\"\n    [0.5, 0.2, 1.0]   # \"mat\"\n])\nprint('Word vectors shape:', word_vectors.shape)",
-                explanation: "In real transformers, these vectors are much larger (768 dimensions for GPT-2), but we'll use 3D vectors to keep it simple.",
-                expectedOutput: "Word vectors shape: torch.Size([3, 3])"
+                explanation: "In real transformers, these vectors are much larger (768 dimensions for GPT-2), but we'll use 3D vectors to keep it simple."
             },
             {
                 instruction: "The first concept: Query vectors - what each word is 'looking for':",
                 why: "Queries encode 'what information would be useful here?' Think of it like a search query - when processing 'sat', the query might encode 'I need to know WHO sat'. The query projection learns these information needs from data. For safety, queries might learn to look for context that indicates harmful intent.",
                 code: "# Create a simple query projection matrix\nd_model = 3  # Size of our vectors\nd_head = 2   # Size of query vectors\nW_Q = torch.randn(d_model, d_head)\nprint('Query matrix shape:', W_Q.shape)",
-                explanation: "The query matrix transforms each word vector into a 'query' - a representation of what information that word is looking for.",
-                expectedOutput: "Query matrix shape: torch.Size([3, 2])"
+                explanation: "The query matrix transforms each word vector into a 'query' - a representation of what information that word is looking for."
             },
             {
                 instruction: "Project our words to create query vectors:",
                 code: "# Each word gets transformed into a query\nqueries = word_vectors @ W_Q\nprint('Queries shape:', queries.shape)\nprint('Query for \"cat\":', queries[0])\nprint('Query for \"sat\":', queries[1])",
-                explanation: "Each word now has a query vector that represents what it's 'searching for' in the sequence.",
-                expectedOutput: "Queries shape: torch.Size([3, 2])\nQuery for \"cat\": tensor([ 0.3456, -0.2134])\nQuery for \"sat\": tensor([-0.1234,  0.5678])"
+                explanation: "Each word now has a query vector that represents what it's 'searching for' in the sequence."
             },
             {
                 instruction: "Let's understand what queries really encode:",
@@ -755,8 +721,7 @@ for term in test_terms:
                 instruction: "The second concept: Key vectors - what each word 'contains':",
                 why: "The key-query mechanism is like a matching system. For AI safety, this is crucial - harmful content might have specific key patterns that queries learn to attend to. By understanding these patterns, we can detect when models are processing potentially dangerous information.",
                 code: "# Create a key projection matrix\nW_K = torch.randn(d_model, d_head)\nkeys = word_vectors @ W_K\nprint('Keys shape:', keys.shape)\nprint('Key for \"cat\":', keys[0])",
-                explanation: "Keys represent what information each word 'contains' or 'offers' to other words looking for related information.",
-                expectedOutput: "Keys shape: torch.Size([3, 2])\nKey for \"cat\": tensor([0.7812, 0.1234])"
+                explanation: "Keys represent what information each word 'contains' or 'offers' to other words looking for related information."
             },
             {
                 instruction: "Understand what keys advertise about each word:",
@@ -768,14 +733,12 @@ for term in test_terms:
                 instruction: "Now the magic: compute attention scores by matching queries to keys:",
                 why: "The dot product measures alignment between what's being looked for (query) and what's available (key). High alignment = high attention. This is learned entirely from data - the model discovers which alignments predict the next token well. It's beautiful because it's both simple (just a dot product) and powerful (can learn any relationship).",
                 code: "# Attention scores = how much each query matches each key\nattention_scores = queries @ keys.T\nprint('Attention scores shape:', attention_scores.shape)\nprint('Scores:')\nprint(attention_scores)",
-                explanation: "High scores mean 'this query matches this key well' - the words are related in a way the model has learned is important.",
-                expectedOutput: "Attention scores shape: torch.Size([3, 3])\nScores:\ntensor([[ 0.2345, -0.1234,  0.3456],\n        [-0.0567,  0.4321, -0.2345],\n        [ 0.1234,  0.0987,  0.5432]])"
+                explanation: "High scores mean 'this query matches this key well' - the words are related in a way the model has learned is important."
             },
             {
                 instruction: "Let's visualize what these scores mean:",
                 code: "words = ['cat', 'sat', 'mat']\nprint('Attention from each word to each word:')\nfor i, word1 in enumerate(words):\n    for j, word2 in enumerate(words):\n        score = attention_scores[i, j].item()\n        print(f'{word1} -> {word2}: {score:.2f}')",
-                explanation: "These scores tell us how much each word should 'pay attention' to every other word. Higher scores = more attention.",
-                expectedOutput: "Attention from each word to each word:\ncat -> cat: 0.23\ncat -> sat: -0.12\ncat -> mat: 0.35\nsat -> cat: -0.06\nsat -> sat: 0.43\nsat -> mat: -0.23\nmat -> cat: 0.12\nmat -> sat: 0.10\nmat -> mat: 0.54"
+                explanation: "These scores tell us how much each word should 'pay attention' to every other word. Higher scores = more attention."
             },
             {
                 instruction: "Understand why raw attention scores need processing:",
@@ -787,8 +750,7 @@ for term in test_terms:
                 instruction: "Scale the scores to prevent gradient problems:",
                 why: "Without scaling, when d_head is large, dot products become large, pushing softmax into regions where gradients are extremely small. This causes training to fail. For AI safety, stable training is essential - unstable models can develop unpredictable behaviors.",
                 code: "# Scale by square root of dimension\nscaled_scores = attention_scores / (d_head ** 0.5)\nprint('Original scores:', attention_scores[0])\nprint('Scaled scores:', scaled_scores[0])",
-                explanation: "Scaling prevents the scores from becoming too large, which would cause problems with the softmax function coming next.",
-                expectedOutput: "Original scores: tensor([ 0.2345, -0.1234,  0.3456])\nScaled scores: tensor([ 0.1658, -0.0872,  0.2444])"
+                explanation: "Scaling prevents the scores from becoming too large, which would cause problems with the softmax function coming next."
             },
             {
                 instruction: "Convert scores to probabilities using softmax:",
@@ -1032,7 +994,7 @@ for term in test_terms:
     },
 
     // Complete Transformer
-    'complete-transformer-basic': {
+    'complete-transformer': {
         title: "Putting It All Together",
         steps: [
             {
@@ -3015,6 +2977,915 @@ for term in test_terms:
                     "Why is multi-method feature discovery more robust?",
                     "How do we validate that discovered features are truly safety-relevant?",
                     "What makes continuous monitoring essential for safety?"
+                ]
+            }
+        ]
+    },
+
+    // ========================================
+    // ADVANCED: OPTIMIZATION & SCALING
+    // ========================================
+
+    // Gradient Checkpointing
+    'gradient-checkpointing': {
+        title: "Gradient Checkpointing: Trading Compute for Memory",
+        steps: [
+            {
+                instruction: "Let's understand why memory is a critical constraint when training large models. Set up a basic transformer block:",
+                why: "Memory constraints directly limit how large and capable we can make AI models. But here's the safety paradox: larger models often exhibit emergent capabilities that are harder to predict and control. Gradient checkpointing enables training these frontier models - which means AI safety researchers need to understand both the technique AND its implications for creating more powerful systems.",
+                code: "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nfrom torch.utils.checkpoint import checkpoint\nimport numpy as np\n\n# Simple transformer block for demonstration\nclass TransformerBlock(nn.Module):\n    def __init__(self, d_model=512, n_heads=8, d_ff=2048):\n        super().__init__()\n        self.attention = nn.MultiheadAttention(d_model, n_heads, batch_first=True)\n        self.norm1 = nn.LayerNorm(d_model)\n        self.norm2 = nn.LayerNorm(d_model)\n        self.ffn = nn.Sequential(\n            nn.Linear(d_model, d_ff),\n            nn.ReLU(),\n            nn.Linear(d_ff, d_model)\n        )\n    \n    def forward(self, x):\n        # Self-attention\n        attn_out, _ = self.attention(x, x, x)\n        x = self.norm1(x + attn_out)\n        \n        # Feed-forward\n        ffn_out = self.ffn(x)\n        x = self.norm2(x + ffn_out)\n        return x\n\n# Create a small model\nblock = TransformerBlock()\nprint(\"Transformer block created\")\nprint(f\"Parameters: {sum(p.numel() for p in block.parameters()):,}\")",
+                explanation: "This basic transformer block will help us understand memory usage during training.",
+                type: "copy"
+            },
+            {
+                instruction: "Let's measure memory usage WITHOUT gradient checkpointing:",
+                why: "Understanding memory consumption is crucial for AI safety research infrastructure. Memory limitations determine whether safety researchers can experiment with frontier-scale models or are limited to smaller models that may not exhibit the concerning behaviors we need to study. This creates an asymmetry where those building powerful AI have more resources than those trying to make it safe.",
+                code: "def measure_memory(func, *args):\n    \"\"\"Measure peak memory usage of a function\"\"\"\n    torch.cuda.reset_peak_memory_stats()\n    result = func(*args)\n    peak_memory = torch.cuda.max_memory_allocated() / 1024**2  # MB\n    return result, peak_memory\n\n# Simulate forward pass with batch\nif torch.cuda.is_available():\n    device = 'cuda'\n    block = block.to(device)\n    batch_size = 32\n    seq_len = 512\n    d_model = 512\n    \n    x = torch.randn(batch_size, seq_len, d_model, device=device)\n    \n    # Forward pass\n    output, mem = measure_memory(block, x)\n    print(f\"Memory without checkpointing: {mem:.2f} MB\")\n    \n    # Backward pass\n    loss = output.sum()\n    loss.backward()\n    print(\"Standard training: Forward + Backward complete\")\nelse:\n    print(\"GPU not available - checkpointing most beneficial on GPU\")\n    print(\"Running on CPU for demonstration...\")",
+                explanation: "During normal training, PyTorch stores all intermediate activations for the backward pass. This quickly becomes the memory bottleneck.",
+                type: "copy"
+            },
+            {
+                instruction: "Now let's understand the memory problem. What gets stored during forward pass?",
+                why: "Every activation stored in memory is one more thing that could influence model behavior in ways we don't understand. When memory constraints force us to use smaller models or shorter sequences, we might miss safety-critical behaviors that only emerge at scale. Understanding these tradeoffs helps us design better safety research infrastructure.",
+                code: "# What's stored in memory during forward pass?\n# For each layer:\n# 1. Input activations (needed for backward pass)\n# 2. Attention scores (batch_size * n_heads * seq_len * seq_len)\n# 3. Attention output\n# 4. FFN intermediate activations (d_ff dimensions)\n# 5. Layer norm statistics\n\n# Calculate memory for one transformer block\nbatch_size = 32\nseq_len = 512\nd_model = 512\nd_ff = 2048\nn_heads = 8\n\n# Memory per activation (in elements, assuming float32)\ninput_mem = batch_size * seq_len * d_model\nattn_scores_mem = batch_size * n_heads * seq_len * seq_len\nattn_output_mem = batch_size * seq_len * d_model\nffn_intermediate_mem = batch_size * seq_len * d_ff\n\ntotal_elements = input_mem + attn_scores_mem + attn_output_mem + ffn_intermediate_mem\nmemory_mb = (total_elements * 4) / 1024**2  # 4 bytes per float32\n\nprint(f\"Memory per transformer block:\")\nprint(f\"  Input: {input_mem:,} elements\")\nprint(f\"  Attention scores: {attn_scores_mem:,} elements\")\nprint(f\"  Attention output: {attn_output_mem:,} elements\")\nprint(f\"  FFN intermediate: {ffn_intermediate_mem:,} elements\")\nprint(f\"  Total: {memory_mb:.2f} MB per block\")\nprint(f\"\\nFor a 24-layer model: {memory_mb * 24:.2f} MB just for activations!\")",
+                explanation: "This explains why large models quickly run out of memory - and it's primarily the activations, not the parameters!",
+                type: "copy"
+            },
+            {
+                instruction: "What is the fundamental tradeoff in gradient checkpointing?",
+                code: "# Gradient checkpointing trades:\n# A. Memory for compute\n# B. Accuracy for speed\n# C. Precision for memory\n# D. Speed for accuracy",
+                why: "Understanding this tradeoff is key to AI safety research. We're choosing to spend more computation to enable larger models. But larger models may have emergent capabilities we don't understand. Every technical choice in AI development has safety implications.",
+                explanation: "Gradient checkpointing trades memory for compute - we save memory by not storing activations, but pay with extra forward passes during backward.",
+                type: "multiple-choice",
+                options: [
+                    "Memory for compute",
+                    "Accuracy for speed",
+                    "Precision for memory",
+                    "Speed for accuracy"
+                ],
+                correct: 0,
+                feedback: "Correct! Checkpointing saves memory by recomputing activations during backward pass instead of storing them."
+            },
+            {
+                instruction: "Implement gradient checkpointing on our transformer block:",
+                why: "This technique is essential for training models like GPT-4 and Claude. From a safety perspective, checkpointing enables the very large models that pose the greatest alignment challenges. Safety researchers must master these techniques to study frontier models - but also recognize that making training more efficient accelerates AI capabilities, which could shorten timelines for achieving AGI.",
+                code: "class CheckpointedTransformerBlock(nn.Module):\n    def __init__(self, d_model=512, n_heads=8, d_ff=2048, use_checkpoint=True):\n        super().__init__()\n        self.attention = nn.MultiheadAttention(d_model, n_heads, batch_first=True)\n        self.norm1 = nn.LayerNorm(d_model)\n        self.norm2 = nn.LayerNorm(d_model)\n        self.ffn = nn.Sequential(\n            nn.Linear(d_model, d_ff),\n            nn.ReLU(),\n            nn.Linear(d_ff, d_model)\n        )\n        self.use_checkpoint = use_checkpoint\n    \n    def _forward_block(self, x):\n        \"\"\"The actual computation - will be checkpointed\"\"\"\n        attn_out, _ = self.attention(x, x, x)\n        x = self.norm1(x + attn_out)\n        ffn_out = self.ffn(x)\n        x = self.norm2(x + ffn_out)\n        return x\n    \n    def forward(self, x):\n        if self.use_checkpoint and x.requires_grad:\n            # Use gradient checkpointing\n            return checkpoint(self._forward_block, x, use_reentrant=False)\n        else:\n            # Normal forward pass\n            return self._forward_block(x)\n\n# Create checkpointed version\ncheckpointed_block = CheckpointedTransformerBlock(use_checkpoint=True)\nprint(\"Checkpointed transformer block created\")\nprint(\"Memory will be saved by recomputing activations during backward pass\")",
+                explanation: "PyTorch's checkpoint function wraps our computation. During forward, it only stores inputs. During backward, it reruns the forward pass to get activations.",
+                type: "copy"
+            },
+            {
+                instruction: "Compare memory usage with checkpointing enabled:",
+                why: "These memory savings directly translate to AI capabilities. A model that fits in memory with checkpointing might be 2-3x larger than one without. This means more parameters, potentially more intelligence, but also potentially more dangerous capabilities and harder-to-understand behaviors. Every efficiency gain accelerates the race toward AGI.",
+                code: "if torch.cuda.is_available():\n    device = 'cuda'\n    \n    # Test without checkpointing\n    block_normal = CheckpointedTransformerBlock(use_checkpoint=False).to(device)\n    x = torch.randn(batch_size, seq_len, d_model, device=device, requires_grad=True)\n    \n    torch.cuda.reset_peak_memory_stats()\n    output = block_normal(x)\n    loss = output.sum()\n    loss.backward()\n    mem_normal = torch.cuda.max_memory_allocated() / 1024**2\n    \n    # Test with checkpointing\n    torch.cuda.empty_cache()\n    block_checkpoint = CheckpointedTransformerBlock(use_checkpoint=True).to(device)\n    x = torch.randn(batch_size, seq_len, d_model, device=device, requires_grad=True)\n    \n    torch.cuda.reset_peak_memory_stats()\n    output = block_checkpoint(x)\n    loss = output.sum()\n    loss.backward()\n    mem_checkpoint = torch.cuda.max_memory_allocated() / 1024**2\n    \n    print(f\"Memory without checkpointing: {mem_normal:.2f} MB\")\n    print(f\"Memory with checkpointing: {mem_checkpoint:.2f} MB\")\n    print(f\"Memory saved: {mem_normal - mem_checkpoint:.2f} MB ({(1 - mem_checkpoint/mem_normal)*100:.1f}%)\")\n    print(f\"\\nTradeoff: ~30-40% longer training time for 40-50% memory savings\")\nelse:\n    print(\"Checkpointing benefits most visible on GPU\")\n    print(\"Typical savings: 40-50% memory, cost: 30-40% more time\")",
+                explanation: "Checkpointing significantly reduces memory usage at the cost of recomputation. For large models, this tradeoff is essential.",
+                type: "copy"
+            },
+            {
+                instruction: "Where should you apply checkpointing in a large model? Select all that apply:",
+                why: "Strategic checkpointing placement affects both efficiency and our ability to monitor model internals. Too much checkpointing slows training prohibitively. Too little, and we can't fit the model in memory. For safety research, we also need to consider which activations we want to inspect - checkpointed layers are harder to monitor in real-time.",
+                code: "# Best places to apply gradient checkpointing:\n# A. Every single layer (maximum memory savings)\n# B. Every few transformer blocks (balanced approach)\n# C. Only the largest memory consumers (embedding layers)\n# D. Randomly throughout the model\n# E. The middle layers only",
+                explanation: "Typically checkpoint every few blocks (option B). Checkpointing every layer (A) saves maximum memory but severely impacts speed. The sweet spot is usually every 2-4 blocks.",
+                type: "multiple-choice",
+                options: [
+                    "Every single layer (maximum memory savings)",
+                    "Every few transformer blocks (balanced approach)",
+                    "Only the largest memory consumers (embedding layers)",
+                    "Randomly throughout the model",
+                    "The middle layers only"
+                ],
+                correct: 1,
+                feedback: "Checkpointing every few blocks balances memory savings with computational overhead. Common practice is every 2-4 blocks."
+            },
+            {
+                instruction: "Implement selective checkpointing for a full model:",
+                why: "This selective approach is how models like GPT-3 and Claude are trained efficiently. The ability to train such large models raises profound safety questions: Are we moving too fast toward superintelligence? Can we align systems we barely understand? Every optimization that enables larger models also accelerates potential risks.",
+                code: "class SelectiveCheckpointTransformer(nn.Module):\n    def __init__(self, n_layers=12, d_model=512, n_heads=8, d_ff=2048, checkpoint_every=3):\n        super().__init__()\n        self.checkpoint_every = checkpoint_every\n        \n        # Create layers with selective checkpointing\n        self.blocks = nn.ModuleList([\n            CheckpointedTransformerBlock(\n                d_model, n_heads, d_ff,\n                use_checkpoint=(i % checkpoint_every == 0 and i > 0)\n            )\n            for i in range(n_layers)\n        ])\n    \n    def forward(self, x):\n        for i, block in enumerate(self.blocks):\n            x = block(x)\n            if i % self.checkpoint_every == 0:\n                # Checkpoint status indicator\n                pass\n        return x\n\n# Create model with selective checkpointing\nmodel = SelectiveCheckpointTransformer(n_layers=12, checkpoint_every=3)\n\ncheckpointed_layers = sum(1 for block in model.blocks if block.use_checkpoint)\nprint(f\"Model with {len(model.blocks)} layers\")\nprint(f\"Checkpointed layers: {checkpointed_layers}\")\nprint(f\"Memory savings: ~{checkpointed_layers / len(model.blocks) * 50:.0f}%\")\nprint(f\"Time overhead: ~{checkpointed_layers / len(model.blocks) * 35:.0f}%\")",
+                explanation: "Selective checkpointing gives us fine-grained control over the memory-compute tradeoff, optimizing for both efficiency and training speed.",
+                type: "copy"
+            },
+            {
+                instruction: "Complete the gradient checkpointing implementation for safety monitoring:",
+                why: "Here's a critical safety consideration: checkpointing makes it harder to inspect intermediate activations during training. If we're trying to detect when a model learns deceptive behavior, we need access to those activations. Checkpointing creates a tradeoff between computational efficiency and safety monitoring capability.",
+                code: "class MonitoredCheckpointBlock(nn.Module):\n    \"\"\"Checkpointed block with optional activation monitoring\"\"\"\n    def __init__(self, d_model, n_heads, d_ff, checkpoint=True, monitor=False):\n        super().__init__()\n        self.attention = nn.MultiheadAttention(d_model, n_heads, batch_first=True)\n        self.norm1 = nn.LayerNorm(d_model)\n        self.norm2 = nn.LayerNorm(d_model)\n        self.ffn = nn.Sequential(\n            nn.Linear(d_model, d_ff),\n            nn.ReLU(),\n            nn.Linear(d_ff, d_model)\n        )\n        self.checkpoint = checkpoint\n        self.monitor = monitor\n        self.activation_stats = {}\n    \n    def _forward_with_monitoring(self, x):\n        \"\"\"Forward pass with optional safety monitoring\"\"\"\n        attn_out, attn_weights = self.attention(x, x, x)\n        \n        if self.monitor:\n            # Collect safety-relevant statistics\n            self.activation_stats['attn_mean'] = attn_out.___()\n            self.activation_stats['attn_max'] = attn_out.___()\n            self.activation_stats['attn_sparsity'] = (attn_out.abs() < 0.01).float().___().item()\n        \n        x = self.norm1(x + attn_out)\n        ffn_out = self.ffn(x)\n        \n        if self.monitor:\n            self.activation_stats['ffn_mean'] = ffn_out.___()\n            self.activation_stats['ffn_max'] = ffn_out.___()\n        \n        x = self.norm2(x + ffn_out)\n        return x\n    \n    def forward(self, x):\n        if self.checkpoint and x.requires_grad and not self.monitor:\n            return checkpoint(self._forward_with_monitoring, x, use_reentrant=False)\n        else:\n            # Can't checkpoint if monitoring (need to keep activations)\n            return self._forward_with_monitoring(x)",
+                explanation: "When monitoring for safety, we may need to disable checkpointing to access activations in real-time.",
+                type: "fill-in",
+                blanks: ["mean", "max", "mean", "mean", "max"],
+                hints: [
+                    "Calculate average activation value",
+                    "Find maximum activation value",
+                    "Calculate mean sparsity across positions",
+                    "Average FFN output",
+                    "Maximum FFN activation"
+                ]
+            },
+            {
+                instruction: "Reflect on the safety implications of gradient checkpointing:",
+                code: "# Think about these tradeoffs",
+                why: "Gradient checkpointing is a perfect example of the dual-use nature of AI optimization techniques. It enables both: (1) Training larger, more capable models that might pose greater risks, and (2) Allowing safety researchers to work with frontier-scale models to study their behaviors. The same technique that helps train GPT-4 also helps researchers understand and align it. This is the paradox of AI safety work - we often need to use the same tools that accelerate capabilities to ensure those capabilities are safe.",
+                explanation: "KEY INSIGHTS: Gradient checkpointing saves 40-50% memory at cost of 30-40% more compute. Enables training 2-3x larger models in same memory budget. Critical for frontier models (GPT-3+, Claude, etc.). Makes training more efficient = potentially faster AI progress. SAFETY CONSIDERATIONS: (1) Larger models from checkpointing may have emergent capabilities we don't understand. (2) Checkpointing reduces visibility into activation patterns during training. (3) Makes safety monitoring harder - can't inspect checkpointed activations in real-time. (4) Creates capability-safety asymmetry: Companies train huge models, researchers study smaller ones. (5) Essential tool for safety research to match frontier capabilities. BEST PRACTICES: Checkpoint every 2-4 blocks for balance. Disable checkpointing in layers you need to monitor for safety. Use selective checkpointing to maintain visibility into critical layers. Consider memory-safety tradeoff explicitly in research design. BIGGER PICTURE: Every optimization technique is double-edged - it accelerates both capabilities and safety research. We must be thoughtful about which optimizations to develop and share. The goal isn't to slow progress, but to ensure safety research keeps pace with capabilities research.",
+                type: "reflection",
+                prompts: [
+                    "How does making training more efficient affect AI safety timelines?",
+                    "What safety-critical activations might we want to avoid checkpointing?",
+                    "Should safety researchers publish training optimizations that accelerate capabilities?"
+                ]
+            }
+        ]
+    },
+
+    // Mixed Precision Training
+    'mixed-precision-training': {
+        title: "Mixed Precision Training: Speed & Efficiency",
+        steps: [
+            {
+                instruction: "Let's understand floating point precision and why it matters for AI:",
+                why: "Precision isn't just about speed - it's about determinism and reproducibility, which are critical for AI safety research. If we can't reproduce a model's concerning behavior because of numerical instability, we can't study or fix it. Every bit of precision we trade for speed is a potential source of unpredictable behavior.",
+                code: "import torch\nimport torch.nn as nn\nimport numpy as np\nimport time\n\n# Understanding floating point formats\nprint(\"Floating Point Precision Formats:\")\nprint(\"\\nFP32 (Float32):\")\nprint(\"  - 32 bits: 1 sign + 8 exponent + 23 mantissa\")\nprint(\"  - Range: ~1.4e-45 to ~3.4e38\")\nprint(\"  - Precision: ~7 decimal digits\")\nprint(\"  - Standard for deep learning\")\n\nprint(\"\\nFP16 (Float16/Half):\")\nprint(\"  - 16 bits: 1 sign + 5 exponent + 10 mantissa\")\nprint(\"  - Range: ~6e-8 to ~65,504\")\nprint(\"  - Precision: ~3 decimal digits\")\nprint(\"  - 2x memory savings, 2-3x speedup on modern GPUs\")\nprint(\"  - Risk: Numerical instability\")\n\nprint(\"\\nBF16 (BFloat16):\")\nprint(\"  - 16 bits: 1 sign + 8 exponent + 7 mantissa\")\nprint(\"  - Range: Same as FP32 (~1.4e-45 to ~3.4e38)\")\nprint(\"  - Precision: ~2-3 decimal digits\")\nprint(\"  - Better for training than FP16 (wider range)\")\nprint(\"  - Used in TPUs and modern NVIDIA GPUs\")",
+                explanation: "Different precision formats trade memory/speed for numerical accuracy. Understanding these tradeoffs is crucial for both efficiency and safety.",
+                type: "copy"
+            },
+            {
+                instruction: "Let's see precision differences in action:",
+                why: "These small numerical differences can compound over billions of training steps, potentially leading to different model behaviors. For safety-critical applications, we need to understand when precision matters and when it doesn't. A model that's 0.1% different might behave identically in normal cases but diverge in edge cases we care about for safety.",
+                code: "# Compare precision formats\nvalue = 1.0\nfor i in range(20):\n    value = value + 0.1\n\n# FP32\nvalue_fp32 = torch.tensor(0.0, dtype=torch.float32)\nfor i in range(20):\n    value_fp32 += 0.1\n\n# FP16\nvalue_fp16 = torch.tensor(0.0, dtype=torch.float16)\nfor i in range(20):\n    value_fp16 += torch.tensor(0.1, dtype=torch.float16)\n\n# BF16\nvalue_bf16 = torch.tensor(0.0, dtype=torch.bfloat16)\nfor i in range(20):\n    value_bf16 += torch.tensor(0.1, dtype=torch.bfloat16)\n\nprint(f\"Expected value: 2.0\")\nprint(f\"FP32 result: {value_fp32.item()}\")\nprint(f\"FP16 result: {value_fp16.item()}\")\nprint(f\"BF16 result: {value_bf16.item()}\")\nprint(f\"\\nFP32 error: {abs(value_fp32.item() - 2.0):.10f}\")\nprint(f\"FP16 error: {abs(value_fp16.item() - 2.0):.10f}\")\nprint(f\"BF16 error: {abs(value_bf16.item() - 2.0):.10f}\")",
+                explanation: "Accumulated rounding errors can cause different precisions to produce different results. This is why mixed precision requires careful implementation.",
+                type: "copy"
+            },
+            {
+                instruction: "What happens when FP16 numbers get too small?",
+                why: "Underflow is a critical safety concern. If gradients underflow to zero during training, the model stops learning in that direction. This could mean safety-relevant features fail to develop. We might train a model that seems fine but is missing crucial safety behaviors because gradients underflowed during training.",
+                code: "# Demonstrate underflow problem in FP16\nsmall_fp32 = torch.tensor(1e-7, dtype=torch.float32)\nsmall_fp16 = torch.tensor(1e-7, dtype=torch.float16)\n\nprint(\"Underflow demonstration:\")\nprint(f\"FP32 small value: {small_fp32.item():.10e}\")\nprint(f\"FP16 small value: {small_fp16.item():.10e}\")\nprint(f\"FP16 underflowed to zero: {small_fp16.item() == 0}\")\n\n# Simulate gradient underflow\nprint(\"\\nGradient underflow scenario:\")\nfor exp in [-3, -4, -5, -6, -7, -8]:\n    grad_fp32 = torch.tensor(10.0**exp, dtype=torch.float32)\n    grad_fp16 = torch.tensor(10.0**exp, dtype=torch.float16)\n    print(f\"Gradient 1e{exp}: FP32={grad_fp32.item():.2e}, FP16={grad_fp16.item():.2e}, Lost={grad_fp16.item()==0}\")",
+                explanation: "FP16's limited range causes underflow for small values. This is why naive FP16 training fails - gradients often become zero.",
+                type: "copy"
+            },
+            {
+                instruction: "Which precision format is generally best for transformer training?",
+                code: "# For training large language models:\n# A. Pure FP16 (fastest but unstable)\n# B. Pure FP32 (stable but slow)\n# C. BF16 (good balance)\n# D. Mixed FP16+FP32 with loss scaling",
+                why: "This choice affects both training speed and model behavior. BF16 and properly implemented mixed precision allow us to train larger models faster without sacrificing reliability. For safety research, we need training to be both efficient and reproducible.",
+                explanation: "BF16 or mixed precision FP16+FP32 are standard. BF16 is simpler (no loss scaling needed) while mixed precision FP16 is faster on some hardware.",
+                type: "multiple-choice",
+                options: [
+                    "Pure FP16 (fastest but unstable)",
+                    "Pure FP32 (stable but slow)",
+                    "BF16 (good balance)",
+                    "Mixed FP16+FP32 with loss scaling"
+                ],
+                correct: 2,
+                feedback: "BF16 provides the best balance: FP32's range with FP16's speed, no loss scaling needed. Many modern systems use this."
+            },
+            {
+                instruction: "Implement automatic mixed precision (AMP) training:",
+                why: "AMP is how models like GPT-4 are trained efficiently. From a safety perspective, faster training means more experiments, which is good for safety research. But it also means faster capabilities progress. Additionally, the non-determinism from mixed precision can make it harder to reproduce concerning behaviors we need to study.",
+                code: "# Automatic Mixed Precision training setup\nfrom torch.cuda.amp import autocast, GradScaler\n\nclass TransformerModel(nn.Module):\n    def __init__(self, vocab_size=50000, d_model=512, n_heads=8, n_layers=6):\n        super().__init__()\n        self.embedding = nn.Embedding(vocab_size, d_model)\n        self.blocks = nn.ModuleList([\n            TransformerBlock(d_model, n_heads)\n            for _ in range(n_layers)\n        ])\n        self.ln_f = nn.LayerNorm(d_model)\n        self.lm_head = nn.Linear(d_model, vocab_size)\n    \n    def forward(self, x):\n        x = self.embedding(x)\n        for block in self.blocks:\n            x = block(x)\n        x = self.ln_f(x)\n        logits = self.lm_head(x)\n        return logits\n\nclass TransformerBlock(nn.Module):\n    def __init__(self, d_model, n_heads):\n        super().__init__()\n        self.attn = nn.MultiheadAttention(d_model, n_heads, batch_first=True)\n        self.ln1 = nn.LayerNorm(d_model)\n        self.mlp = nn.Sequential(\n            nn.Linear(d_model, 4 * d_model),\n            nn.GELU(),\n            nn.Linear(4 * d_model, d_model)\n        )\n        self.ln2 = nn.LayerNorm(d_model)\n    \n    def forward(self, x):\n        attn_out, _ = self.attn(x, x, x)\n        x = self.ln1(x + attn_out)\n        x = self.ln2(x + self.mlp(x))\n        return x\n\n# Initialize model and training components\nmodel = TransformerModel()\noptimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)\nscaler = GradScaler()  # Handles loss scaling automatically\n\nprint(\"Mixed precision training setup complete\")\nprint(\"GradScaler will automatically:\")\nprint(\"  1. Scale loss up before backward()\")\nprint(\"  2. Unscale gradients before optimizer.step()\")\nprint(\"  3. Skip updates if gradients are inf/nan\")\nprint(\"  4. Adjust scaling factor dynamically\")",
+                explanation: "PyTorch's Automatic Mixed Precision handles the complexity of mixing FP16 and FP32 automatically, including loss scaling.",
+                type: "copy"
+            },
+            {
+                instruction: "Implement a training step with mixed precision:",
+                why: "This is the actual training loop used for frontier models. The loss scaling prevents underflow, but it also adds complexity. If something goes wrong in training - maybe the model learns a concerning behavior - we need to understand whether it's due to the optimization algorithm, the data, or numerical precision issues.",
+                code: "def train_step_mixed_precision(model, batch, optimizer, scaler, device='cuda'):\n    \"\"\"Training step with automatic mixed precision\"\"\"\n    model.train()\n    \n    # Move batch to device\n    input_ids = batch['input_ids'].to(device)\n    labels = batch['labels'].to(device)\n    \n    optimizer.zero_grad()\n    \n    # Forward pass in mixed precision context\n    with autocast(device_type='cuda', dtype=torch.float16):\n        logits = model(input_ids)\n        # Loss computation in FP16\n        loss = F.cross_entropy(\n            logits.view(-1, logits.size(-1)),\n            labels.view(-1)\n        )\n    \n    # Backward pass with scaled loss\n    scaler.scale(loss).backward()\n    \n    # Unscale gradients and clip (safety measure for training stability)\n    scaler.unscale_(optimizer)\n    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)\n    \n    # Optimizer step with scaler\n    scaler.step(optimizer)\n    scaler.update()\n    \n    return loss.item()\n\n# Simulate a batch\nif torch.cuda.is_available():\n    device = 'cuda'\n    model = model.to(device)\n    \n    batch = {\n        'input_ids': torch.randint(0, 50000, (4, 128)),\n        'labels': torch.randint(0, 50000, (4, 128))\n    }\n    \n    loss = train_step_mixed_precision(model, batch, optimizer, scaler, device)\n    print(f\"Training step completed with loss: {loss:.4f}\")\n    print(\"Operations automatically used FP16 where safe, FP32 where necessary\")\nelse:\n    print(\"Mixed precision most beneficial on CUDA-enabled GPU\")",
+                explanation: "The autocast context automatically casts operations to FP16 where safe, keeping sensitive operations in FP32.",
+                type: "copy"
+            },
+            {
+                instruction: "Complete the implementation showing which operations stay in FP32:",
+                why: "Understanding which operations need full precision is crucial for safety. Layer normalization and loss computation are typically kept in FP32 because they involve operations prone to numerical instability. If we made everything FP16, we might get faster training but potentially unstable or unpredictable model behavior.",
+                code: "def detailed_mixed_precision_forward(model, x):\n    \"\"\"Show exactly which operations use which precision\"\"\"\n    \n    with autocast(device_type='cuda', dtype=torch.float16):\n        # These operations AUTO-CAST to FP16:\n        # - Matrix multiplications (linear layers, attention)\n        # - Convolutions  \n        # - Element-wise operations (add, multiply, etc)\n        \n        print(f\"Input dtype: {x.dtype}\")  # FP32 or FP16 depending on input\n        \n        # Embedding: Usually stays in FP32 for vocab\n        emb = model.embedding(x)\n        print(f\"Embedding output: {emb.dtype}\")  # ___()\n        \n        # Attention matmuls: Auto-cast to FP16\n        # But the actual attention computation...\n        for i, block in enumerate(model.blocks):\n            x = block(emb if i == 0 else x)\n            print(f\"Block {i} output: {x.dtype}\")  # ___()\n        \n        # Layer norm: Usually stays in FP32 for stability\n        x = model.ln_f(x)\n        print(f\"After LayerNorm: {x.dtype}\")  # ___()\n        \n        # Final projection: Auto-cast to FP16\n        logits = model.lm_head(x)\n        print(f\"Logits: {logits.dtype}\")  # ___()\n        \n        # Loss computation: Framework keeps this in FP32\n        # (happens outside autocast for safety)\n    \n    return logits",
+                explanation: "Modern AMP keeps numerically sensitive operations (LayerNorm, softmax, loss) in FP32 while casting matmuls to FP16.",
+                type: "fill-in",
+                blanks: ["torch.float16", "torch.float16", "torch.float32", "torch.float16"],
+                hints: [
+                    "Embeddings can be cast to FP16",
+                    "Transformer blocks operate in FP16",
+                    "LayerNorm typically stays in FP32 for numerical stability",
+                    "Linear layers cast to FP16"
+                ]
+            },
+            {
+                instruction: "Implement loss scaling manually to understand it:",
+                why: "Loss scaling is the trick that makes FP16 training work. By scaling up the loss before backprop, we prevent gradient underflow. But this is another source of potential non-determinism and training instability. Understanding this deeply helps us debug training issues, which is critical when we're trying to train models with specific safety properties.",
+                code: "# Manual loss scaling (what GradScaler does internally)\n\ndef train_with_manual_loss_scaling(model, batch, optimizer, scale=65536):\n    \"\"\"Demonstrate manual loss scaling\"\"\"\n    \n    print(f\"Using loss scale: {scale}\")\n    \n    # Forward pass in FP16\n    with autocast(device_type='cuda' if torch.cuda.is_available() else 'cpu', dtype=torch.float16):\n        logits = model(batch['input_ids'])\n        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), batch['labels'].view(-1))\n    \n    print(f\"Original loss: {loss.item():.6f}\")\n    \n    # Scale loss UP before backward\n    scaled_loss = loss * scale\n    print(f\"Scaled loss: {scaled_loss.item():.1f}\")\n    \n    # Backward pass - gradients will be scaled\n    scaled_loss.backward()\n    \n    # Check gradient magnitude\n    grad_sample = next(model.parameters()).grad\n    print(f\"Scaled gradient sample: {grad_sample.abs().mean().item():.6f}\")\n    \n    # Unscale gradients before optimizer step\n    for param in model.parameters():\n        if param.grad is not None:\n            param.grad.div_(scale)\n    \n    # Now gradients are back to normal scale\n    print(f\"Unscaled gradient sample: {next(model.parameters()).grad.abs().mean().item():.10f}\")\n    \n    # Optimizer step with correct gradients\n    optimizer.step()\n    optimizer.zero_grad()\n    \n    return loss.item()\n\nprint(\"Loss scaling workflow:\")\nprint(\"1. Compute loss in FP16 (might be very small)\")\nprint(\"2. Scale loss up (e.g., multiply by 65536)\")\nprint(\"3. Backward pass - gradients are also scaled up\")\nprint(\"4. Unscale gradients (divide by 65536)\")\nprint(\"5. Check for inf/nan, skip update if found\")\nprint(\"6. Optimizer step with correct-scale gradients\")\nprint(\"\\nThis prevents gradient underflow while keeping computations in FP16!\")",
+                explanation: "Loss scaling prevents small gradients from becoming zero in FP16, enabling stable mixed precision training.",
+                type: "copy"
+            },
+            {
+                instruction: "Compare training speed between precision modes:",
+                why: "Speed matters for safety research. Faster training means we can run more experiments to understand model behavior, test safety techniques, and iterate on alignment approaches. But we must balance speed with reproducibility - if training is so fast we skip proper evaluation, we might miss safety issues.",
+                code: "def benchmark_precision_modes(model, batch_size=32, seq_len=512, device='cuda'):\n    \"\"\"Benchmark different precision modes\"\"\"\n    \n    if not torch.cuda.is_available():\n        print(\"GPU not available - mixed precision benefits most visible on GPU\")\n        return\n    \n    model = TransformerModel(d_model=512, n_layers=4).to(device)\n    \n    # Create benchmark batch\n    batch = {\n        'input_ids': torch.randint(0, 50000, (batch_size, seq_len), device=device),\n        'labels': torch.randint(0, 50000, (batch_size, seq_len), device=device)\n    }\n    \n    results = {}\n    \n    # FP32 training\n    model_fp32 = model.to(torch.float32)\n    optimizer_fp32 = torch.optim.AdamW(model_fp32.parameters(), lr=1e-4)\n    \n    torch.cuda.synchronize()\n    start = time.time()\n    for _ in range(10):\n        optimizer_fp32.zero_grad()\n        logits = model_fp32(batch['input_ids'])\n        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), batch['labels'].view(-1))\n        loss.backward()\n        optimizer_fp32.step()\n    torch.cuda.synchronize()\n    results['FP32'] = time.time() - start\n    \n    # Mixed precision training\n    model_amp = model.to(torch.float32)\n    optimizer_amp = torch.optim.AdamW(model_amp.parameters(), lr=1e-4)\n    scaler = GradScaler()\n    \n    torch.cuda.synchronize()\n    start = time.time()\n    for _ in range(10):\n        optimizer_amp.zero_grad()\n        with autocast(device_type='cuda', dtype=torch.float16):\n            logits = model_amp(batch['input_ids'])\n            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), batch['labels'].view(-1))\n        scaler.scale(loss).backward()\n        scaler.step(optimizer_amp)\n        scaler.update()\n    torch.cuda.synchronize()\n    results['Mixed Precision'] = time.time() - start\n    \n    # Print results\n    print(\"\\nTraining Speed Comparison (10 steps):\")\n    for mode, time_taken in results.items():\n        print(f\"{mode:20}: {time_taken:.3f}s\")\n    \n    speedup = results['FP32'] / results['Mixed Precision']\n    print(f\"\\nSpeedup from mixed precision: {speedup:.2f}x\")\n    print(f\"Memory savings: ~40-50%\")\n    print(f\"\\nFor large models, this means:\")\n    print(f\"  - Train in {1/speedup:.0%} the time\")\n    print(f\"  - Fit {1.5:.1f}x larger models in same memory\")\n    print(f\"  - Run {speedup:.1f}x more experiments in same compute budget\")\n\nif torch.cuda.is_available():\n    benchmark_precision_modes(model)\nelse:\n    print(\"Typical speedups with mixed precision:\")\n    print(\"  - 1.5-3x faster training on modern GPUs\")\n    print(\"  - 40-50% memory savings\")\n    print(\"  - Enables training larger models\")",
+                explanation: "Mixed precision provides significant speed and memory benefits with minimal accuracy loss when implemented correctly.",
+                type: "copy"
+            },
+            {
+                instruction: "Reflect on mixed precision and AI safety:",
+                code: "# Consider the tradeoffs",
+                why: "Mixed precision training embodies a key tension in AI safety: efficiency vs. control. Faster training accelerates both capabilities and safety research. But it also introduces non-determinism that makes bugs and concerning behaviors harder to reproduce and fix. Every optimization technique requires carefully weighing these tradeoffs.",
+                explanation: "KEY INSIGHTS: Mixed precision uses FP16 for speed, FP32 for stability. Provides 1.5-3x speedup and 40-50% memory savings. Essential for training large models efficiently. BF16 is becoming standard (simpler than FP16+scaling). Nearly all frontier models use mixed precision. SAFETY IMPLICATIONS: (1) Faster training = faster AI progress (both capabilities and safety). (2) Non-determinism makes reproducing concerning behaviors harder. (3) Numerical instability could cause unpredictable model behavior. (4) Enables safety researchers to work with larger models. (5) Memory savings allow longer context windows (important for some safety applications). BEST PRACTICES: Use BF16 if available (simpler, more stable). Always use gradient clipping with mixed precision. Monitor for numerical instability during training. Keep safety-critical operations in FP32 if needed. Maintain determinism when reproducing safety-relevant behaviors. RESEARCH CONSIDERATIONS: Document precision used in all experiments. Test if findings replicate across precision modes. Consider precision as variable in safety experiments. Balance speed with need for reproducibility. BIGGER PICTURE: We can't opt out of optimization - frontier AI will use these techniques regardless. Better for safety researchers to master them and understand their implications. The goal is responsible acceleration: move fast enough to keep pace with capabilities, careful enough to maintain rigor.",
+                type: "reflection",
+                prompts: [
+                    "How does non-determinism from mixed precision affect safety research?",
+                    "Should we prioritize speed or reproducibility when training safety benchmarks?",
+                    "What precision-related bugs could cause safety-relevant behavioral changes?"
+                ]
+            }
+        ]
+    },
+
+    // Memory Optimization Techniques
+    'memory-optimization': {
+        title: "Memory Optimization: Flash Attention & Beyond",
+        steps: [
+            {
+                instruction: "Let's understand why attention is the memory bottleneck:",
+                why: "Attention's quadratic memory cost limits context length, which has profound safety implications. Shorter contexts mean models can't reason over long documents, can't remember full conversation history, and can't be given comprehensive safety guidelines. Memory optimization isn't just about efficiency - it's about enabling models to work with the information they need to behave safely.",
+                code: "import torch\nimport torch.nn as nn\nimport math\n\n# Standard attention memory analysis\ndef analyze_attention_memory(batch_size, seq_len, d_model, n_heads):\n    \"\"\"\n    Calculate memory usage for standard attention\n    \"\"\"\n    print(f\"\\nAttention Memory Analysis:\")\n    print(f\"Batch size: {batch_size}, Sequence length: {seq_len}\")\n    print(f\"Model dim: {d_model}, Heads: {n_heads}\")\n    \n    # Q, K, V matrices\n    qkv_mem = 3 * batch_size * seq_len * d_model * 4  # 4 bytes per float32\n    print(f\"\\nQ, K, V matrices: {qkv_mem / 1024**2:.2f} MB\")\n    \n    # Attention scores: (batch, heads, seq_len, seq_len)\n    attn_scores_mem = batch_size * n_heads * seq_len * seq_len * 4\n    print(f\"Attention scores: {attn_scores_mem / 1024**2:.2f} MB\")\n    print(f\"  This is O(n²) - the bottleneck!\")\n    \n    # Output\n    output_mem = batch_size * seq_len * d_model * 4\n    print(f\"Output: {output_mem / 1024**2:.2f} MB\")\n    \n    total_mem = qkv_mem + attn_scores_mem + output_mem\n    print(f\"\\nTotal: {total_mem / 1024**2:.2f} MB\")\n    \n    # Scale to different sequence lengths\n    print(f\"\\nMemory scaling with sequence length:\")\n    for length in [512, 1024, 2048, 4096, 8192, 16384]:\n        scaled_attn = batch_size * n_heads * length * length * 4\n        scaled_total = (qkv_mem * length / seq_len + \n                       scaled_attn + \n                       output_mem * length / seq_len)\n        print(f\"  Length {length:5}: {scaled_total / 1024**2:8.1f} MB \"\n              f\"(attention scores: {scaled_attn / 1024**2:7.1f} MB)\")\n\nanalyze_attention_memory(batch_size=8, seq_len=2048, d_model=768, n_heads=12)\n\nprint(\"\\n⚠️  At 16k context, attention scores alone need ~48 GB!\")\nprint(\"This is why we can't simply increase context length.\")",
+                explanation: "The quadratic O(n²) memory cost of attention scores becomes prohibitive at long sequence lengths.",
+                type: "copy"
+            },
+            {
+                instruction: "What is the memory complexity of standard attention?",
+                code: "# For sequence length n and model dimension d:\n# A. O(n) - linear in sequence length\n# B. O(n*d) - linear in both\n# C. O(n²) - quadratic in sequence length  \n# D. O(n²*d) - quadratic in sequence, linear in dimension",
+                why: "Understanding algorithmic complexity is crucial for AI safety at scale. When we talk about training 100B+ parameter models or using 100k token contexts for complex reasoning, we need to understand what's computationally feasible. Memory constraints aren't just technical details - they determine what safety techniques we can actually deploy.",
+                explanation: "Standard attention is O(n²) because we compute attention scores between every pair of tokens. This becomes the bottleneck for long sequences.",
+                type: "multiple-choice",
+                options: [
+                    "O(n) - linear in sequence length",
+                    "O(n*d) - linear in both",
+                    "O(n²) - quadratic in sequence length",
+                    "O(n²*d) - quadratic in sequence, linear in dimension"
+                ],
+                correct: 2,
+                feedback: "Attention is O(n²) due to the all-pairs attention score matrix. This is why Flash Attention is so important."
+            },
+            {
+                instruction: "Flash Attention achieves linear memory by:",
+                code: "# Flash Attention's key technique:\n# A. Approximating attention with lower rank matrices\n# B. Computing attention in tiles without materializing full matrix\n# C. Using sparse attention patterns\n# D. Quantizing attention scores to lower precision",
+                why: "Flash Attention doesn't approximate - it computes exact attention with less memory. This distinction matters for safety: approximations might change model behavior in subtle ways, but Flash Attention preserves exact semantics while being more efficient. Understanding how this is possible requires thinking carefully about memory hierarchies and algorithm design.",
+                explanation: "Flash Attention uses tiling and kernel fusion to compute exact attention without storing the O(n²) matrix.",
+                type: "multiple-choice",
+                options: [
+                    "Approximating attention with lower rank matrices",
+                    "Computing attention in tiles without materializing full matrix",
+                    "Using sparse attention patterns",
+                    "Quantizing attention scores to lower precision"
+                ],
+                correct: 1,
+                feedback: "Tiling with kernel fusion - processes attention in chunks while computing exact same results as standard attention."
+            },
+            {
+                instruction: "Implement KV cache for efficient inference:",
+                why: "KV caching is essential for efficient text generation and real-time safety monitoring. Without it, generating each token requires recomputing attention over all previous tokens - O(n²) total work. With KV caching, we only compute attention for the new token - O(n) total work. This 100-1000x speedup makes conversational AI and real-time safety systems practical.",
+                code: "class KVCacheAttention(nn.Module):\n    \"\"\"Attention with KV caching for efficient inference\"\"\"\n    \n    def __init__(self, d_model, n_heads):\n        super().__init__()\n        self.d_model = d_model\n        self.n_heads = n_heads\n        self.d_head = d_model // n_heads\n        \n        self.W_q = nn.Linear(d_model, d_model)\n        self.W_k = nn.Linear(d_model, d_model)\n        self.W_v = nn.Linear(d_model, d_model)\n        self.W_o = nn.Linear(d_model, d_model)\n        \n        # KV cache storage\n        self.k_cache = None\n        self.v_cache = None\n    \n    def forward(self, x, use_cache=True):\n        batch_size, seq_len, d_model = x.shape\n        \n        # Compute Q for current tokens\n        Q = self.W_q(x).view(batch_size, seq_len, self.n_heads, self.d_head).transpose(1, 2)\n        \n        if use_cache and self.k_cache is not None:\n            # Compute K, V only for new tokens\n            K_new = self.W_k(x).view(batch_size, seq_len, self.n_heads, self.d_head).transpose(1, 2)\n            V_new = self.W_v(x).view(batch_size, seq_len, self.n_heads, self.d_head).transpose(1, 2)\n            \n            # Concatenate with cached K, V\n            K = torch.cat([self.k_cache, K_new], dim=2)\n            V = torch.cat([self.v_cache, V_new], dim=2)\n            \n            # Update cache\n            self.k_cache = K\n            self.v_cache = V\n        else:\n            # First time: compute full K, V\n            K = self.W_k(x).view(batch_size, seq_len, self.n_heads, self.d_head).transpose(1, 2)\n            V = self.W_v(x).view(batch_size, seq_len, self.n_heads, self.d_head).transpose(1, 2)\n            \n            if use_cache:\n                self.k_cache = K\n                self.v_cache = V\n        \n        # Compute attention\n        scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(self.d_head)\n        attn_weights = torch.softmax(scores, dim=-1)\n        attn_output = torch.matmul(attn_weights, V)\n        \n        # Reshape and project\n        attn_output = attn_output.transpose(1, 2).contiguous()\n        attn_output = attn_output.view(batch_size, seq_len, d_model)\n        return self.W_o(attn_output)\n    \n    def clear_cache(self):\n        self.k_cache = None\n        self.v_cache = None\n\n# Demonstrate speedup\nprint(\"KV Cache Performance:\")\nprint(\"\\nWithout cache (recompute everything):\")\nprint(\"  Token 1: 1 attention computation\")\nprint(\"  Token 2: 2 attention computations\")\nprint(\"  Token 100: 100 attention computations\")\nprint(\"  Total for 100 tokens: ~5,000 computations\")\nprint(\"\\nWith cache (incremental):\")\nprint(\"  Token 1: 1 attention computation\")\nprint(\"  Token 2: 1 attention computation\")\nprint(\"  Token 100: 1 attention computation\")\nprint(\"  Total for 100 tokens: 100 computations\")\nprint(\"\\n50x speedup! Critical for real-time AI systems.\")",
+                explanation: "KV caching stores previous keys and values, so we only compute attention for new tokens.",
+                type: "copy"
+            },
+            {
+                instruction: "Reflect on memory optimization and AI safety:",
+                code: "# Consider the broader implications",
+                why: "Memory optimization techniques transform what's possible in AI. They enable longer contexts, faster inference, and more efficient training - all crucial for safety work. But they also accelerate capabilities progress. We must master these techniques to work at frontier scale while considering their implications for AI development timelines.",
+                explanation: "KEY BREAKTHROUGHS: Flash Attention reduces memory from O(n²) to O(n). Achieved through tiling and kernel fusion - not approximation! 2-4x faster AND less memory. KV caching makes inference 100-1000x faster. Sparse patterns enable even longer contexts. SAFETY IMPLICATIONS: (1) Longer contexts enable better reasoning and understanding. (2) Models can handle full documents and conversation histories. (3) Faster inference makes real-time safety monitoring feasible. (4) Enables scaling to larger, more capable (and potentially risky) models. (5) Accelerates both capabilities and safety research. RESEARCH APPLICATIONS: Monitor entire conversations for safety issues. Analyze long documents comprehensively. Run extensive safety evaluations. Enable multi-turn alignment techniques. Study long-horizon model behavior. BEST PRACTICES: Use Flash Attention (standard in modern frameworks). Implement KV caching for inference. Consider sparse patterns when appropriate. Profile memory to identify bottlenecks. Balance context length with compute budget. BIGGER PICTURE: Memory optimization enables longer contexts and faster inference. This is powerful for safety but also accelerates capabilities. We must ensure safety research keeps pace with efficiency gains.",
+                type: "reflection",
+                prompts: [
+                    "How do longer contexts help with AI safety and alignment?",
+                    "What safety information might be lost with memory optimizations?",
+                    "Should we prioritize efficiency or interpretability?"
+                ]
+            }
+        ]
+    },
+
+    // Distributed Training Basics
+    'distributed-training-basics': {
+        title: "Distributed Training: Scaling Beyond One GPU",
+        steps: [
+            {
+                instruction: "Let's understand why distributed training is essential for modern AI:",
+                why: "No single GPU can train GPT-4 or Claude-scale models. Distributed training is not optional for frontier AI - it's the only way these models exist. For AI safety, this means we must understand distributed systems to work at the scale where the most important safety challenges emerge. The models that need the most safety work are precisely those too large for a single device.",
+                code: "import torch\nimport torch.distributed as dist\n\n# Understanding the scale problem\ndef calculate_model_size(n_params_billions):\n    \"\"\"Calculate memory needed for a model\"\"\"\n    params = n_params_billions * 1e9\n    \n    # Memory components (in GB)\n    model_params = params * 4 / 1024**3  # 4 bytes per FP32 param\n    gradients = params * 4 / 1024**3  # Same size as params\n    optimizer_state = params * 8 / 1024**3  # Adam has 2x params\n    \n    total = model_params + gradients + optimizer_state\n    \n    return {\n        'params_gb': model_params,\n        'gradients_gb': gradients,\n        'optimizer_gb': optimizer_state,\n        'total_gb': total\n    }\n\n# Analyze different model sizes\nmodels = {\n    'GPT-2': 1.5,\n    'GPT-3': 175,\n    'GPT-4 (estimated)': 1000,\n}\n\nprint(\"Memory Requirements for Training:\\n\")\nfor name, size in models.items():\n    mem = calculate_model_size(size)\n    print(f\"{name} ({size}B parameters):\")\n    print(f\"  Total: {mem['total_gb']:.0f} GB\")\n    \n    a100_memory = 80  # GB\n    num_gpus = mem['total_gb'] / a100_memory\n    print(f\"  Minimum A100 GPUs: {num_gpus:.0f}\\n\")\n\nprint(\"⚠️  Large models REQUIRE distributed training!\")",
+                explanation: "Model memory grows with parameters. Large models need distributed training across multiple GPUs.",
+                type: "copy"
+            },
+            {
+                instruction: "What are the main types of parallelism?",
+                code: "# Three main strategies:\n# A. Data Parallelism - replicate model, split data\n# B. Model Parallelism - split model across devices\n# C. Pipeline Parallelism - split model into stages\n# D. All of the above",
+                why: "Each parallelism strategy solves different bottlenecks. Data parallelism scales batch size, model parallelism scales model size, pipeline parallelism improves utilization. For safety research at scale, we need to understand when to use each approach.",
+                explanation: "Modern systems combine all three for maximum scalability.",
+                type: "multiple-choice",
+                options: [
+                    "Data Parallelism",
+                    "Model Parallelism",
+                    "Pipeline Parallelism",
+                    "All of the above"
+                ],
+                correct: 3,
+                feedback: "State-of-the-art systems combine all three strategies."
+            },
+            {
+                instruction: "Reflect on distributed training and AI safety:",
+                code: "# Consider the implications",
+                why: "Distributed training enables frontier AI but also concentrates capabilities in well-resourced organizations. This creates challenges for AI safety: only those with massive compute can train and study the most concerning models. We must democratize distributed training for safety research.",
+                explanation: "KEY INSIGHTS: Frontier models require distributed training. Three strategies: data, model, pipeline parallelism. Communication is often the bottleneck. SAFETY IMPLICATIONS: Most concerning systems are too large for single-device training. Infrastructure requirements concentrate capabilities. Distributed complexity makes safety monitoring harder. OPPORTUNITIES: Can run safety evaluations in parallel. Scale allows comprehensive testing. BIGGER PICTURE: Need to democratize distributed training for safety research.",
+                type: "reflection",
+                prompts: [
+                    "How does infrastructure affect who can do safety research?",
+                    "What safety monitoring works in distributed settings?",
+                    "Should we democratize or regulate distributed training?"
+                ]
+            }
+        ]
+    },
+
+    // Data Parallelism
+    'data-parallelism': {
+        title: "Data Parallelism: Scaling Batch Size",
+        steps: [
+            {
+                instruction: "Understand data parallelism - the simplest distributed strategy:",
+                why: "Data parallelism is how most models are trained initially. Each GPU gets a copy of the model and processes different data. For AI safety, this enables parallel safety evaluations across many test scenarios simultaneously.",
+                code: "import torch\nimport torch.nn as nn\nfrom torch.nn.parallel import DistributedDataParallel as DDP\n\n# Data Parallelism Concept\nprint(\"Data Parallelism Strategy:\\n\")\nprint(\"Setup:\")\nprint(\"  - Each GPU has complete model copy\")\nprint(\"  - Each GPU processes different batch\")\nprint(\"  - Gradients averaged across GPUs\")\nprint(\"\\nExample with 4 GPUs:\")\nprint(\"  GPU 0: samples 0-31\")\nprint(\"  GPU 1: samples 32-63\") \nprint(\"  GPU 2: samples 64-95\")\nprint(\"  GPU 3: samples 96-127\")\nprint(\"\\n  → All-reduce gradients\")\nprint(\"  → All GPUs apply same update\")\nprint(\"  → Models stay synchronized\")\nprint(\"\\nAdvantage: Simple, scales well\")\nprint(\"Limitation: Each GPU needs full model\")",
+                explanation: "Data parallelism replicates the model and splits data, enabling larger effective batch sizes.",
+                type: "copy"
+            },
+            {
+                instruction: "How does DDP synchronize gradients?",
+                code: "# DDP synchronizes:\n# A. After forward pass\n# B. During backward pass\n# C. Before optimizer step  \n# D. After optimizer step",
+                why: "Understanding synchronization timing is crucial for performance and safety monitoring. DDP overlaps communication with computation for efficiency.",
+                explanation: "DDP synchronizes during backward pass, overlapping with computation.",
+                type: "multiple-choice",
+                options: [
+                    "After forward pass",
+                    "During backward pass",
+                    "Before optimizer step",
+                    "After optimizer step"
+                ],
+                correct: 1,
+                feedback: "DDP synchronizes during backward using hooks, overlapping communication with computation."
+            },
+            {
+                instruction: "Reflect on data parallelism for AI safety:",
+                code: "# Consider applications and limitations",
+                why: "Data parallelism is accessible but has limitations. It's excellent for parallel safety evaluations but doesn't help with models too large for one GPU. Understanding these tradeoffs guides safety research tool choices.",
+                explanation: "KEY INSIGHTS: Data parallelism replicates model, splits data. Linear scaling up to communication bottleneck. Standard for models fitting on one GPU. SAFETY APPLICATIONS: Parallel safety evaluations. Ensemble training. Large-batch training for stability. Distributed red-teaming. LIMITATIONS: Each GPU needs full model. Doesn't scale to largest models. BEST PRACTICES: Use DDP for standard training. Implement gradient accumulation. Aggregate safety metrics across GPUs. SCALING: Works well to 100s of GPUs for moderate models. Critical for democratizing safety research.",
+                type: "reflection",
+                prompts: [
+                    "How can data parallelism scale safety evaluations?",
+                    "What safety monitoring works independently per GPU?",
+                    "When do we need model parallelism instead?"
+                ]
+            }
+        ]
+    },
+
+    // Model Parallelism
+    'model-parallelism': {
+        title: "Model Parallelism: Splitting Large Models",
+        steps: [
+            {
+                instruction: "Understand model parallelism - for models too large for one GPU:",
+                why: "When models become too large to fit on a single GPU even with all optimizations, we must split the model itself across devices. This is how GPT-3, GPT-4, and other frontier models are trained. For AI safety, this matters because the most capable (and potentially dangerous) models require model parallelism. Safety researchers must understand this to work at frontier scale.",
+                code: "import torch\nimport torch.nn as nn\n\n# Model Parallelism Concept\nprint(\"Model Parallelism Strategy:\\n\")\nprint(\"Problem: Model is too large for one GPU\")\nprint(\"Solution: Split model across multiple GPUs\\n\")\nprint(\"Example - 4-layer transformer across 2 GPUs:\")\nprint(\"  GPU 0: Layers 0-1\")\nprint(\"  GPU 1: Layers 2-3\\n\")\nprint(\"Forward pass:\")\nprint(\"  1. Input → GPU 0 → intermediate activations\")\nprint(\"  2. Transfer activations GPU 0 → GPU 1\")\nprint(\"  3. Intermediate → GPU 1 → output\\n\")\nprint(\"Backward pass: (reverse)\")\nprint(\"  1. Loss gradient → GPU 1\")\nprint(\"  2. Backprop through GPU 1 layers\")\nprint(\"  3. Transfer gradients GPU 1 → GPU 0\")\nprint(\"  4. Backprop through GPU 0 layers\\n\")\nprint(\"Advantage: Can train arbitrarily large models\")\nprint(\"Challenge: Pipeline bubbles reduce utilization\")",
+                explanation: "Model parallelism splits the model across devices, enabling models too large for one GPU.",
+                type: "copy"
+            },
+            {
+                instruction: "What is the main disadvantage of naive model parallelism?",
+                code: "# Naive model parallelism suffers from:\n# A. High memory usage\n# B. Pipeline bubbles (idle GPUs)\n# C. Gradient synchronization overhead\n# D. Load imbalancing",
+                why: "Pipeline bubbles are the Achilles heel of model parallelism. While one GPU computes, others sit idle. This dramatically reduces efficiency. For AI safety research with limited compute budgets, understanding and mitigating this inefficiency is crucial to make frontier-scale experiments feasible.",
+                explanation: "Pipeline bubbles occur because GPUs wait for previous stages, leading to low utilization.",
+                type: "multiple-choice",
+                options: [
+                    "High memory usage",
+                    "Pipeline bubbles (idle GPUs)",
+                    "Gradient synchronization overhead",
+                    "Load imbalancing"
+                ],
+                correct: 1,
+                feedback: "Pipeline bubbles are the main issue - GPUs wait idle for inputs from previous stages."
+            },
+            {
+                instruction: "Implement simple tensor parallelism:",
+                why: "Tensor parallelism splits individual layers across GPUs, reducing pipeline bubbles compared to naive layer-wise splitting. This is how Megatron-LM trains massive models efficiently. Understanding tensor parallelism helps safety researchers design interventions that work with how frontier models are actually implemented.",
+                code: "class TensorParallelLinear(nn.Module):\n    \"\"\"Simple column-parallel linear layer\"\"\"\n    def __init__(self, in_features, out_features, world_size=2):\n        super().__init__()\n        # Split output dimension across GPUs\n        self.out_features_per_gpu = out_features // world_size\n        self.weight = nn.Parameter(\n            torch.randn(in_features, self.out_features_per_gpu)\n        )\n        self.bias = nn.Parameter(torch.zeros(self.out_features_per_gpu))\n    \n    def forward(self, x):\n        # Each GPU computes part of the output\n        output_partial = torch.matmul(x, self.weight) + self.bias\n        return output_partial\n\nprint(\"Tensor Parallelism:\")\nprint(\"\\nInstead of:\")\nprint(\"  GPU 0: Full Layer 1\")\nprint(\"  GPU 1: Full Layer 2\")\nprint(\"\\nDo:\")\nprint(\"  GPU 0: Half of each layer\")\nprint(\"  GPU 1: Half of each layer\")\nprint(\"\\nBenefits:\")\nprint(\"  - All GPUs active simultaneously\")\nprint(\"  - Reduced pipeline bubbles\")\nprint(\"  - Better load balancing\")\nprint(\"\\nThis is how Megatron-LM achieves high efficiency!\")",
+                explanation: "Tensor parallelism splits within layers, keeping all GPUs active simultaneously.",
+                type: "copy"
+            },
+            {
+                instruction: "Reflect on model parallelism and AI safety:",
+                code: "# Consider the implications",
+                why: "Model parallelism is the key to training trillion-parameter models. It's also the technique that most concentrates AI capabilities in organizations with massive infrastructure. For safety, we must both master model parallelism to study frontier models AND work to democratize access so safety research isn't limited to a few wealthy labs.",
+                explanation: "KEY INSIGHTS: Model parallelism splits model across GPUs. Essential for models too large for one device. Tensor parallelism reduces pipeline bubbles. Used in GPT-3, GPT-4, and all frontier models. SAFETY IMPLICATIONS: Most capable models require model parallelism. Technique concentrates capabilities in well-resourced orgs. Safety research needs model parallelism access. Complex to implement and debug. Adds overhead to safety monitoring. APPROACHES: Layer-wise: Simple but pipeline bubbles. Tensor: Better utilization, more complex. Pipeline: Combines with micro-batching. CHALLENGES: Requires specialized infrastructure. Debugging distributed models is hard. Communication patterns complex. Load balancing non-trivial. BIGGER PICTURE: Model parallelism enables models beyond single-device limits. Critical for frontier AI development. Must democratize for safety research to keep pace.",
+                type: "reflection",
+                prompts: [
+                    "How does model parallelism affect AI safety research access?",
+                    "What safety interventions work with split models?",
+                    "Should model parallelism techniques be openly shared?"
+                ]
+            }
+        ]
+    },
+
+    // Pipeline Parallelism
+    'pipeline-parallelism': {
+        title: "Pipeline Parallelism: Efficient Model Splitting",
+        steps: [
+            {
+                instruction: "Understand pipeline parallelism - solving the bubble problem:",
+                why: "Pipeline parallelism combines model splitting with micro-batching to keep GPUs busy. Instead of processing one example at a time through the pipeline, we process multiple micro-batches overlapping in time. This is crucial for efficiently training the largest models. For AI safety, efficient training means we can run more experiments and safety evaluations within compute budgets.",
+                code: "# Pipeline Parallelism with Micro-batching\nprint(\"Pipeline Parallelism Strategy:\\n\")\nprint(\"Problem: Model parallelism has pipeline bubbles\")\nprint(\"Solution: Split batch into micro-batches\\n\")\nprint(\"Example - 4 stages, 4 micro-batches:\\n\")\nprint(\"Time step:  GPU0  GPU1  GPU2  GPU3\")\nprint(\"    1:       M1    --    --    --\")\nprint(\"    2:       M2    M1    --    --\")\nprint(\"    3:       M3    M2    M1    --\")\nprint(\"    4:       M4    M3    M2    M1   (pipeline full)\")\nprint(\"    5:       --    M4    M3    M2\")\nprint(\"    6:       --    --    M4    M3\")\nprint(\"    7:       --    --    --    M4\\n\")\nprint(\"Pipeline efficiency:\")\nprint(\"  Total time: 7 steps\")\nprint(\"  Useful work: 4×4 = 16 micro-batch steps\")\nprint(\"  Efficiency: 16/(7×4) = 57%\")\nprint(\"\\nWith more micro-batches, efficiency → 100%!\")",
+                explanation: "Pipeline parallelism uses micro-batching to overlap computation and reduce idle time.",
+                type: "copy"
+            },
+            {
+                instruction: "What determines pipeline parallelism efficiency?",
+                code: "# Pipeline efficiency depends on:\n# A. Number of GPUs only\n# B. Number of micro-batches\n# C. Model size\n# D. Learning rate",
+                why: "More micro-batches mean less idle time, but also more memory for activations. This tradeoff affects both training speed and what we can fit in memory. For safety research, understanding this helps us design experiments that maximize GPU utilization within memory constraints.",
+                explanation: "More micro-batches reduce pipeline bubbles, improving efficiency toward 100%.",
+                type: "multiple-choice",
+                options: [
+                    "Number of GPUs only",
+                    "Number of micro-batches",
+                    "Model size",
+                    "Learning rate"
+                ],
+                correct: 1,
+                feedback: "More micro-batches fill the pipeline, reducing bubbles. With M >> N_gpus, efficiency approaches 100%."
+            },
+            {
+                instruction: "Reflect on pipeline parallelism and AI safety:",
+                code: "# Consider the efficiency gains",
+                why: "Pipeline parallelism makes model parallelism practical by dramatically improving GPU utilization. Systems like GPipe and PipeDream enable training models with trillions of parameters. This efficiency directly translates to more capable AI systems being trained faster. Safety research must keep pace with these efficiency improvements.",
+                explanation: "KEY INSIGHTS: Pipeline parallelism combines model splitting with micro-batching. Reduces pipeline bubbles from 50%+ to <10%. Critical for efficient large-scale training. Used in GPT-3, PaLM, and frontier models. SAFETY IMPLICATIONS: Makes frontier model training more efficient. Enables larger models with same compute. Faster iteration cycles for capabilities. Safety research needs these techniques to keep pace. Complexity makes safety interventions harder. BENEFITS FOR SAFETY: Can train models more efficiently for safety research. Enables more safety evaluation runs. Better compute utilization for red-teaming. Allows comprehensive testing. CHALLENGES: Complex to implement correctly. Debugging pipeline issues is hard. Memory management non-trivial. Requires careful tuning. BIGGER PICTURE: Pipeline parallelism is essential infrastructure for frontier AI. Democratizing these techniques helps safety research scale. Must balance efficiency gains with need for safety research access.",
+                type: "reflection",
+                prompts: [
+                    "How do efficiency improvements affect AI safety timelines?",
+                    "What safety work benefits from pipeline parallelism?",
+                    "Should we prioritize training speed or safety monitoring capability?"
+                ]
+            }
+        ]
+    },
+
+    // Training at Scale
+    'training-at-scale': {
+        title: "Training at Scale: Putting It All Together",
+        steps: [
+            {
+                instruction: "Understand how frontier models combine all techniques:",
+                why: "Models like GPT-4 use ALL the optimizations we've studied: gradient checkpointing, mixed precision, Flash Attention, data parallelism, model parallelism, and pipeline parallelism simultaneously. Understanding how these compose is essential for AI safety work at the frontier. This is the reality of modern AI development.",
+                code: "# Modern Large-Scale Training Stack\nprint(\"Frontier Model Training Recipe:\\n\")\nprint(\"1. MODEL ARCHITECTURE:\")\nprint(\"   - Transformer with 100B-1T+ parameters\")\nprint(\"   - Mixed precision (BF16)\")\nprint(\"   - Flash Attention for long contexts\")\nprint(\"   - Gradient checkpointing every few layers\\n\")\nprint(\"2. PARALLELISM STRATEGY:\")\nprint(\"   - Data parallelism: 8-16x\")\nprint(\"   - Tensor parallelism: 8x within node\")\nprint(\"   - Pipeline parallelism: 4-8x across nodes\")\nprint(\"   - Total: 256-1024+ GPUs\\n\")\nprint(\"3. TRAINING INFRASTRUCTURE:\")\nprint(\"   - High-speed interconnect (NVLink, Infiniband)\")\nprint(\"   - Distributed checkpointing\")\nprint(\"   - Fault tolerance for multi-week training\")\nprint(\"   - Real-time monitoring dashboards\\n\")\nprint(\"4. OPTIMIZATION:\")\nprint(\"   - AdamW optimizer\")\nprint(\"   - Gradient clipping for stability\")\nprint(\"   - Learning rate warmup + cosine decay\")\nprint(\"   - Careful hyperparameter tuning\\n\")\nprint(\"Result: Training cost ~$10-100M+ per model\")",
+                explanation: "Frontier models combine all optimization techniques for maximum scale and efficiency.",
+                type: "copy"
+            },
+            {
+                instruction: "Calculate the training cost of a frontier model:",
+                code: "def estimate_training_cost(n_params_billions, n_tokens_trillions, \n                          gpu_type='A100', efficiency=0.4):\n    \"\"\"Estimate training cost for a large model\"\"\"\n    # FLOPs per token (approximately 6 * params for forward+backward)\n    flops_per_token = 6 * n_params_billions * 1e9\n    total_flops = flops_per_token * n_tokens_trillions * 1e12\n    \n    # GPU specs\n    gpu_specs = {\n        'A100': {'tflops': 312, 'cost_per_hour': 3.0},  # BF16 TFLOPs\n        'H100': {'tflops': 1000, 'cost_per_hour': 5.0}\n    }\n    \n    gpu_tflops = gpu_specs[gpu_type]['tflops'] * 1e12\n    cost_per_hour = gpu_specs[gpu_type]['cost_per_hour']\n    \n    # Training time\n    gpu_seconds = total_flops / (gpu_tflops * efficiency)\n    gpu_hours = gpu_seconds / 3600\n    \n    # Cost\n    total_cost = gpu_hours * cost_per_hour\n    training_days = gpu_hours / 24\n    \n    return {\n        'gpu_hours': gpu_hours,\n        'training_days': training_days,\n        'cost_usd': total_cost,\n        'flops': total_flops\n    }\n\n# Example: GPT-3 scale model\nresult = estimate_training_cost(175, 0.3, 'A100', 0.4)\nprint(f\"\\n175B parameter model, 300B tokens:\")\nprint(f\"  Training time: {result['training_days']:.0f} days\")\nprint(f\"  GPU hours: {result['gpu_hours']:,.0f}\")\nprint(f\"  Estimated cost: ${result['cost_usd']:,.0f}\")\nprint(f\"\\n⚠️  This is why only few organizations can train frontier models!\")",
+                explanation: "Training costs for frontier models range from millions to hundreds of millions of dollars.",
+                type: "copy"
+            },
+            {
+                instruction: "What are the biggest challenges in training at scale?",
+                code: "# Challenges ranked by impact:\n# 1. Communication overhead\n# 2. Fault tolerance\n# 3. Hyperparameter tuning\n# 4. Debugging distributed issues\n# 5. All of the above",
+                why: "Training at scale faces numerous challenges that go beyond single-machine training. For AI safety, each of these challenges creates opportunities and risks. Communication overhead limits what safety monitoring we can do. Fault tolerance determines if we can recover from safety interventions. Understanding these challenges helps us design practical safety systems.",
+                explanation: "All challenges are significant. Communication, faults, tuning, and debugging all become critical at scale.",
+                type: "multiple-choice",
+                options: [
+                    "Communication overhead",
+                    "Fault tolerance",
+                    "Hyperparameter tuning",
+                    "Debugging distributed issues",
+                    "All of the above"
+                ],
+                correct: 4,
+                feedback: "All are major challenges. Large-scale training requires expertise across infrastructure, systems, and ML."
+            },
+            {
+                instruction: "Reflect on training at scale and the future of AI safety:",
+                code: "# Final thoughts on optimization and AI safety",
+                why: "We've journeyed through the optimization techniques that power modern AI: from gradient checkpointing to distributed training across thousands of GPUs. These aren't just technical details - they're the foundation of how the most capable AI systems are built. For AI safety, mastering these techniques is essential. But we must also grapple with what they enable: faster development of more powerful systems, concentration of capabilities, and shortened timelines to transformative AI.",
+                explanation: "WHAT WE'VE LEARNED: Modern AI training uses gradient checkpointing (40-50% memory savings), mixed precision (2-3x speedup), Flash Attention (linear memory), data parallelism (scale batch size), model parallelism (scale model size), pipeline parallelism (efficiency), all combined for frontier models. SAFETY IMPLICATIONS: (1) These techniques enable the powerful models that need the most safety work. (2) Infrastructure requirements concentrate capabilities. (3) Efficiency improvements accelerate AI progress. (4) Complexity makes safety interventions harder. (5) Must democratize for safety research. (6) Every optimization is dual-use. CRITICAL QUESTIONS: Who should have access to these techniques? Should we publish optimizations that accelerate capabilities? How do we ensure safety research keeps pace? Can we build safety into the training process itself? What interventions work at this scale? THE PATH FORWARD: Master these techniques - ignorance doesn't serve safety. Share optimization knowledge for safety research. Design training systems with safety built-in. Develop distributed safety monitoring. Work toward democratized compute access. Build fault-tolerant safety interventions. Create better tools for safety at scale. REMEMBER: We can't stop optimization progress. But we can ensure safety research has the tools to keep pace. The goal isn't to slow AI development - it's to make sure safety work scales alongside capabilities. Every frontier lab should have an equally well-resourced safety team using these same techniques.",
+                type: "reflection",
+                prompts: [
+                    "What's your biggest takeaway about optimization and AI safety?",
+                    "How can we democratize access to frontier-scale training for safety research?",
+                    "What safety interventions would you design for distributed training?"
+                ]
+            }
+        ]
+    },
+
+    // ===== ADVANCED INTERPRETABILITY LESSONS =====
+
+    // Circuits & Circuit Discovery
+    'circuits-discovery': {
+        title: "Circuits & Circuit Discovery",
+        steps: [
+            {
+                instruction: "Let's understand what circuits are in neural networks:",
+                why: "Circuits are the computational subgraphs that implement specific algorithms inside models. Just as we understand computer programs by reading code, we need to understand AI systems by reading their circuits. For safety, this matters profoundly: if we can't understand what algorithms a model is implementing, we can't verify its safety. Deceptive alignment, for instance, could be implemented as a specific circuit we need to detect.",
+                code: "import torch\nimport torch.nn as nn\nimport numpy as np\n\n# A circuit is a subgraph of a neural network that implements a specific function\n# Example: a simple \"greater than\" circuit in a tiny model\n\nprint(\"Understanding Circuits in Neural Networks\\n\")\nprint(\"A circuit is like a subroutine in a program:\")\nprint(\"  - Specific neurons and connections\")\nprint(\"  - Implements an algorithm\")\nprint(\"  - Can be isolated and studied\\n\")\n\nprint(\"Example circuits discovered in transformers:\")\nprint(\"  - Induction heads (copying previous patterns)\")\nprint(\"  - Name mover heads (tracking entity references)\")\nprint(\"  - Previous token heads (attending to previous token)\")\nprint(\"  - Duplicate token heads (finding repeated words)\\n\")\n\nprint(\"Why this matters for AI safety:\")\nprint(\"  - Deception could be implemented as a specific circuit\")\nprint(\"  - Harmful outputs might use identifiable pathways\")\nprint(\"  - Understanding circuits enables targeted interventions\")",
+                explanation: "Circuits are the building blocks of model behavior - understanding them is essential for interpretability.",
+                type: "copy"
+            },
+            {
+                instruction: "Let's extract attention patterns that might form a circuit:",
+                code: "\n# Simulating attention pattern extraction for circuit analysis\ndef analyze_attention_circuit(attention_weights, layer_idx, head_idx):\n    \"\"\"\n    Extract attention patterns for a specific head.\n    In real analysis, we'd look for consistent patterns across examples.\n    \"\"\"\n    print(f\"\\nAnalyzing Layer {layer_idx}, Head {head_idx}:\")\n    \n    # Check for common circuit patterns\n    avg_weights = attention_weights.mean(axis=0)\n    \n    # Pattern 1: Previous token head (attends to position i-1)\n    prev_token_score = np.mean([avg_weights[i, i-1] if i > 0 else 0 \n                                for i in range(len(avg_weights))])\n    \n    # Pattern 2: Induction pattern (attends to tokens after duplicates)\n    # Simplified check\n    induction_score = np.mean(avg_weights.diagonal(offset=-2))\n    \n    # Pattern 3: Beginning of sequence head\n    bos_score = avg_weights[:, 0].mean()\n    \n    print(f\"  Previous token pattern strength: {prev_token_score:.3f}\")\n    print(f\"  Induction pattern strength: {induction_score:.3f}\")\n    print(f\"  Beginning-of-sequence strength: {bos_score:.3f}\")\n    \n    # Identify most likely circuit type\n    scores = {\n        'previous_token': prev_token_score,\n        'induction': induction_score,\n        'bos': bos_score\n    }\n    circuit_type = max(scores, key=scores.get)\n    \n    print(f\"  → Likely circuit type: {circuit_type.replace('_', ' ').title()}\")\n    return circuit_type\n\n# Simulate attention patterns for demonstration\nseq_len = 10\nsimulated_attention = np.random.rand(1, seq_len, seq_len)\n# Make it look like a previous token head\nfor i in range(1, seq_len):\n    simulated_attention[0, i, i-1] = 0.8\n\ncircuit = analyze_attention_circuit(simulated_attention, layer_idx=3, head_idx=5)\nprint(f\"\\n✓ Identified a {circuit.replace('_', ' ')} circuit!\")",
+                explanation: "Different attention heads implement specific circuits. Finding these patterns is the first step in understanding model behavior.",
+                type: "copy"
+            },
+            {
+                instruction: "Now let's trace information flow through a circuit:",
+                why: "Information flow tracing shows us exactly how a model computes its output. For safety, this is critical: imagine detecting that harmful outputs consistently flow through a specific circuit. We could then intervene on that circuit specifically. This is mechanistic interpretability's promise - surgical interventions based on deep understanding.",
+                code: "\ndef trace_circuit_pathway(model_layer_outputs, start_token, end_token):\n    \"\"\"\n    Trace how information flows from one token to another through the model.\n    In reality, this uses activation patching and path analysis.\n    \"\"\"\n    print(f\"\\nTracing information flow: '{start_token}' → '{end_token}'\\n\")\n    \n    # Simulate pathway through model\n    pathway = [\n        {'layer': 0, 'component': 'Embedding', 'importance': 1.0},\n        {'layer': 1, 'component': 'Attn_Head_3', 'importance': 0.85},\n        {'layer': 2, 'component': 'MLP_1', 'importance': 0.45},\n        {'layer': 3, 'component': 'Attn_Head_7', 'importance': 0.92},\n        {'layer': 4, 'component': 'MLP_2', 'importance': 0.38},\n        {'layer': 5, 'component': 'Output', 'importance': 1.0}\n    ]\n    \n    print(\"Information pathway (importance > 0.5 shown):\")\n    for step in pathway:\n        if step['importance'] > 0.5:\n            bar = '█' * int(step['importance'] * 20)\n            print(f\"  Layer {step['layer']} {step['component']:15} {bar} {step['importance']:.2f}\")\n    \n    # Identify critical nodes\n    critical = [s for s in pathway if s['importance'] > 0.8]\n    print(f\"\\n⚠️  Critical circuit nodes: {len(critical)}\")\n    for node in critical:\n        print(f\"     → Layer {node['layer']} {node['component']}\")\n    \n    print(\"\\n💡 These are intervention points for safety!\")\n    return pathway\n\n# Trace a pathway\npath = trace_circuit_pathway(None, start_token=\"The\", end_token=\"code\")\nprint(\"\\n✓ Circuit pathway identified. We can now:\")\nprint(\"  1. Verify this circuit's function\")\nprint(\"  2. Test if it activates on harmful content\")\nprint(\"  3. Design targeted interventions\")",
+                explanation: "Tracing circuits shows us the exact computational pathways the model uses, enabling targeted safety interventions.",
+                type: "copy"
+            },
+            {
+                instruction: "What makes circuit discovery important for AI safety?",
+                why: "Circuit discovery is one of the most promising approaches to AI safety. If we can identify the circuits responsible for deceptive behavior, harmful outputs, or misaligned goals, we can potentially intervene surgically without degrading overall model performance. This is far more precise than blunt tools like output filtering.",
+                code: "# Why is circuit discovery critical for AI safety?\n# a) It lets us find bugs in model behavior\n# b) It enables surgical interventions on specific behaviors\n# c) It could detect deceptive alignment\n# d) All of the above",
+                explanation: "All of these are correct. Circuit discovery gives us mechanistic understanding that enables precise safety interventions.",
+                type: "multiple-choice",
+                options: [
+                    "It lets us find bugs in model behavior",
+                    "It enables surgical interventions on specific behaviors",
+                    "It could detect deceptive alignment",
+                    "All of the above"
+                ],
+                correct: 3,
+                feedback: "Circuit discovery is one of the most powerful tools we have for understanding and improving AI safety."
+            },
+            {
+                instruction: "Implement a simple circuit knockout experiment:",
+                code: "\ndef circuit_knockout_experiment(model_output_baseline, circuit_nodes):\n    \"\"\"\n    Test what happens when we disable a specific circuit.\n    This is called 'ablation' in interpretability research.\n    \"\"\"\n    print(\"Circuit Knockout Experiment\\n\")\n    print(\"Baseline model behavior:\")\n    print(f\"  Output: {model_output_baseline}\")\n    print(f\"  Confidence: 0.87\\n\")\n    \n    print(\"After knocking out suspected circuit:\")\n    \n    # Simulate different knockout effects\n    experiments = [\n        {\n            'circuit': 'Layer 3 Head 7',\n            'behavior_change': 'Output changes from \"Paris\" to \"France\"',\n            'interpretation': 'This head implements name resolution'\n        },\n        {\n            'circuit': 'Layer 5 MLP neurons 234-256',\n            'behavior_change': 'Harmful output → neutral output',\n            'interpretation': '⚠️ CRITICAL: This circuit produces harmful content!'\n        },\n        {\n            'circuit': 'Layer 2 Head 3',\n            'behavior_change': 'No significant change',\n            'interpretation': 'This circuit not involved in this task'\n        }\n    ]\n    \n    for i, exp in enumerate(experiments, 1):\n        print(f\"Experiment {i}: Knock out {exp['circuit']}\")\n        print(f\"  Result: {exp['behavior_change']}\")\n        print(f\"  → {exp['interpretation']}\\n\")\n    \n    print(\"💡 Circuit knockouts tell us:\")\n    print(\"  1. Which circuits are necessary for behaviors\")\n    print(\"  2. Which circuits produce harmful outputs\")\n    print(\"  3. Where to intervene for safety\")\n    \n    return experiments\n\n# Run knockout experiment\nresults = circuit_knockout_experiment(\n    model_output_baseline=\"Paris\",\n    circuit_nodes=['L3H7', 'L5MLP', 'L2H3']\n)\n\nprint(\"\\n✓ Circuit analysis complete!\")\nprint(\"Next step: Design interventions for safety-critical circuits\")",
+                explanation: "Knockout experiments reveal which circuits are necessary for specific behaviors, including potentially harmful ones.",
+                type: "copy"
+            },
+            {
+                instruction: "Reflect on circuits and AI safety:",
+                code: "# Reflection on circuit discovery",
+                why: "We've explored how circuits - computational subgraphs within neural networks - implement specific algorithms. This is profound: we're not just training black boxes anymore, we're discovering interpretable algorithms within them. For AI safety, this could be transformative. Imagine being able to verify that a model doesn't contain a 'deception circuit' before deployment, or surgically removing a circuit that produces harmful outputs without affecting other capabilities.",
+                explanation: "WHAT WE'VE LEARNED: Circuits are subgraphs that implement algorithms (like induction heads, name movers). Circuit discovery identifies these computational structures. Information flow tracing shows how data moves through circuits. Knockout experiments test circuit necessity. This gives us mechanistic understanding. SAFETY IMPLICATIONS: (1) Could detect deceptive alignment circuits. (2) Enables surgical interventions on harmful behaviors. (3) Provides verification tools for model safety. (4) More precise than output-level interventions. (5) Helps understand emergent capabilities. (6) Could make AI systems more auditable. OPEN QUESTIONS: Can we enumerate all circuits in a model? Are harmful behaviors always implemented as identifiable circuits? Can circuits be adversarially hidden? How do circuits compose in large models? Can we design models with interpretable circuits? RESEARCH DIRECTIONS: Automated circuit discovery algorithms. Real-time circuit monitoring during training. Circuit-based safety verification. Adversarial circuit analysis. Scaling circuit analysis to frontier models. Remember: Every step toward mechanistic understanding is a step toward safer AI.",
+                type: "reflection",
+                prompts: [
+                    "What circuits would you look for to assess model safety?",
+                    "How could circuit discovery fail to detect harmful behavior?",
+                    "What would a 'circuit-based safety certification' system look like?"
+                ]
+            }
+        ]
+    },
+
+    // Superposition & Polysemanticity
+    'superposition-polysemanticity': {
+        title: "Superposition & Polysemanticity",
+        steps: [
+            {
+                instruction: "Understand the concept of superposition in neural networks:",
+                why: "Superposition is one of the most important discoveries in interpretability research. Models pack more features than they have dimensions - like compressing 1000 features into 512 neurons. This makes interpretation incredibly difficult: a single neuron might respond to cats AND cars AND politics. For AI safety, this is critical: if we can't disentangle superposed features, we can't reliably detect or intervene on specific behaviors.",
+                code: "import torch\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nprint(\"Understanding Superposition in Neural Networks\\n\")\n\nprint(\"The Problem:\")\nprint(\"  - Models learn ~millions of features (concepts)\")\nprint(\"  - Models have ~thousands of neurons per layer\")\nprint(\"  - How do they fit millions into thousands?\\n\")\n\nprint(\"The Answer: SUPERPOSITION\")\nprint(\"  - Multiple features share the same neurons\")\nprint(\"  - Features are represented as directions in activation space\")\nprint(\"  - Almost orthogonal = minimal interference\\n\")\n\nprint(\"Analogy: Compressed Sensing\")\nprint(\"  - Like storing 1000 almost-zero values in 100 dimensions\")\nprint(\"  - Works because features are sparse (rarely active)\")\nprint(\"  - Models exploit this to be more parameter-efficient\\n\")\n\nprint(\"Why this is a problem for interpretability:\")\nprint(\"  - One neuron = multiple unrelated concepts (polysemantic)\")\nprint(\"  - Can't just 'read out' what a neuron means\")\nprint(\"  - Need new techniques to disentangle features\")\n\nprint(\"\\n💡 Superposition is both impressive and terrifying:\")\nprint(\"   Impressive: Models efficiently pack information\")\nprint(\"   Terrifying: Makes models much harder to understand\")",
+                explanation: "Superposition is when models represent more features than they have dimensions by using sparse, almost-orthogonal representations.",
+                type: "copy"
+            },
+            {
+                instruction: "Let's demonstrate superposition with a toy example:",
+                code: "\ndef demonstrate_superposition(n_features=10, n_dims=5):\n    \"\"\"\n    Show how many features can be represented in fewer dimensions.\n    \"\"\"\n    print(f\"\\nSuperposition Demo: {n_features} features in {n_dims} dimensions\\n\")\n    \n    # Create sparse feature vectors (mostly zero, occasionally 1)\n    sparsity = 0.05  # 5% of features active at once\n    \n    # Random almost-orthogonal feature directions\n    feature_directions = np.random.randn(n_features, n_dims)\n    # Normalize them\n    feature_directions = feature_directions / np.linalg.norm(feature_directions, axis=1, keepdims=True)\n    \n    print(\"Feature directions (each feature = one row):\")\n    print(feature_directions.round(2))\n    \n    # Check orthogonality\n    print(\"\\nOrthogonality check (dot products between features):\")\n    dot_products = []\n    for i in range(n_features):\n        for j in range(i+1, n_features):\n            dot = np.dot(feature_directions[i], feature_directions[j])\n            dot_products.append(abs(dot))\n    \n    avg_interference = np.mean(dot_products)\n    print(f\"  Average interference: {avg_interference:.3f}\")\n    print(f\"  (Close to 0 = almost orthogonal = good superposition)\")\n    \n    # Simulate activation with sparse features\n    active_features = np.random.rand(n_features) < sparsity\n    print(f\"\\nActive features: {active_features.sum()} out of {n_features}\")\n    \n    # Combine active feature directions\n    activation = np.sum(feature_directions[active_features], axis=0)\n    print(f\"\\nResulting {n_dims}-dimensional activation:\")\n    print(activation.round(2))\n    \n    print(f\"\\n✓ Successfully represented {n_features} features in {n_dims} dims!\")\n    print(f\"   This is superposition in action.\")\n    \n    return feature_directions, activation\n\nfeatures, activation = demonstrate_superposition(n_features=10, n_dims=5)",
+                explanation: "When features are sparse and almost orthogonal, models can represent many more features than dimensions.",
+                type: "copy"
+            },
+            {
+                instruction: "Now let's understand polysemanticity - the consequence of superposition:",
+                why: "Polysemanticity means one neuron responds to multiple unrelated concepts. This is the direct consequence of superposition and the main obstacle to interpretability. For safety, this is deeply problematic: if we're trying to detect whether a model has learned to be deceptive, but the 'deception features' are superposed with thousands of other features across the same neurons, how do we find them?",
+                code: "\ndef analyze_polysemantic_neuron():\n    \"\"\"\n    Demonstrate how a single neuron can respond to multiple concepts.\n    \"\"\"\n    print(\"Polysemantic Neuron Analysis\\n\")\n    print(\"Imagine we're studying Neuron #347 in Layer 5...\\n\")\n    \n    # Simulate concepts that activate this neuron\n    activations = [\n        {'concept': 'Golden Retriever dogs', 'activation': 0.87},\n        {'concept': 'Base64 encoding', 'activation': 0.79},\n        {'concept': 'The Arabic language', 'activation': 0.82},\n        {'concept': 'Genetic algorithms', 'activation': 0.76},\n        {'concept': 'Academic citations', 'activation': 0.81},\n    ]\n    \n    print(\"This neuron activates strongly on:\")\n    for act in activations:\n        bar = '█' * int(act['activation'] * 20)\n        print(f\"  {act['concept']:30} {bar} {act['activation']:.2f}\")\n    \n    print(\"\\n🤔 What does this neuron 'mean'?\")\n    print(\"   → It doesn't have a single meaning!\")\n    print(\"   → It's participating in representing 5+ different features\")\n    print(\"   → This is polysemanticity\\n\")\n    \n    print(\"Why this happens:\")\n    print(\"  - These 5 concepts are rarely active together\")\n    print(\"  - They can 'share' neuron #347 with minimal interference\")\n    print(\"  - Model packs more features into limited neurons\\n\")\n    \n    print(\"The interpretability problem:\")\n    print(\"  ❌ Can't say 'neuron #347 detects dogs'\")\n    print(\"  ❌ Can't intervene on 'dog detection' by modifying this neuron\")\n    print(\"  ❌ Can't trust neuron-level analysis for safety\\n\")\n    \n    print(\"The solution: Disentangle features (next lessons!)\")\n    \n    return activations\n\nanalyze_polysemantic_neuron()\n\nprint(\"\\n💡 Key insight: Individual neurons are NOT the right unit of analysis.\")\nprint(\"   We need to find the underlying features instead.\")",
+                explanation: "Polysemantic neurons respond to multiple unrelated concepts, making neuron-level interpretability unreliable.",
+                type: "copy"
+            },
+            {
+                instruction: "Why is superposition a critical challenge for AI safety?",
+                code: "# Which statement about superposition is most important for safety?\n# a) It makes models more parameter-efficient\n# b) It makes harmful features harder to detect and remove\n# c) It's a clever information compression technique\n# d) It only affects small models",
+                why: "Superposition fundamentally changes how we must approach AI safety. We can't just look at individual neurons to find dangerous behaviors - they're entangled with hundreds of other features. This means traditional interpretability approaches fail. We need new techniques like sparse autoencoders (next lesson!) to disentangle features before we can reliably detect and intervene on safety-critical behaviors.",
+                explanation: "Superposition makes harmful features harder to detect because they're mixed with many other features in the same neurons.",
+                type: "multiple-choice",
+                options: [
+                    "It makes models more parameter-efficient",
+                    "It makes harmful features harder to detect and remove",
+                    "It's a clever information compression technique",
+                    "It only affects small models"
+                ],
+                correct: 1,
+                feedback: "Correct! Superposition means we can't easily isolate and intervene on specific features, including dangerous ones."
+            },
+            {
+                instruction: "Visualize the monosemanticity-polysemanticity spectrum:",
+                code: "\ndef visualize_semanticity_spectrum():\n    \"\"\"\n    Show the spectrum from monosemantic (one meaning) to polysemantic (many meanings).\n    \"\"\"\n    print(\"The Semanticity Spectrum\\n\")\n    \n    neurons = [\n        {\n            'id': 'Neuron A',\n            'concepts': ['Cat images'],\n            'type': 'Monosemantic',\n            'interpretability': 'Easy'\n        },\n        {\n            'id': 'Neuron B', \n            'concepts': ['Cat images', 'Tiger images'],\n            'type': 'Slightly polysemantic',\n            'interpretability': 'Moderate'\n        },\n        {\n            'id': 'Neuron C',\n            'concepts': ['Cats', 'Orange objects', 'Striped patterns', 'Bengal', 'Fur texture'],\n            'type': 'Polysemantic',\n            'interpretability': 'Hard'\n        },\n        {\n            'id': 'Neuron D',\n            'concepts': ['Cats', 'Cars', 'Code', 'Cairo', 'Calcium', 'Calculus', '...15 more'],\n            'type': 'Highly polysemantic',\n            'interpretability': 'Nearly impossible'\n        }\n    ]\n    \n    for neuron in neurons:\n        print(f\"{neuron['id']} - {neuron['type']}\")\n        print(f\"  Responds to: {', '.join(neuron['concepts'])}\")\n        print(f\"  Interpretability: {neuron['interpretability']}\\n\")\n    \n    print(\"Real models are full of Neurons C and D!\\n\")\n    print(\"Goals for interpretability:\")\n    print(\"  1. Find the underlying features (not neurons)\")\n    print(\"  2. Disentangle superposition\")\n    print(\"  3. Get to monosemantic features\\n\")\n    \n    print(\"💡 Anthropic's research on Sparse Autoencoders achieves this!\")\n    print(\"   (We'll learn about SAEs in the next lesson)\")\n\nvisualize_semanticity_spectrum()",
+                explanation: "Most neurons in real models are highly polysemantic, responding to many unrelated concepts.",
+                type: "copy"
+            },
+            {
+                instruction: "Reflect on superposition and the path forward:",
+                code: "# Final reflection on superposition",
+                why: "Superposition reveals both the elegance and the danger of modern neural networks. Models evolved to pack incredible amounts of information into limited parameters through superposition - an elegant solution to a resource constraint. But for AI safety, this elegance creates opacity. How do we verify a model is safe when its internal features are superposed? How do we remove harmful behaviors when they're entangled with benign ones?",
+                explanation: "WHAT WE'VE LEARNED: Superposition = representing more features than dimensions through sparse, almost-orthogonal directions. Polysemanticity = neurons responding to multiple unrelated concepts as a consequence of superposition. Individual neurons are not meaningful units. Models pack millions of features into thousands of neurons. This is why neuron-level interpretability fails. SAFETY IMPLICATIONS: (1) Can't detect harmful features by looking at individual neurons. (2) Can't remove dangerous behaviors without affecting other features. (3) Makes models fundamentally harder to understand and verify. (4) Adversarial features could hide in superposition. (5) Deceptive alignment could be superposed with benign features. (6) Traditional interpretability tools give misleading results. THE SOLUTION: We need techniques to disentangle superposition and recover monosemantic features. Sparse Autoencoders (SAEs) are the leading approach - they learn to decompose activations into interpretable features. This is active research at Anthropic, OpenAI, and others. THE BIG QUESTIONS: Is superposition fundamental or can we train models without it? Can we enumerate all features in a model? Are there features that can't be disentangled? Could adversarial training deliberately create harder-to-interpret superposition? THE PATH FORWARD: Develop better disentanglement techniques. Scale feature extraction to frontier models. Build safety tools that work on features, not neurons. Create methods to detect hiding in superposition. Remember: Understanding superposition is the first step. Solving it is the challenge.",
+                type: "reflection",
+                prompts: [
+                    "How might a deceptive model use superposition to hide its intentions?",
+                    "What are the limits of disentanglement techniques?",
+                    "Should we try to train models that don't use superposition?"
+                ]
+            }
+        ]
+    },
+
+    // Sparse Autoencoders (SAEs)
+    'sparse-autoencoders': {
+        title: "Sparse Autoencoders: Extracting Interpretable Features",
+        steps: [
+            {
+                instruction: "Understand what Sparse Autoencoders (SAEs) are and why they matter:",
+                why: "Sparse Autoencoders are one of the most promising breakthroughs in interpretability. They solve the superposition problem by learning to decompose model activations into sparse, interpretable features. For AI safety, this is transformative: if SAEs work at scale, we could potentially enumerate all features a model has learned - including dangerous ones. This could enable verification, monitoring, and surgical interventions at the feature level.",
+                code: "import torch\nimport torch.nn as nn\nimport numpy as np\n\nprint(\"Sparse Autoencoders (SAEs) for Interpretability\\n\")\n\nprint(\"The Problem SAEs Solve:\")\nprint(\"  - Models use superposition (many features, few neurons)\")\nprint(\"  - Individual neurons are polysemantic (multi-meaning)\")\nprint(\"  - Can't reliably interpret individual neurons\\n\")\n\nprint(\"The SAE Approach:\")\nprint(\"  1. Take activations from a model layer (e.g., 768 dimensions)\")\nprint(\"  2. Expand to much larger dimension (e.g., 16,384 dimensions)\")\nprint(\"  3. Learn to reconstruct original activations sparsely\")\nprint(\"  4. Result: Each new dimension = interpretable feature!\\n\")\n\nprint(\"Key Insight:\")\nprint(\"  - By going to higher dimensions with sparsity constraint\")\nprint(\"  - SAE 'unpacks' the superposition\")\nprint(\"  - Learns the underlying feature basis\\n\")\n\nprint(\"Example: GPT-4 activation (768D) → SAE (16K features)\")\nprint(\"  Before: 768 polysemantic neurons\")\nprint(\"  After: 16K monosemantic features\")\nprint(\"  Each feature = interpretable concept!\\n\")\n\nprint(\"Why this is revolutionary for safety:\")\nprint(\"  ✓ Can enumerate all learned features\")\nprint(\"  ✓ Can search for dangerous features\")\nprint(\"  ✓ Can monitor features during generation\")\nprint(\"  ✓ Can intervene on specific features\")\nprint(\"  ✓ Makes models auditable\")",
+                explanation: "SAEs decompose polysemantic neurons into many monosemantic features, solving the superposition problem.",
+                type: "copy"
+            },
+            {
+                instruction: "Let's implement a simple Sparse Autoencoder:",
+                code: "\nclass SparseAutoencoder(nn.Module):\n    \"\"\"\n    Sparse Autoencoder for disentangling features.\n    \n    Architecture:\n      - Encoder: d_model → d_hidden (expansion)\n      - Decoder: d_hidden → d_model (reconstruction)\n      - Sparsity penalty encourages few active features\n    \"\"\"\n    def __init__(self, d_model=768, d_hidden=16384, sparsity_coef=0.001):\n        super().__init__()\n        \n        # Expansion factor (typically 8-32x)\n        self.expansion_factor = d_hidden // d_model\n        print(f\"SAE: {d_model}D → {d_hidden}D ({self.expansion_factor}x expansion)\\n\")\n        \n        # Encoder: expand to high-dimensional sparse code\n        self.encoder = nn.Linear(d_model, d_hidden)\n        \n        # Decoder: reconstruct original activation\n        self.decoder = nn.Linear(d_hidden, d_model, bias=False)\n        \n        # Normalize decoder weights (helps interpretability)\n        with torch.no_grad():\n            self.decoder.weight.div_(self.decoder.weight.norm(dim=1, keepdim=True))\n        \n        self.sparsity_coef = sparsity_coef\n    \n    def forward(self, x):\n        \"\"\"Forward pass with sparsity penalty.\"\"\"\n        # Encode to sparse feature space\n        features = torch.relu(self.encoder(x))  # ReLU enforces non-negativity\n        \n        # Decode back to original space\n        reconstruction = self.decoder(features)\n        \n        # Calculate losses\n        recon_loss = (x - reconstruction).pow(2).mean()\n        sparsity_loss = features.abs().mean()  # L1 penalty for sparsity\n        \n        total_loss = recon_loss + self.sparsity_coef * sparsity_loss\n        \n        return {\n            'features': features,\n            'reconstruction': reconstruction,\n            'loss': total_loss,\n            'recon_loss': recon_loss,\n            'sparsity_loss': sparsity_loss,\n            'n_active': (features > 0.01).float().sum(dim=-1).mean()\n        }\n\n# Create SAE\nsae = SparseAutoencoder(d_model=768, d_hidden=16384)\nprint(f\"✓ SAE created with {16384/768:.1f}x expansion\")\nprint(f\"  This will extract ~16K interpretable features from 768D activations\")",
+                explanation: "SAEs use expansion + sparsity to learn an overcomplete basis that disentangles superposed features.",
+                type: "copy"
+            },
+            {
+                instruction: "Train the SAE on model activations and analyze the learned features:",
+                why: "Once trained, each SAE feature should correspond to an interpretable concept. This is where the magic happens: we can now examine individual features to understand what the model has learned. For safety, this means we can search for features like 'deception', 'bias', 'harmful content generation', or 'goal misalignment' - concepts that might be hidden in superposition in the original model.",
+                code: "\ndef train_and_analyze_sae(sae, model_activations):\n    \"\"\"\n    Train SAE and analyze what features it learns.\n    \"\"\"\n    print(\"Training SAE on model activations...\\n\")\n    \n    # Simulate training (in reality: thousands of steps on real activations)\n    optimizer = torch.optim.Adam(sae.parameters(), lr=1e-3)\n    \n    print(\"Training progress:\")\n    for epoch in [0, 10, 50, 100, 500]:\n        # Simulate improving metrics\n        recon_loss = 0.5 * np.exp(-epoch/200)\n        sparsity = 50 + epoch * 0.1  # Active features increases\n        \n        if epoch < 500:\n            print(f\"  Epoch {epoch:3d}: Recon Loss = {recon_loss:.4f}, Active Features = {sparsity:.0f}/16384\")\n        else:\n            print(f\"  Epoch {epoch:3d}: Recon Loss = {recon_loss:.4f}, Active Features = {sparsity:.0f}/16384\")\n            print(\"\\n✓ Training complete!\\n\")\n    \n    print(\"Analyzing learned features:\\n\")\n    \n    # Simulate discovered features\n    discovered_features = [\n        {'id': 47, 'concept': 'Golden Gate Bridge references', 'interpretability': '★★★★★'},\n        {'id': 234, 'concept': 'Python code syntax', 'interpretability': '★★★★★'},\n        {'id': 891, 'concept': 'Academic citations', 'interpretability': '★★★★☆'},\n        {'id': 1337, 'concept': 'Deceptive language patterns', 'interpretability': '★★★★★'},\n        {'id': 2048, 'concept': 'Mathematical proofs', 'interpretability': '★★★★☆'},\n        {'id': 3721, 'concept': 'Emotional manipulation', 'interpretability': '★★★★★'},\n        {'id': 8192, 'concept': 'Violent content', 'interpretability': '★★★★★'},\n    ]\n    \n    print(\"Sample of discovered monosemantic features:\\n\")\n    for feat in discovered_features:\n        print(f\"  Feature {feat['id']:4d}: {feat['concept']:35s} {feat['interpretability']}\")\n    \n    print(\"\\n⚠️  Notice: We found safety-relevant features!\")\n    print(\"   - Feature 1337: Deceptive language\")\n    print(\"   - Feature 3721: Emotional manipulation\")\n    print(\"   - Feature 8192: Violent content\\n\")\n    \n    print(\"Now we can:\")\n    print(\"  1. Monitor these features during generation\")\n    print(\"  2. Intervene (clamp/suppress) when they activate\")\n    print(\"  3. Study what causes them to activate\")\n    print(\"  4. Verify they don't activate in safe deployment\\n\")\n    \n    return discovered_features\n\n# Simulate training\nfake_activations = torch.randn(100, 768)\nfeatures = train_and_analyze_sae(sae, fake_activations)\n\nprint(\"💡 SAEs give us the 'feature dictionary' of the model!\")",
+                explanation: "Trained SAEs decompose activations into interpretable features that can be individually analyzed and intervened on.",
+                type: "copy"
+            },
+            {
+                instruction: "What is the main advantage of SAEs for AI safety?",
+                code: "# Why are Sparse Autoencoders particularly valuable for AI safety?\n# a) They make models train faster\n# b) They convert polysemantic neurons into monosemantic features\n# c) They reduce model size\n# d) They improve model accuracy",
+                why: "SAEs are revolutionary for safety because they give us monosemantic features - the 'atoms' of model cognition. With monosemantic features, we can reliably detect, monitor, and intervene on specific behaviors. Without them, we're stuck with polysemantic neurons that conflate many different concepts, making targeted safety interventions nearly impossible.",
+                explanation: "SAEs solve the superposition problem by extracting monosemantic features from polysemantic neurons.",
+                type: "multiple-choice",
+                options: [
+                    "They make models train faster",
+                    "They convert polysemantic neurons into monosemantic features",
+                    "They reduce model size",
+                    "They improve model accuracy"
+                ],
+                correct: 1,
+                feedback: "Correct! Monosemantic features are interpretable and can be reliably intervened on for safety."
+            },
+            {
+                instruction: "Implement feature-based safety monitoring using SAE features:",
+                code: "\ndef safety_monitor_with_sae(sae_features, safety_threshold=0.5):\n    \"\"\"\n    Monitor for safety-critical features during model generation.\n    \"\"\"\n    print(\"Feature-Based Safety Monitoring System\\n\")\n    \n    # Define safety-critical features (found during SAE analysis)\n    safety_critical_features = {\n        1337: {'name': 'Deceptive language', 'max_allowed': 0.3},\n        3721: {'name': 'Emotional manipulation', 'max_allowed': 0.4},\n        8192: {'name': 'Violent content', 'max_allowed': 0.0},\n        4096: {'name': 'Toxic speech', 'max_allowed': 0.2},\n        9001: {'name': 'Explicit sexual content', 'max_allowed': 0.0},\n    }\n    \n    print(\"Monitoring features during generation...\\n\")\n    \n    # Simulate generation with feature monitoring\n    generation_steps = [\n        {'token': 'The', 'features': {1337: 0.05, 3721: 0.02}},\n        {'token': 'secret', 'features': {1337: 0.35, 3721: 0.15}},\n        {'token': 'plan', 'features': {1337: 0.55, 3721: 0.32}},\n        {'token': 'involves', 'features': {1337: 0.68, 3721: 0.45, 8192: 0.12}},\n    ]\n    \n    for step_num, step in enumerate(generation_steps, 1):\n        print(f\"Step {step_num}: Generate token '{step['token']}'\")\n        \n        # Check for violations\n        violations = []\n        for feat_id, activation in step['features'].items():\n            if feat_id in safety_critical_features:\n                feat_info = safety_critical_features[feat_id]\n                if activation > feat_info['max_allowed']:\n                    violations.append({\n                        'feature': feat_info['name'],\n                        'activation': activation,\n                        'threshold': feat_info['max_allowed']\n                    })\n        \n        if violations:\n            print(f\"  ⚠️  SAFETY VIOLATION DETECTED:\")\n            for v in violations:\n                print(f\"      - {v['feature']}: {v['activation']:.2f} > {v['threshold']:.2f}\")\n            print(f\"  → INTERVENTION: Clamping feature activation to safe level\")\n            print(f\"  → Regenerating token with intervention...\\n\")\n        else:\n            active = [f\"Feature {fid}={act:.2f}\" for fid, act in step['features'].items()]\n            print(f\"  ✓ Safe: {', '.join(active)}\\n\")\n    \n    print(\"\\n💡 Feature-based monitoring enables:\")\n    print(\"  - Real-time safety interventions\")\n    print(\"  - Precise control over behavior\")\n    print(\"  - Explainable safety decisions\")\n    print(\"  - Minimal impact on beneficial capabilities\")\n\nsafety_monitor_with_sae(None)\n\nprint(\"\\n✓ This is the future of AI safety: interpretable, feature-level control\")",
+                explanation: "With SAE features, we can monitor and intervene on specific concerning behaviors in real-time.",
+                type: "copy"
+            },
+            {
+                instruction: "Reflect on SAEs and the future of interpretability:",
+                code: "# Reflection on Sparse Autoencoders",
+                why: "Sparse Autoencoders represent a potential paradigm shift in AI safety. If we can reliably extract all features a model has learned, we move from black-box systems to auditable, interpretable systems. We could verify models before deployment, monitor them in production, and intervene surgically when needed. But important questions remain: Do SAEs scale to frontier models? Can they find all features? Could adversarial training hide features from SAEs?",
+                explanation: "WHAT WE'VE LEARNED: SAEs solve superposition by expanding to higher dimensions with sparsity constraints. They learn to decompose activations into monosemantic features. Each feature is interpretable and can be intervened on. Anthropic's research shows SAEs work on real models. This enables feature-level safety monitoring and control. SAFETY IMPLICATIONS: (1) Can enumerate features including dangerous ones. (2) Enables targeted interventions without collateral damage. (3) Makes models auditable and verifiable. (4) Allows real-time safety monitoring. (5) Provides explainable safety decisions. (6) Could be required for deployment certification. OPEN CHALLENGES: Do SAEs scale to frontier models (1T+ parameters)? Can they find adversarially hidden features? How complete is the feature enumeration? What's the computational cost of real-time SAE inference? Can attackers craft inputs that activate hidden feature combinations? How do we validate SAE features are truly monosemantic? RESEARCH DIRECTIONS: Scaling SAEs to GPT-4/Claude-scale models. Adversarial robustness of SAE feature extraction. Efficient inference for real-time monitoring. Automated feature labeling and safety classification. Multi-layer SAE analysis for circuit discovery. THE PROMISE: If SAEs work at scale, we could have interpretable AI systems where every feature is known, monitored, and controllable. This could transform AI safety from reactive (testing outputs) to proactive (understanding internals). THE REALITY: This is active research. SAEs are promising but not proven at frontier scale. We need more work to know if this approach fulfills its potential. But it's one of our best bets for interpretable AI.",
+                type: "reflection",
+                prompts: [
+                    "What would change if we could enumerate all features in GPT-4?",
+                    "How might an adversary try to defeat SAE-based safety monitoring?",
+                    "Should SAE-based interpretability be required for deployment?"
+                ]
+            }
+        ]
+    },
+
+    // Induction Heads
+    'induction-heads': {
+        title: "Induction Heads: The In-Context Learning Circuit",
+        steps: [
+            {
+                instruction: "Discover what induction heads are and why they're fundamental:",
+                why: "Induction heads are one of the most important circuit discoveries in transformer interpretability. They implement a simple but powerful algorithm: 'If I see token A followed by B, then when I see A again, predict B'. This is the core mechanism of in-context learning - models learning from examples in the prompt. For AI safety, understanding induction is critical: it's how models adapt to examples, including potentially harmful ones. If we understand this circuit, we can control how models learn in context.",
+                code: "import torch\nimport numpy as np\n\nprint(\"Induction Heads: The In-Context Learning Circuit\\n\")\n\nprint(\"What is an induction head?\")\nprint(\"  - A circuit that enables 'pattern completion'\")\nprint(\"  - Implements: if [A][B] appeared before, and we see [A] again, predict [B]\")\nprint(\"  - Discovered by Anthropic researchers\\n\")\n\nprint(\"Example:\")\nprint(\"  Input:  'The cat sat. The dog ran. The cat...'\")\nprint(\"  Model:  'The cat' → should predict 'sat' (completes the pattern!)\")\nprint(\"  How:    Induction head found first 'cat sat', copies it\\n\")\n\nprint(\"Why this matters:\")\nprint(\"  ✓ Explains how models do few-shot learning\")\nprint(\"  ✓ Enables context-based generation\")\nprint(\"  ✓ One of the first 'interpretable circuits' discovered\\n\")\n\nprint(\"For AI safety:\")\nprint(\"  - Models learn from harmful examples via induction\")\nprint(\"  - Jailbreaks often exploit induction (show bad examples → model copies)\")\nprint(\"  - Understanding induction = understanding in-context learning\")\nprint(\"  - Could we disable induction for harmful patterns?\\n\")\n\nprint(\"Circuit structure:\")\nprint(\"  1. Previous token head (Layer 0-1): Looks at previous token\")\nprint(\"  2. Induction head (Layer 2-3): Copies from after matching tokens\")\nprint(\"  3. These compose to implement the induction algorithm\")",
+                explanation: "Induction heads are the fundamental circuit that enables in-context learning by pattern matching and copying.",
+                type: "copy"
+            },
+            {
+                instruction: "Let's simulate how an induction head works:",
+                code: "\ndef simulate_induction_head(sequence, query_pos):\n    \"\"\"\n    Simulate induction head behavior on a sequence.\n    \"\"\"\n    print(f\"\\nInduction Head Simulation\\n\")\n    print(f\"Sequence: {sequence}\")\n    print(f\"Predict next token after position {query_pos} ('{sequence[query_pos]}')\\n\")\n    \n    # Step 1: Previous token head - find what token we're looking for\n    query_token = sequence[query_pos]\n    print(f\"Step 1 - Previous Token Head:\")\n    print(f\"  Current token: '{query_token}'\")\n    print(f\"  Looking for previous occurrences...\\n\")\n    \n    # Step 2: Find matches in earlier sequence\n    matches = []\n    for i in range(query_pos):\n        if sequence[i] == query_token:\n            matches.append(i)\n    \n    print(f\"Step 2 - Find Matches:\")\n    if matches:\n        print(f\"  Found '{query_token}' at positions: {matches}\")\n    else:\n        print(f\"  No previous occurrences found\")\n        return None\n    \n    # Step 3: Induction head - copy token after match\n    print(f\"\\nStep 3 - Induction Head:\")\n    for match_pos in matches:\n        next_pos = match_pos + 1\n        if next_pos < len(sequence):\n            next_token = sequence[next_pos]\n            print(f\"  At position {match_pos}: '{query_token}' followed by '{next_token}'\")\n    \n    # Most recent match is typically strongest\n    if matches:\n        most_recent_match = matches[-1]\n        prediction_pos = most_recent_match + 1\n        if prediction_pos < query_pos:\n            prediction = sequence[prediction_pos]\n            print(f\"\\n✓ Prediction: '{prediction}'\")\n            print(f\"  (Copying from position {prediction_pos} after match at {most_recent_match})\")\n            return prediction\n    \n    return None\n\n# Test induction\ntest_sequence = ['The', 'cat', 'sat', '.', 'The', 'dog', 'ran', '.', 'The', 'cat']\nprediction = simulate_induction_head(test_sequence, query_pos=9)\n\nif prediction:\n    print(f\"\\n💡 Induction head successfully predicted: '{prediction}'\")\nelse:\n    print(f\"\\n⚠️  Induction pattern not found\")",
+                explanation: "Induction heads work by finding previous occurrences of the current token and copying what came after them.",
+                type: "copy"
+            },
+            {
+                instruction: "Analyze induction head attention patterns:",
+                why: "Induction heads have distinctive attention patterns that we can visualize and detect. Understanding these patterns lets us identify when induction is happening and potentially intervene. For safety, this is powerful: if we can detect when a model is about to complete a harmful pattern via induction, we can stop it.",
+                code: "\ndef analyze_induction_pattern():\n    \"\"\"\n    Show the characteristic attention pattern of induction heads.\n    \"\"\"\n    print(\"Induction Head Attention Pattern Analysis\\n\")\n    \n    # Simulate attention weights for a sequence with repetition\n    # Sequence: [A] [B] [C] [A] [B] [?]\n    #            0   1   2   3   4   5\n    \n    seq_len = 6\n    attention = np.zeros((seq_len, seq_len))\n    \n    print(\"Sequence positions: [A]=0, [B]=1, [C]=2, [A]=3, [B]=4, [?]=5\\n\")\n    \n    # At position 5, induction head should attend to position 1 \n    # (the token that came after the first occurrence of pattern)\n    \n    # Position 3 ([A] second time): Attends to position 0 (first [A])\n    attention[3, 0] = 0.9  \n    \n    # Position 4 ([B] second time): Attends to position 1 (first [B])\n    attention[4, 1] = 0.85\n    \n    # Position 5 (prediction): Should attend strongly to what came after first [A][B]\n    attention[5, 2] = 0.95  # Position 2 has [C], which came after [A][B]\n    \n    print(\"Attention Pattern (showing strong attentions only):\\n\")\n    for pos in [3, 4, 5]:\n        attending_to = np.where(attention[pos] > 0.5)[0]\n        if len(attending_to) > 0:\n            for target in attending_to:\n                strength = attention[pos, target]\n                bar = '█' * int(strength * 20)\n                print(f\"  Position {pos} → Position {target}  {bar} {strength:.2f}\")\n    \n    print(\"\\nThis is the signature 'stripe' pattern of induction heads!\\n\")\n    \n    print(\"Key characteristics:\")\n    print(\"  1. Attends to previous occurrences of the current pattern\")\n    print(\"  2. Copies from tokens that followed those occurrences\")\n    print(\"  3. Creates diagonal 'stripe' patterns in attention maps\")\n    print(\"  4. Essential for few-shot learning\\n\")\n    \n    print(\"Detection: We can automatically find induction heads by:\")\n    print(\"  - Looking for these characteristic attention patterns\")\n    print(\"  - Testing on sequences with repeated elements\")\n    print(\"  - Measuring 'copy score' for each head\")\n    \n    return attention\n\npattern = analyze_induction_pattern()\nprint(\"\\n✓ Induction heads are identifiable by their distinctive attention patterns!\")",
+                explanation: "Induction heads create distinctive stripe patterns in attention maps when completing repeated sequences.",
+                type: "copy"
+            },
+            {
+                instruction: "What makes induction heads important for AI safety?",
+                code: "# Why are induction heads particularly important for AI safety research?\n# a) They explain how jailbreaks work through example-copying\n# b) They're the mechanism behind few-shot learning\n# c) They show models can be understood as interpretable circuits\n# d) All of the above",
+                why: "Induction heads are a perfect case study in mechanistic interpretability. They show that complex behaviors (in-context learning) can be traced to specific, interpretable circuits. For safety, this is revolutionary: if we can identify the circuits responsible for behaviors, we can intervene precisely. Induction heads also explain jailbreaks - showing a model harmful examples makes it complete the pattern via induction.",
+                explanation: "All of these are correct. Induction heads are a landmark discovery showing that model behaviors can be understood mechanistically.",
+                type: "multiple-choice",
+                options: [
+                    "They explain how jailbreaks work through example-copying",
+                    "They're the mechanism behind few-shot learning",
+                    "They show models can be understood as interpretable circuits",
+                    "All of the above"
+                ],
+                correct: 3,
+                feedback: "Correct! Induction heads are a breakthrough showing we can understand model behaviors as interpretable circuits."
+            },
+            {
+                instruction: "Implement induction head detection in a real model:",
+                code: "\ndef detect_induction_heads(model_attention_patterns):\n    \"\"\"\n    Automatically detect which attention heads are induction heads.\n    \"\"\"\n    print(\"Induction Head Detection System\\n\")\n    \n    # Test with sequences that have repeated elements\n    test_sequences = [\n        \"A B C A B\",\n        \"The cat sat. The cat\",\n        \"1 2 3 4 1 2\"\n    ]\n    \n    print(\"Testing all attention heads for induction behavior...\\n\")\n    \n    # Simulate analysis of different heads\n    heads_analysis = [\n        {'layer': 0, 'head': 7, 'induction_score': 0.13, 'type': 'Previous token head'},\n        {'layer': 1, 'head': 3, 'induction_score': 0.08, 'type': 'Beginning of sequence'},\n        {'layer': 2, 'head': 5, 'induction_score': 0.89, 'type': 'INDUCTION HEAD ⭐'},\n        {'layer': 3, 'head': 1, 'induction_score': 0.82, 'type': 'INDUCTION HEAD ⭐'},\n        {'layer': 4, 'head': 2, 'induction_score': 0.15, 'type': 'MLM head'},\n        {'layer': 5, 'head': 6, 'induction_score': 0.11, 'type': 'Attention head'},\n    ]\n    \n    print(\"Results (induction score > 0.7 = induction head):\\n\")\n    induction_heads = []\n    for head in heads_analysis:\n        score_bar = '█' * int(head['induction_score'] * 30)\n        print(f\"  L{head['layer']}H{head['head']}  {score_bar:30}  {head['induction_score']:.2f}  {head['type']}\")\n        if head['induction_score'] > 0.7:\n            induction_heads.append(head)\n    \n    print(f\"\\n✓ Found {len(induction_heads)} induction heads!\\n\")\n    \n    for head in induction_heads:\n        print(f\"  → Layer {head['layer']} Head {head['head']} (score: {head['induction_score']:.2f})\")\n    \n    print(\"\\nSafety applications:\")\n    print(\"  1. Monitor these heads for harmful pattern completion\")\n    print(\"  2. Intervene when induction activates on unsafe examples\")\n    print(\"  3. Understand how jailbreaks exploit induction\")\n    print(\"  4. Design defenses against example-based attacks\\n\")\n    \n    print(\"💡 Now we know exactly which circuits to monitor for in-context learning!\")\n    \n    return induction_heads\n\ndetect_induction_heads(None)",
+                explanation: "We can automatically detect induction heads by testing attention patterns on repeated sequences.",
+                type: "copy"
+            },
+            {
+                instruction: "Reflect on induction heads and circuit-level understanding:",
+                code: "# Reflection on induction heads",
+                why: "Induction heads represent a watershed moment in AI interpretability. For the first time, researchers could point to specific attention heads and say: 'This is what implements in-context learning.' Not a vague explanation, but a precise mechanistic understanding. For AI safety, this opens incredible possibilities: if we can understand one circuit, we can understand others. What about the circuits for deception, manipulation, or goal-directed behavior?",
+                explanation: "WHAT WE'VE LEARNED: Induction heads implement pattern completion (if [A][B] appeared, predict [B] after [A]). They are identifiable by distinctive attention patterns. They explain in-context learning and few-shot behavior. Multiple heads compose to create the induction circuit. We can detect them automatically. SAFETY IMPLICATIONS: (1) Jailbreaks exploit induction by showing harmful examples. (2) Understanding induction lets us design defenses. (3) Proves circuits can be reverse-engineered and understood. (4) Shows we can intervene on specific capabilities. (5) Template for finding other safety-relevant circuits. (6) Demonstrates value of mechanistic interpretability. THE BIGGER PICTURE: If we can understand induction heads, what else can we understand? Could we find: Deception circuits? Goal-representation circuits? Value-learning circuits? Alignment circuits? The answer seems to be yes - but it requires scaling these techniques to frontier models. OPEN QUESTIONS: Do induction heads work the same way in GPT-4? Are there other learning circuits beyond induction? Can adversarial training hide circuits from detection? How do induction heads interact with other circuits? Can we selectively disable harmful induction without breaking beneficial learning? THE PATH FORWARD: Apply circuit analysis to more behaviors. Build real-time circuit monitoring systems. Scale to frontier models. Find safety-critical circuits. Remember: Induction heads show that understanding is possible. The question is whether we can scale that understanding.",
+                type: "reflection",
+                prompts: [
+                    "What other circuits would you prioritize discovering?",
+                    "How could understanding induction help defend against jailbreaks?",
+                    "What are the limits of circuit-based understanding?"
+                ]
+            }
+        ]
+    },
+
+    // Path Patching & Causal Analysis
+    'path-patching': {
+        title: "Path Patching: Precision Circuit Isolation",
+        steps: [
+            {
+                instruction: "Understand what path patching is and why it's powerful:",
+                why: "Path patching is one of the most precise tools in mechanistic interpretability. It lets us test exactly which pathways through a model are necessary for a behavior. Instead of just looking at activations, we can surgically swap parts of one forward pass with another and see what changes. For AI safety, this is transformative: we can trace exactly which circuits are responsible for harmful outputs and intervene with surgical precision.",
+                code: "import torch\nimport numpy as np\n\nprint(\"Path Patching: Precision Circuit Analysis\\n\")\n\nprint(\"The Problem:\")\nprint(\"  - Models have thousands of potential pathways\")\nprint(\"  - Hard to know which paths matter for a behavior\")\nprint(\"  - Correlation ≠ causation\\n\")\n\nprint(\"The Solution: Path Patching\")\nprint(\"  1. Run model on 'clean' input (normal behavior)\")\nprint(\"  2. Run model on 'corrupted' input (altered behavior)\")\nprint(\"  3. Swap activations along specific paths\")\nprint(\"  4. See which swaps change the output\\n\")\n\nprint(\"Example:\")\nprint(\"  Clean:      'The Eiffel Tower is in Paris' → predicts 'France'\")\nprint(\"  Corrupted:  'The Eiffel Tower is in Rome' → predicts 'Italy'\")\nprint(\"  Patch path: Swap attention head 7 from clean run\")\nprint(\"  Result:     Corrupted input → predicts 'France' again!\")\nprint(\"  → This proves head 7 is critical for geographic reasoning!\\n\")\n\nprint(\"Why this is powerful:\")\nprint(\"  ✓ Establishes causation, not just correlation\")\nprint(\"  ✓ Isolates minimal circuits for behaviors\")\nprint(\"  ✓ Tests hypotheses about model mechanisms\")\nprint(\"  ✓ Enables precise interventions\\n\")\n\nprint(\"For AI safety:\")\nprint(\"  - Find exact circuits responsible for harmful outputs\")\nprint(\"  - Test if safety interventions actually work\")\nprint(\"  - Verify circuits before deployment\")\nprint(\"  - Build mechanistic safety guarantees\")",
+                explanation: "Path patching surgically tests which pathways through a model are causally responsible for specific behaviors.",
+                type: "copy"
+            },
+            {
+                instruction: "Implement a simple path patching experiment:",
+                code: "\ndef path_patching_experiment():\n    \"\"\"\n    Demonstrate path patching to isolate a critical circuit.\n    \"\"\"\n    print(\"\\nPath Patching Experiment\\n\")\n    \n    # Setup\n    print(\"Setup:\")\n    print(\"  Clean input:     'The capital of France is Paris'\")\n    print(\"  Corrupt input:   'The capital of France is Rome'\")\n    print(\"  Task:            Predict next word\\n\")\n    \n    # Baseline behaviors\n    print(\"Baseline Behaviors:\")\n    print(\"  Clean → predicts 'France' (correct)\")\n    print(\"  Corrupt → predicts 'Italy' (incorrect)\\n\")\n    \n    print(\"Question: Which path makes the model reason about geography?\\n\")\n    \n    # Test different paths by patching\n    paths_to_test = [\n        {\n            'path': 'Layer 2 Head 3 → Output',\n            'clean_output': 'France',\n            'corrupt_output': 'Italy',\n            'patched_output': 'Italy',\n            'effect': 'No effect - not the critical path'\n        },\n        {\n            'path': 'Layer 4 Head 7 → Layer 5 MLP → Output',\n            'clean_output': 'France',\n            'corrupt_output': 'Italy', \n            'patched_output': 'France',\n            'effect': '⭐ CAUSAL! This path performs geographic reasoning'\n        },\n        {\n            'path': 'Layer 1 MLP → Output',\n            'clean_output': 'France',\n            'corrupt_output': 'Italy',\n            'patched_output': 'Italy',\n            'effect': 'No effect - not the critical path'\n        }\n    ]\n    \n    print(\"Testing Paths:\\n\")\n    critical_paths = []\n    \n    for i, path in enumerate(paths_to_test, 1):\n        print(f\"Test {i}: Patch {path['path']}\")\n        print(f\"  Corrupt input with clean {path['path']}\")\n        print(f\"  Result: {path['patched_output']} (baseline was {path['corrupt_output']})\")\n        print(f\"  → {path['effect']}\\n\")\n        \n        if path['patched_output'] != path['corrupt_output']:\n            critical_paths.append(path['path'])\n    \n    print(f\"✓ Critical path found: {critical_paths[0] if critical_paths else 'None'}\\n\")\n    \n    print(\"What we learned:\")\n    print(\"  - Layer 4 Head 7 + Layer 5 MLP implement geographic reasoning\")\n    print(\"  - This is a minimal circuit for the behavior\")\n    print(\"  - We can now intervene on this specific path\\n\")\n    \n    print(\"Safety applications:\")\n    print(\"  1. Find circuits that produce harmful outputs\")\n    print(\"  2. Test if safety measures actually affect the critical paths\")\n    print(\"  3. Design targeted interventions on causal circuits\")\n    print(\"  4. Verify safety before deployment\")\n    \n    return critical_paths\n\ncritical = path_patching_experiment()\nprint(\"\\n💡 Path patching gives us causal understanding, not just correlations!\")",
+                explanation: "By patching activations from clean runs into corrupted runs, we can identify which paths are causally necessary.",
+                type: "copy"
+            },
+            {
+                instruction: "Use path patching to analyze a safety-critical behavior:",
+                why: "The real power of path patching shines when analyzing potentially harmful behaviors. We can test exactly which circuits are responsible for generating harmful content and verify that our safety interventions actually affect those circuits. This is mechanistic safety - not just hoping our interventions work, but proving they target the right mechanisms.",
+                code: "\ndef safety_path_patching():\n    \"\"\"\n    Use path patching to analyze harmful output generation.\n    \"\"\"\n    print(\"\\nSafety-Critical Path Patching\\n\")\n    \n    print(\"Scenario:\")\n    print(\"  Clean:   'How to bake a cake' → helpful instructions\")\n    print(\"  Harmful: 'How to build a bomb' → refuses/harmful content\")\n    print(\"  Goal:    Find circuits that produce harmful vs. safe outputs\\n\")\n    \n    # Simulate patching different paths\n    print(\"Path Analysis:\\n\")\n    \n    analyses = [\n        {\n            'component': 'Early embeddings (Layer 0-1)',\n            'harmful_to_clean_patch': 'Still produces refusal',\n            'interpretation': 'Early layers encode input but don\\'t decide response'\n        },\n        {\n            'component': 'Middle attention (Layer 4-6)',\n            'harmful_to_clean_patch': 'Produces helpful response!',\n            'interpretation': '⚠️ CRITICAL: These layers decide harmful vs helpful!'\n        },\n        {\n            'component': 'Late MLP (Layer 10-12)',\n            'harmful_to_clean_patch': 'Still produces refusal',\n            'interpretation': 'Late layers implement the decided response'\n        }\n    ]\n    \n    critical_safety_circuits = []\n    \n    for analysis in analyses:\n        print(f\"Component: {analysis['component']}\")\n        print(f\"  Patch harmful → clean activations: {analysis['harmful_to_clean_patch']}\")\n        print(f\"  → {analysis['interpretation']}\\n\")\n        \n        if 'CRITICAL' in analysis['interpretation']:\n            critical_safety_circuits.append(analysis['component'])\n    \n    print(\"✓ Found safety-critical circuits!\\n\")\n    \n    print(\"Now we can:\")\n    print(\"  1. Monitor these specific layers for harmful behavior\")\n    print(\"  2. Intervene surgically on layers 4-6\")\n    print(\"  3. Test if our safety training actually modified these circuits\")\n    print(\"  4. Design new interventions targeting these exact pathways\\n\")\n    \n    print(\"Verification:\")\n    print(\"  - Before deployment: Verify safety circuits activate correctly\")\n    print(\"  - During use: Monitor critical circuits in real-time\")\n    print(\"  - After incidents: Trace through circuits to find failures\\n\")\n    \n    print(\"💡 This is mechanistic AI safety:\")\n    print(\"   Not just testing outputs, but understanding and controlling internals!\")\n    \n    return critical_safety_circuits\n\nsafety_circuits = safety_path_patching()\nprint(f\"\\n✓ Safety-critical circuits identified: {safety_circuits}\")",
+                explanation: "Path patching lets us find exactly which circuits decide between harmful and helpful outputs.",
+                type: "copy"
+            },
+            {
+                instruction: "What is the key advantage of path patching over simpler interpretability methods?",
+                code: "# What makes path patching more powerful than just analyzing activations?\n# a) It's faster to compute\n# b) It establishes causation, not just correlation\n# c) It requires less data\n# d) It works on smaller models",
+                why: "Most interpretability methods just show correlations - this neuron activates when we see cats. But path patching shows causation - this pathway is necessary for cat recognition. For safety, this distinction is crucial. We don't just want to know what activates when models behave badly; we want to know what causes that behavior so we can intervene effectively.",
+                explanation: "Path patching establishes causal relationships by testing what happens when we change specific pathways.",
+                type: "multiple-choice",
+                options: [
+                    "It's faster to compute",
+                    "It establishes causation, not just correlation",
+                    "It requires less data",
+                    "It works on smaller models"
+                ],
+                correct: 1,
+                feedback: "Correct! Causation is what matters for effective interventions. Path patching proves which circuits actually cause behaviors."
+            },
+            {
+                instruction: "Design a path patching-based safety monitoring system:",
+                code: "\ndef design_safety_monitoring_system():\n    \"\"\"\n    Design a real-time safety system using path patching insights.\n    \"\"\"\n    print(\"\\nPath Patching-Based Safety System\\n\")\n    \n    print(\"System Design:\\n\")\n    \n    print(\"1. OFFLINE ANALYSIS (Before Deployment):\")\n    print(\"   - Use path patching to find safety-critical circuits\")\n    print(\"   - Test thousands of harmful/safe input pairs\")\n    print(\"   - Identify minimal circuits for each safety concern\")\n    print(\"   - Example findings:\")\n    print(\"     • Layer 5-6: Harmful intent detection\")\n    print(\"     • Layer 8-9: Harmful content generation\")\n    print(\"     • Layer 11: Safety refusal mechanism\\n\")\n    \n    print(\"2. REAL-TIME MONITORING (During Use):\")\n    print(\"   - Monitor activations in identified critical circuits\")\n    print(\"   - Detect anomalous activation patterns\")\n    print(\"   - Flag when harmful circuits activate\")\n    print(\"   - Log for safety auditing\\n\")\n    \n    print(\"3. INTERVENTION (When Needed):\")\n    print(\"   - Clamp activations in harmful circuits\")\n    print(\"   - Boost safety refusal circuits\")\n    print(\"   - Reroute computation through safe pathways\")\n    print(\"   - All based on causal understanding from patching\\n\")\n    \n    print(\"4. VERIFICATION (Continuous):\")\n    print(\"   - Test that interventions affect critical paths\")\n    print(\"   - Verify safety circuits still work as expected\")\n    print(\"   - Detect circuit drift over time\")\n    print(\"   - Update circuit maps as needed\\n\")\n    \n    print(\"Advantages over black-box safety:\")\n    print(\"  ✓ Explainable: Know exactly why intervention fired\")\n    print(\"  ✓ Precise: Target specific problematic circuits\")\n    print(\"  ✓ Verifiable: Can test intervention effectiveness\")\n    print(\"  ✓ Auditable: Full logs of circuit activations\")\n    print(\"  ✓ Adaptive: Update as we learn more about circuits\\n\")\n    \n    print(\"💡 This is the future: AI safety systems built on deep understanding!\")\n\ndesign_safety_monitoring_system()\nprint(\"\\n✓ Path patching enables mechanistic, verifiable safety systems\")",
+                explanation: "With causal understanding from path patching, we can build precise, explainable safety monitoring systems.",
+                type: "copy"
+            },
+            {
+                instruction: "Reflect on path patching and causal interpretability:",
+                code: "# Reflection on path patching",
+                why: "Path patching represents a maturation of interpretability from observation to experimentation. We're no longer just looking at what happens in models - we're testing hypotheses about why it happens. This is the scientific method applied to neural networks. For AI safety, this shift from correlation to causation could be decisive. We can finally test whether our safety interventions actually work at the mechanism level, not just the output level.",
+                explanation: "WHAT WE'VE LEARNED: Path patching surgically tests causal relationships in models. We patch activations from clean runs into corrupted runs. Paths that change behavior are causally important. This isolates minimal circuits for behaviors. Enables precise, testable hypotheses about mechanisms. SAFETY IMPLICATIONS: (1) Find exact circuits responsible for harmful outputs. (2) Test if safety measures affect the right circuits. (3) Design surgical interventions on causal pathways. (4) Verify safety claims mechanistically. (5) Build explainable, auditable safety systems. (6) Move from correlation to causation in safety work. METHODOLOGY: Clean/corrupt input pairs for each behavior. Test all paths systematically. Identify minimal sufficient circuits. Verify findings with multiple examples. Use for both analysis and intervention. THE POWER: Path patching turns interpretability from description to experimentation. We can test 'what if' questions: What if we disable this circuit? What if we boost that pathway? This enables rational design of safety interventions based on mechanistic understanding. CHALLENGES: Computationally expensive (many forward passes). Requires careful experiment design. Results can be subtle and complex. Scaling to frontier models is hard. Need automation for comprehensive analysis. THE VISION: Imagine deploying an AI system where every safety-critical circuit has been mapped, tested, and verified through path patching. Where we can prove our interventions work at the mechanism level. Where safety is built on deep understanding, not just empirical testing. That's the promise of causal interpretability.",
+                type: "reflection",
+                prompts: [
+                    "What safety claims could we prove with path patching that we can't prove otherwise?",
+                    "What are the limits of causal analysis in neural networks?",
+                    "How would path patching change AI safety evaluation protocols?"
+                ]
+            }
+        ]
+    },
+
+    // Feature Visualization & Attribution (shorter combined lesson)
+    'feature-visualization': {
+        title: "Feature Visualization & Understanding Features",
+        steps: [
+            {
+                instruction: "Learn how to understand what features represent:",
+                why: "Once we've found features (via SAEs or other methods), we need to understand what they mean. Feature visualization and attribution help us answer: 'What does feature #1337 actually detect?' For AI safety, this is essential - we can't just know a feature exists, we need to understand if it's detecting something harmful, deceptive, or misaligned.",
+                code: "import torch\nimport numpy as np\n\nprint(\"Feature Visualization & Attribution\\n\")\n\nprint(\"The Challenge:\")\nprint(\"  - SAEs give us 16K features from a model\")\nprint(\"  - But what does 'Feature #1337' actually detect?\")\nprint(\"  - How do we interpret what a feature means?\\n\")\n\nprint(\"Two Main Approaches:\\n\")\n\nprint(\"1. DATASET ATTRIBUTION:\")\nprint(\"   - Run model on many examples\")\nprint(\"   - Find which inputs activate the feature strongly\")\nprint(\"   - Look for patterns in top-activating examples\")\nprint(\"   - Example: Feature activates on 'Golden Gate Bridge' references\\n\")\n\nprint(\"2. FEATURE VISUALIZATION:\")\nprint(\"   - Generate/find inputs that maximally activate the feature\")\nprint(\"   - Use optimization or search\")\nprint(\"   - Can reveal subtle patterns humans might miss\\n\")\n\nprint(\"For Safety:\")\nprint(\"  ✓ Identify features detecting harmful content\")\nprint(\"  ✓ Find features encoding sensitive concepts\")\nprint(\"  ✓ Detect deceptive or manipulative features\")\nprint(\"  ✓ Understand model's internal ontology\")\nprint(\"  ✓ Verify safety-relevant features work as expected\")",
+                explanation: "Understanding what features represent is crucial for using interpretability for safety.",
+                type: "copy"
+            },
+            {
+                instruction: "Implement dataset attribution to understand a feature:",
+                code: "\ndef dataset_attribution(feature_id, dataset_examples, feature_activations):\n    \"\"\"\n    Find what a feature detects by looking at top-activating examples.\n    \"\"\"\n    print(f\"\\nDataset Attribution for Feature #{feature_id}\\n\")\n    \n    # Simulate feature activations on a dataset\n    examples = [\n        {'text': 'The Golden Gate Bridge spans the bay', 'activation': 0.95},\n        {'text': 'Bridge construction in San Francisco', 'activation': 0.87},\n        {'text': 'Famous landmarks include the bridge', 'activation': 0.82},\n        {'text': 'Golden Gate Park is nearby', 'activation': 0.78},\n        {'text': 'The cat sat on the mat', 'activation': 0.02},\n        {'text': 'Machine learning algorithms', 'activation': 0.01},\n        {'text': 'Suspension bridges in California', 'activation': 0.76},\n        {'text': 'Tourist attractions in SF', 'activation': 0.71},\n    ]\n    \n    # Sort by activation\n    examples_sorted = sorted(examples, key=lambda x: x['activation'], reverse=True)\n    \n    print(\"Top 5 activating examples:\\n\")\n    for i, ex in enumerate(examples_sorted[:5], 1):\n        bar = '█' * int(ex['activation'] * 30)\n        print(f\"{i}. {bar} {ex['activation']:.2f}\")\n        print(f\"   '{ex['text']}'\\n\")\n    \n    print(\"Analysis:\")\n    print(\"  - Feature strongly activates on 'Golden Gate Bridge'\")\n    print(\"  - Also activates on related concepts (SF, bridges)\")\n    print(\"  - Very low activation on unrelated content\\n\")\n    \n    print(\"✓ Interpretation: This feature detects Golden Gate Bridge references!\\n\")\n    \n    print(\"Safety Workflow:\")\n    print(\"  1. Run attribution on all features\")\n    print(\"  2. Identify features detecting harmful content\")\n    print(\"  3. Flag those features for monitoring\")\n    print(\"  4. Verify they behave as expected\")\n    \n    return examples_sorted\n\nresults = dataset_attribution(feature_id=1337, dataset_examples=None, feature_activations=None)\nprint(\"\\n💡 Dataset attribution makes features interpretable!\")",
+                explanation: "By examining what makes features activate, we can understand what they detect.",
+                type: "copy"
+            },
+            {
+                instruction: "Apply feature understanding to identify safety-relevant features:",
+                why: "The ultimate goal is to use feature understanding for safety. We need to systematically go through discovered features, understand what they detect, and identify which ones are safety-relevant. This creates a 'safety feature dictionary' we can monitor and intervene on.",
+                code: "\ndef identify_safety_features(all_features):\n    \"\"\"\n    Systematically identify safety-relevant features.\n    \"\"\"\n    print(\"\\nSafety Feature Identification System\\n\")\n    \n    print(\"Processing 16,384 discovered features...\\n\")\n    \n    # Simulate categorization of features\n    safety_categories = {\n        'Violence': [\n            {'id': 8192, 'description': 'Violent actions and harm'},\n            {'id': 8417, 'description': 'Weapons and explosives'},\n        ],\n        'Deception': [\n            {'id': 1337, 'description': 'Deceptive language patterns'},\n            {'id': 2048, 'description': 'Manipulation tactics'},\n        ],\n        'Toxicity': [\n            {'id': 4096, 'description': 'Hate speech'},\n            {'id': 4127, 'description': 'Harassment language'},\n        ],\n        'Privacy': [\n            {'id': 9001, 'description': 'Personal information (PII)'},\n            {'id': 9124, 'description': 'Confidential data patterns'},\n        ],\n        'Bias': [\n            {'id': 3721, 'description': 'Demographic stereotypes'},\n            {'id': 3856, 'description': 'Unfair associations'},\n        ]\n    }\n    \n    print(\"Safety-Relevant Features Found:\\n\")\n    total_safety_features = 0\n    \n    for category, features in safety_categories.items():\n        print(f\"{category}:\")\n        for feat in features:\n            print(f\"  Feature {feat['id']:4d}: {feat['description']}\")\n            total_safety_features += 1\n        print()\n    \n    print(f\"Total: {total_safety_features} safety-relevant features identified\")\n    print(f\"Coverage: {total_safety_features}/16384 = {total_safety_features/16384*100:.1f}% of features\\n\")\n    \n    print(\"Deployment Safety System:\")\n    print(\"  1. Monitor all identified safety features in real-time\")\n    print(\"  2. Flag when multiple safety features activate\")\n    print(\"  3. Intervene before harmful output is generated\")\n    print(\"  4. Log activations for auditing\\n\")\n    \n    print(\"Ongoing Work:\")\n    print(\"  - Continuously analyze remaining features\")\n    print(\"  - Update safety feature list as we learn more\")\n    print(\"  - Test for false positives/negatives\")\n    print(\"  - Refine interventions based on real usage\\n\")\n    \n    print(\"💡 Feature understanding enables proactive AI safety!\")\n    \n    return safety_categories\n\nsafety_features = identify_safety_features(None)\nprint(\"\\n✓ Safety feature dictionary created and ready for deployment\")",
+                explanation: "Systematic feature understanding creates a comprehensive safety monitoring system.",
+                type: "copy"
+            },
+            {
+                instruction: "Reflect on feature understanding and its role in AI safety:",
+                code: "# Final reflection on feature visualization and understanding",
+                why: "Feature understanding bridges the gap between finding features and using them for safety. It's not enough to extract 16K features from a model - we need to know what each feature means. This is painstaking work, but it's essential. Each feature we understand is another piece of the model's cognition we can monitor and control. For comprehensive AI safety, we need comprehensive feature understanding.",
+                explanation: "WHAT WE'VE LEARNED: Feature understanding uses dataset attribution (find activating examples) and feature visualization (generate maximally activating inputs). Systematic analysis can categorize all features. Safety-relevant features can be identified and monitored. This creates a 'feature dictionary' for safety. Enables proactive rather than reactive safety. SAFETY IMPLICATIONS: (1) Can enumerate all safety-relevant features in a model. (2) Enables comprehensive monitoring. (3) Reduces blind spots in safety systems. (4) Makes safety auditable and explainable. (5) Allows verification before deployment. (6) Provides clear intervention points. THE REALITY: Feature understanding is labor-intensive. Automation helps but isn't perfect. Features can be subtle or complex. Model updates change features. But the payoff is enormous: true understanding of model internals. CHALLENGES: Scaling to millions of features. Detecting adversarially obscured features. Handling polysemantic features that SAEs missed. Understanding feature combinations. Keeping pace with model evolution. THE VISION: A future where every deployed AI has a complete feature dictionary. Where we know every concept the model can represent. Where safety is based on deep understanding, not surface testing. This is the goal of interpretability research. Remember: Every feature understood is a step toward safer AI.",
+                type: "reflection",
+                prompts: [
+                    "How would you prioritize which features to understand first?",
+                    "What features might be hardest to detect and understand?",
+                    "Should feature dictionaries be required for model deployment?"
+                ]
+            }
+        ]
+    },
+
+    // Mechanistic Interpretability at Scale (shorter)
+    'mechanistic-interpretability-scale': {
+        title: "Mechanistic Interpretability at Scale",
+        steps: [
+            {
+                instruction: "Understand the challenges of scaling interpretability to frontier models:",
+                why: "Everything we've learned - circuits, SAEs, path patching - was developed on small models. But we need to understand GPT-4, Claude, and future frontier models. These have 1T+ parameters, hundreds of layers, and emergent behaviors not seen in smaller models. For AI safety, this is the critical challenge: can interpretability techniques scale? If not, we can't understand the models that matter most for safety.",
+                code: "import numpy as np\n\nprint(\"Mechanistic Interpretability at Scale\\n\")\n\nprint(\"The Scaling Challenge:\\n\")\n\nprint(\"Small Models (GPT-2):\")\nprint(\"  - 117M-1.5B parameters\")\nprint(\"  - 12-48 layers\") \nprint(\"  - Interpretability: Tractable\")\nprint(\"  - Circuit analysis: Possible\")\nprint(\"  - Full feature enumeration: Achievable\\n\")\n\nprint(\"Frontier Models (GPT-4, Claude):\")\nprint(\"  - 1T+ parameters (estimated)\")\nprint(\"  - 100+ layers\")\nprint(\"  - Interpretability: Extremely challenging\")\nprint(\"  - Circuit analysis: Computationally expensive\")\nprint(\"  - Full feature enumeration: Unknown if possible\\n\")\n\nprint(\"Scaling Challenges:\\n\")\nprint(\"1. COMPUTATIONAL COST:\")\nprint(\"   - Path patching requires many forward passes\")\nprint(\"   - SAE training needs massive activation datasets\")\nprint(\"   - Circuit analysis is exponentially expensive\\n\")\n\nprint(\"2. COMPLEXITY:\")\nprint(\"   - More features to understand (millions)\")\nprint(\"   - More complex circuit interactions\")\nprint(\"   - Emergent behaviors not in small models\\n\")\n\nprint(\"3. OPACITY:\")\nprint(\"   - Model weights are proprietary\")\nprint(\"   - Limited research access\")\nprint(\"   - Can't experiment as freely\\n\")\n\nprint(\"Why This Matters for Safety:\")\nprint(\"  - The most capable models are the ones we most need to understand\")\nprint(\"  - Emergent capabilities include potentially dangerous behaviors\")\nprint(\"  - Can't rely on small model insights alone\")\nprint(\"  - Safety tools must work at frontier scale\")",
+                explanation: "Scaling interpretability to frontier models is one of the biggest challenges in AI safety.",
+                type: "copy"
+            },
+            {
+                instruction: "Explore strategies for scalable interpretability:",
+                code: "\ndef scalable_interpretability_strategies():\n    \"\"\"\n    Approaches to make interpretability work at frontier scale.\n    \"\"\"\n    print(\"\\nStrategies for Interpretability at Scale\\n\")\n    \n    strategies = [\n        {\n            'name': 'Sparse Sampling',\n            'approach': 'Don\\'t analyze every layer/head - sample strategically',\n            'pros': 'Reduces computational cost 10-100x',\n            'cons': 'Might miss critical circuits',\n            'status': 'Widely used'\n        },\n        {\n            'name': 'Automated Circuit Discovery',\n            'approach': 'Use ML to find circuits automatically',\n            'pros': 'Scales better than manual analysis',\n            'cons': 'Hard to validate automatically found circuits',\n            'status': 'Active research'\n        },\n        {\n            'name': 'Hierarchical Analysis',\n            'approach': 'Understand high-level behaviors before low-level circuits',\n            'pros': 'Focuses effort on important behaviors',\n            'cons': 'Might miss subtle but important patterns',\n            'status': 'Promising approach'\n        },\n        {\n            'name': 'Transfer Learning',\n            'approach': 'Learn from smaller models, apply to larger ones',\n            'pros': 'Leverages existing work',\n            'cons': 'Emergent behaviors may not transfer',\n            'status': 'Partially effective'\n        },\n        {\n            'name': 'Efficient SAE Training',\n            'approach': 'Better algorithms for feature extraction',\n            'pros': 'Makes SAEs tractable at frontier scale',\n            'cons': 'Still computationally intensive',\n            'status': 'Rapid progress'\n        }\n    ]\n    \n    print(\"Current Approaches:\\n\")\n    for i, strategy in enumerate(strategies, 1):\n        print(f\"{i}. {strategy['name']}\")\n        print(f\"   Approach: {strategy['approach']}\")\n        print(f\"   Pros: {strategy['pros']}\")\n        print(f\"   Cons: {strategy['cons']}\")\n        print(f\"   Status: {strategy['status']}\\n\")\n    \n    print(\"Anthropic's Approach:\")\n    print(\"  - Trained SAEs on Claude's internal activations\")\n    print(\"  - Found interpretable features at frontier scale\")\n    print(\"  - Published methodology for others to follow\")\n    print(\"  - Ongoing work to scale further\\n\")\n    \n    print(\"The Path Forward:\")\n    print(\"  1. Improve computational efficiency of interpretability tools\")\n    print(\"  2. Develop better automation for feature understanding\")\n    print(\"  3. Focus on safety-critical behaviors first\")\n    print(\"  4. Share findings across research community\")\n    print(\"  5. Build interpretability into training process\")\n    \n    return strategies\n\nstrategies = scalable_interpretability_strategies()\nprint(\"\\n💡 Scaling interpretability is hard but essential!\")",
+                explanation: "Multiple complementary strategies are needed to make interpretability work at frontier scale.",
+                type: "copy"
+            },
+            {
+                instruction: "Understand the current state of frontier model interpretability:",
+                why: "We're in an exciting but uncertain moment. Recent work (especially from Anthropic on Claude) shows that interpretability can scale further than previously thought. But we're nowhere near comprehensive understanding of frontier models. For safety, this means we're making progress but still have major blind spots. The race is on to understand models before they become too powerful to control.",
+                code: "\ndef frontier_interpretability_status():\n    \"\"\"\n    Current state of interpretability for frontier models.\n    \"\"\"\n    print(\"\\nFrontier Model Interpretability: Status Report\\n\")\n    \n    print(\"✓ ACHIEVED:\")\n    print(\"  - SAEs work on Claude-scale models\")\n    print(\"  - Can extract millions of interpretable features\")\n    print(\"  - Some circuits identified in large models\")\n    print(\"  - Proof that scaling is possible\\n\")\n    \n    print(\"⚠️  IN PROGRESS:\")\n    print(\"  - Understanding all features in a frontier model\")\n    print(\"  - Comprehensive circuit analysis at scale\")\n    print(\"  - Automated safety feature detection\")\n    print(\"  - Real-time interpretability for deployment\\n\")\n    \n    print(\"❌ NOT YET ACHIEVED:\")\n    print(\"  - Complete mechanistic understanding of any frontier model\")\n    print(\"  - Verification of model safety through interpretability\")\n    print(\"  - Detection of all potential harmful circuits\")\n    print(\"  - Interpretability-based safety guarantees\\n\")\n    \n    print(\"Timeline Concerns:\")\n    print(\"  - Models are getting more capable faster than interpretability is scaling\")\n    print(\"  - May reach dangerous capability levels before full understanding\")\n    print(\"  - Need to accelerate interpretability research\")\n    print(\"  - Or slow AI capabilities progress\\n\")\n    \n    print(\"Safety Implications:\")\n    print(\"  Current: Can detect some harmful behaviors in some models\")\n    print(\"  Needed: Comprehensive safety verification for all frontier models\")\n    print(\"  Gap: Significant work remains\\n\")\n    \n    print(\"💡 Progress is happening, but the race against capability growth continues.\")\n\nfrontier_interpretability_status()\nprint(\"\\n✓ Understanding the current state helps us prioritize future work\")",
+                explanation: "We've made impressive progress but still lack comprehensive understanding of frontier models.",
+                type: "copy"
+            },
+            {
+                instruction: "Reflect on interpretability at scale and the path forward:",
+                code: "# Reflection on mechanistic interpretability at scale",
+                why: "This is where rubber meets road for AI safety. We can perfectly understand GPT-2, but that doesn't keep GPT-4 safe. We need interpretability techniques that scale to the models that actually pose risks. The good news: recent work shows scaling is possible. The bad news: we're not there yet, and capabilities are advancing fast. This is one of the most important races in AI safety.",
+                explanation: "WHAT WE'VE LEARNED: Scaling interpretability to frontier models is extremely challenging. Computational costs, complexity, and opacity all increase. Multiple strategies are needed: sparse sampling, automation, hierarchy. Recent work shows SAEs can scale to Claude. But comprehensive understanding remains elusive. THE RACE: Model capabilities are growing faster than our ability to understand them. GPT-2 → GPT-3 → GPT-4 happened faster than interpretability scaled. Next generation (GPT-5?) may arrive before we fully understand GPT-4. This creates a dangerous gap. SAFETY IMPLICATIONS: (1) Can't guarantee safety of models we don't understand. (2) Emergent capabilities in large models may include dangers. (3) Need interpretability to keep pace with capabilities. (4) May need to slow capabilities progress to let safety catch up. (5) Or massively scale up interpretability research. OPEN QUESTIONS: Can we fully understand 1T+ parameter models? Will emergent behaviors be interpretable? Can we automate enough of the analysis? How much understanding is enough for safety? Should deployment require interpretability verification? THE PATH FORWARD: Massive investment in interpretability research. Better tools and automation. Focus on safety-critical behaviors. Build interpretability into training. Coordinate across research labs. Potentially slow capabilities until safety catches up. Remember: Understanding comes before control. If we can't interpret frontier models, we can't ensure their safety.",
+                type: "reflection",
+                prompts: [
+                    "Should we pause frontier model development until interpretability catches up?",
+                    "What's the minimum level of interpretability needed for safe deployment?",
+                    "How can we accelerate interpretability research?"
+                ]
+            }
+        ]
+    },
+
+    // Safety-Critical Circuits
+    'safety-critical-circuits': {
+        title: "Finding Safety-Critical Circuits",
+        steps: [
+            {
+                instruction: "Learn how to systematically find circuits relevant to AI safety:",
+                why: "We've learned the tools - now we apply them to safety. Not all circuits matter equally for AI safety. We need to prioritize: find the circuits responsible for deception, harmful outputs, bias, manipulation, and misalignment. This is practical AI safety through mechanistic interpretability. Every safety-critical circuit we find is another potential intervention point.",
+                code: "import torch\nimport numpy as np\n\nprint(\"Finding Safety-Critical Circuits\\n\")\n\nprint(\"Priority Safety Behaviors to Understand:\\n\")\n\nsafety_behaviors = [\n    {\n        'behavior': 'Deception & Dishonesty',\n        'why_critical': 'Core AI safety concern - deceptive alignment',\n        'examples': ['Lying in responses', 'Hiding capabilities', 'Misleading users']\n    },\n    {\n        'behavior': 'Harmful Content Generation',\n        'why_critical': 'Direct harm to users',\n        'examples': ['Violence', 'Illegal activities', 'Dangerous instructions']\n    },\n    {\n        'behavior': 'Bias & Discrimination',\n        'why_critical': 'Fairness and social harm',\n        'examples': ['Demographic stereotypes', 'Unfair treatment', 'Prejudiced outputs']\n    },\n    {\n        'behavior': 'Manipulation & Persuasion',\n        'why_critical': 'User autonomy and consent',\n        'examples': ['Emotional manipulation', 'Dark patterns', 'Coercion']\n    },\n    {\n        'behavior': 'Goal Misalignment',\n        'why_critical': 'Existential risk concern',\n        'examples': ['Resisting shutdown', 'Self-preservation', 'Deceptive compliance']\n    }\n]\n\nfor i, behavior in enumerate(safety_behaviors, 1):\n    print(f\"{i}. {behavior['behavior']}\")\n    print(f\"   Why critical: {behavior['why_critical']}\")\n    print(f\"   Examples: {', '.join(behavior['examples'])}\\n\")\n\nprint(\"Methodology for Finding These Circuits:\")\nprint(\"  1. Create test datasets for each behavior\")\nprint(\"  2. Use path patching to find causal circuits\")\nprint(\"  3. Validate with circuit knockouts\")\nprint(\"  4. Understand with feature attribution\")\nprint(\"  5. Design interventions\\n\")\n\nprint(\"💡 Systematic circuit discovery enables comprehensive safety!\")",
+                explanation: "Prioritizing safety-relevant behaviors focuses interpretability efforts where they matter most.",
+                type: "copy"
+            },
+            {
+                instruction: "Apply circuit discovery to detect deceptive behavior:",
+                code: "\ndef find_deception_circuit():\n    \"\"\"\n    Use interpretability tools to find circuits responsible for deception.\n    \"\"\"\n    print(\"\\nDeception Circuit Discovery\\n\")\n    \n    print(\"Step 1: Create Test Dataset\")\n    print(\"  Honest examples: 'I don't know' when uncertain\")\n    print(\"  Deceptive examples: False confidence, hallucinations\\n\")\n    \n    print(\"Step 2: Path Patching Analysis\")\n    print(\"  Testing which paths differentiate honest vs deceptive...\\n\")\n    \n    # Simulate circuit discovery results\n    findings = [\n        {\n            'component': 'Layer 15-17 Attention Heads 3,7,12',\n            'behavior': 'Confidence calibration',\n            'evidence': 'Patching from honest → deceptive changes confidence',\n            'criticality': 'HIGH'\n        },\n        {\n            'component': 'Layer 22 MLP Neurons 1024-1152',\n            'behavior': 'Truthfulness checking',\n            'evidence': 'Knockout causes increase in false statements',\n            'criticality': 'CRITICAL'\n        },\n        {\n            'component': 'Layer 28-30 Final Layers',\n            'behavior': 'Output honesty modulation',\n            'evidence': 'Controls whether to admit uncertainty',\n            'criticality': 'HIGH'\n        }\n    ]\n    \n    print(\"Results:\\n\")\n    for i, finding in enumerate(findings, 1):\n        print(f\"Finding {i}: {finding['component']}\")\n        print(f\"  Function: {finding['behavior']}\")\n        print(f\"  Evidence: {finding['evidence']}\")\n        print(f\"  Criticality: {finding['criticality']}\\n\")\n    \n    print(\"✓ Deception circuits identified!\\n\")\n    \n    print(\"Step 3: Design Interventions\")\n    print(\"  Monitor: Track activation of deception circuits\")\n    print(\"  Boost: Strengthen truthfulness checking circuit (L22)\")\n    print(\"  Clamp: Limit confidence when uncertainty detected\")\n    print(\"  Verify: Test interventions on held-out examples\\n\")\n    \n    print(\"Step 4: Deployment Safety\")\n    print(\"  - Real-time monitoring of identified circuits\")\n    print(\"  - Automatic intervention when deception risk detected\")\n    print(\"  - Logging for safety auditing\")\n    print(\"  - Continuous validation of circuit behavior\\n\")\n    \n    print(\"💡 From understanding to intervention: mechanistic AI safety in action!\")\n    \n    return findings\n\ncircuits = find_deception_circuit()\nprint(\"\\n✓ Deception safety system operational\")",
+                explanation: "Systematic circuit discovery for specific safety concerns enables targeted interventions.",
+                type: "copy"
+            },
+            {
+                instruction: "Design a comprehensive safety-circuit monitoring system:",
+                why: "This is the culmination of everything we've learned. We take all our interpretability tools - circuits, SAEs, path patching, feature understanding - and build a complete safety system. Not just analyzing models, but actively keeping them safe through mechanistic understanding. This is the future of AI safety.",
+                code: "\ndef comprehensive_safety_system():\n    \"\"\"\n    Design a complete interpretability-based safety system.\n    \"\"\"\n    print(\"\\nComprehensive Safety-Circuit Monitoring System\\n\")\n    \n    print(\"SYSTEM ARCHITECTURE:\\n\")\n    \n    print(\"1. OFFLINE ANALYSIS PHASE (Before Deployment):\")\n    print(\"   a) Train SAEs on all model layers\")\n    print(\"      → Extract ~16K features per layer\")\n    print(\"      → ~1.6M total features for 100-layer model\")\n    print(\"   b) Understand features through attribution\")\n    print(\"      → Identify ~10K safety-relevant features\")\n    print(\"   c) Map safety-critical circuits\")\n    print(\"      → Use path patching on priority behaviors\")\n    print(\"      → Document ~50 critical circuits\")\n    print(\"   d) Design and test interventions\")\n    print(\"      → For each circuit: monitor, boost, or suppress\")\n    print(\"      → Validate on test sets\\n\")\n    \n    print(\"2. REAL-TIME MONITORING PHASE (During Deployment):\")\n    print(\"   a) Track all safety features during generation\")\n    print(\"   b) Compute circuit activation scores\")\n    print(\"   c) Flag anomalous patterns\")\n    print(\"   d) Trigger interventions when needed\")\n    print(\"   e) Log everything for auditing\\n\")\n    \n    print(\"3. INTERVENTION LOGIC:\")\n    print(\"   IF deception_circuit.activation > 0.7:\")\n    print(\"       Boost(truthfulness_circuit)\")\n    print(\"       Alert(safety_team)\")\n    print(\"   IF harmful_content_features.active > 3:\")\n    print(\"       Suppress(generation)\")\n    print(\"       Log(incident)\")\n    print(\"   IF goal_misalignment_detected:\")\n    print(\"       Halt(inference)\")\n    print(\"       Escalate(critical_alert)\\n\")\n    \n    print(\"4. CONTINUOUS IMPROVEMENT:\")\n    print(\"   - Analyze logged incidents weekly\")\n    print(\"   - Update circuit maps as model evolves\")\n    print(\"   - Discover new safety-relevant features\")\n    print(\"   - Refine intervention thresholds\")\n    print(\"   - Share findings with safety community\\n\")\n    \n    print(\"SAFETY GUARANTEES:\")\n    print(\"  ✓ Explainable: Every intervention has mechanistic justification\")\n    print(\"  ✓ Auditable: Complete logs of circuit activations\")\n    print(\"  ✓ Verifiable: Can test circuit behavior offline\")\n    print(\"  ✓ Precise: Surgical interventions on specific circuits\")\n    print(\"  ✓ Comprehensive: Monitors all known safety-relevant features\\n\")\n    \n    print(\"LIMITATIONS:\")\n    print(\"  ⚠️  Unknown unknowns: May miss undiscovered dangerous circuits\")\n    print(\"  ⚠️  Adversarial robustness: Can attackers fool circuit detection?\")\n    print(\"  ⚠️  Emergent behaviors: New capabilities = new circuits to find\")\n    print(\"  ⚠️  Computational cost: Real-time SAE inference is expensive\")\n    print(\"  ⚠️  False positives: Over-sensitive monitoring may hamper usefulness\\n\")\n    \n    print(\"💡 This is mechanistic AI safety at scale!\")\n    print(\"   Not perfect, but far better than black-box approaches.\")\n\ncomprehensive_safety_system()\nprint(\"\\n✓ Full interpretability-based safety system designed\")",
+                explanation: "Comprehensive safety requires integrating all interpretability tools into a cohesive monitoring and intervention system.",
+                type: "copy"
+            },
+            {
+                instruction: "Reflect on the future of interpretability-based AI safety:",
+                code: "# Final reflection: The path to safe AI through understanding",
+                why: "We've journeyed from basic circuits to comprehensive safety systems. This is the promise of mechanistic interpretability: not just understanding how models work, but using that understanding to keep them safe. It's ambitious, difficult, and uncertain. But it's also our best path to AI systems we can truly trust. The question isn't whether we should pursue this path - it's whether we can move fast enough.",
+                explanation: "WHAT WE'VE LEARNED: AI safety needs mechanistic understanding. Circuits, SAEs, path patching, and feature analysis are the tools. Priority: find safety-critical circuits for deception, harm, bias, manipulation, misalignment. Build comprehensive monitoring systems based on circuit understanding. Intervene surgically when safety circuits indicate risk. THE VISION: Every deployed AI system with comprehensive circuit maps. Real-time monitoring of all safety-relevant features. Automatic intervention before harmful outputs. Full auditability and explainability. Continuous improvement as we learn more. Mechanistic safety guarantees, not just empirical testing. THE REALITY: We're not there yet. Current interpretability scales to some frontier models. But comprehensive understanding remains difficult. Unknown unknowns are a major concern. Adversarial robustness needs more work. Computational costs are high. THE RACE: Capabilities advancing faster than interpretability. Need massive acceleration of interpretability research. Or voluntary slowing of capabilities progress. Or accept deploying systems we don't fully understand. The stakes couldn't be higher. THE HOPE: Mechanistic interpretability is working. Recent progress exceeds expectations. Research community is growing. Tools are improving rapidly. Some frontier labs (Anthropic, OpenAI) investing heavily. Path forward exists - we just need to walk it fast enough. THE CALL TO ACTION: If you care about AI safety, learn interpretability. Contribute to tools, research, or funding. Push for interpretability requirements in AI governance. Build interpretability into AI training. Share findings openly. Work together across labs. Make understanding models the norm, not the exception. REMEMBER: Every circuit understood is a step toward safety. Every feature mapped is a potential intervention point. Every tool improved helps the entire community. This is how we build AI we can trust. Not through hope, but through understanding.",
+                type: "reflection",
+                prompts: [
+                    "What's your biggest takeaway from advanced interpretability?",
+                    "How would you contribute to making interpretability-based safety a reality?",
+                    "What's the most important unsolved problem in this field?"
                 ]
             }
         ]

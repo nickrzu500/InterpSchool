@@ -15,13 +15,6 @@
             font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 0 1rem;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 0 0.5rem;
-            }
         }
         
         .nav-link-pill {
@@ -35,10 +28,10 @@
 			background: rgba(255, 255, 255, 0.1);
 			backdrop-filter: blur(10px);
 			transition: all 0.3s ease;
+			display: inline-block;
 			display: block;
-			margin: 1.5rem auto 0;
+			margin: 1rem auto 0;
 			width: fit-content;
-			max-width: calc(100% - 2rem);
 		}
 
 		.nav-link-pill:hover {
@@ -51,13 +44,7 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem 1.5rem;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 1.5rem 1rem;
-            }
+            padding: 2rem;
         }
         
         .header {
@@ -83,19 +70,6 @@
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
             margin-bottom: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .card-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .card-grid {
-                gap: 1rem;
-            }
         }
         
         .card {
@@ -154,29 +128,29 @@
         .hidden {
             display: none;
         }
-        
+
         /* IDE Styles */
+        #lesson-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
         .lesson-ide {
             display: flex;
-            height: 100vh;
-            margin: 0;
-            max-width: 100%;
+            height: 100%;
+            width: 100%;
         }
-        
+
         .lesson-panel {
             width: 40%;
             background: rgba(255, 255, 255, 0.95);
             color: #2d3748;
-            padding: 2rem 1.5rem;
+            padding: 2rem;
             overflow-y: auto;
-            overflow-x: hidden;
-        }
-
-        @media (max-width: 768px) {
-            .lesson-panel {
-                width: 100%;
-                padding: 1.5rem 1rem;
-            }
         }
         
         .lesson-title {
@@ -307,16 +281,10 @@
         .editor-header {
             background: rgba(0, 0, 0, 0.8);
             color: white;
-            padding: 1rem 1.5rem;
+            padding: 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-
-        @media (max-width: 768px) {
-            .editor-header {
-                padding: 1rem;
-            }
         }
         
         .run-button {
@@ -339,18 +307,12 @@
             background: #1e1e1e;
             color: #d4d4d4;
             font-family: monospace;
-            padding: 1.5rem;
+            padding: 1rem;
             border: none;
             resize: none;
             font-size: 14px;
             line-height: 1.5;
             overflow-x: auto;
-        }
-
-        @media (max-width: 768px) {
-            .simple-editor {
-                padding: 1rem;
-            }
         }
         
         .output-panel {
@@ -358,49 +320,11 @@
             background: #1a202c;
             color: #e2e8f0;
             font-family: monospace;
-            padding: 1.5rem;
+            padding: 1rem;
             overflow-y: auto;
             overflow-x: auto;
             flex-shrink: 0;
             white-space: pre-wrap;
-        }
-
-        @media (max-width: 768px) {
-            .output-panel {
-                padding: 1rem;
-            }
-        }
-
-        .expected-output-section {
-            margin-top: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .expected-output-label {
-            font-size: 0.9rem;
-            color: #667eea;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        .expected-output-panel {
-            background: #1a202c;
-            color: #48bb78;
-            font-family: 'Courier New', Courier, monospace;
-            padding: 1rem;
-            border-radius: 8px;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            font-size: 13px;
-            line-height: 1.4;
-            border: 1px solid #2d3748;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .expected-output-panel::before {
-            content: '$ ';
-            color: #9ca3af;
         }
         
         .status-indicator {
@@ -419,12 +343,6 @@
         .badge-page {
             text-align: center;
             padding: 4rem 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .badge-page {
-                padding: 3rem 1.5rem;
-            }
         }
         
         .badge-icon {
@@ -458,17 +376,10 @@
 		.about-section {
 			background: rgba(255, 255, 255, 0.95);
 			border-radius: 16px;
-			padding: 2rem 1.5rem;
+			padding: 2rem;
 			margin-bottom: 2rem;
 			backdrop-filter: blur(10px);
 			border: 1px solid rgba(255, 255, 255, 0.2);
-			overflow-wrap: break-word;
-		}
-
-		@media (max-width: 768px) {
-			.about-section {
-				padding: 1.5rem 1rem;
-			}
 		}
 
 		.about-section h2 {
@@ -554,51 +465,6 @@
 			color: #718096;
 			font-size: 0.9rem;
 		}
-
-		/* Prevent code overflow in about section */
-		.about-section pre,
-		.about-section code {
-			overflow-x: auto;
-			max-width: 100%;
-			display: block;
-			word-wrap: break-word;
-		}
-
-		.about-section pre {
-			background: #f7fafc;
-			padding: 1rem;
-			border-radius: 8px;
-			margin: 1rem 0;
-		}
-
-		/* Ensure lesson IDE is responsive */
-		@media (max-width: 1024px) {
-			.lesson-ide {
-				flex-direction: column;
-			}
-
-			.lesson-panel,
-			.editor-panel {
-				width: 100% !important;
-			}
-
-			.lesson-ide {
-				height: auto;
-			}
-
-			.editor-container {
-				min-height: 400px;
-			}
-		}
-
-		/* Ensure text doesn't overflow */
-		.main-title,
-		.subtitle,
-		.card-title,
-		.card-description {
-			word-wrap: break-word;
-			overflow-wrap: break-word;
-		}
     </style>
 </head>
 <body>
@@ -636,27 +502,18 @@
                         Explore cutting-edge interpretability research including circuits, superposition,
                         and advanced mechanistic interpretability techniques.
                     </p>
-                    <p class="card-meta">1 lesson • Mechanistic Analysis</p>
+                    <p class="card-meta">8 lessons • Deep Technical Understanding</p>
                 </div>
                 
-                <div class="card" onclick="showAgenda('adversarial-robustness')">
-                    <h2 class="card-title">Advanced: Adversarial Robustness</h2>
-                    <p class="card-description">
-                        Learn about adversarial attacks, jailbreaking techniques, prompt injection,
-                        and defensive measures to keep AI systems safe.
-                    </p>
-                    <p class="card-meta">1 lesson • Security & Safety</p>
-                </div>
-
                 <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
                     <h2 class="card-title">
-                        Developmental Interpretability
+                        Developmental Interpretability 
                         <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
                             Under Construction
                         </span>
                     </h2>
                     <p class="card-description">
-                        Study how AI systems learn and develop capabilities over time, including
+                        Study how AI systems learn and develop capabilities over time, including 
                         training dynamics and emergent behaviors.
                     </p>
                     <p class="card-meta">Coming Soon</p>
@@ -695,10 +552,10 @@
                 <div class="card" onclick="showDifficulty('transformer-scratch', 'advanced')">
                     <h2 class="card-title">Advanced: Optimization & Scaling</h2>
                     <p class="card-description">
-                        Learn advanced techniques like training dynamics, efficient inference with KV caching,
-                        quantization, and model compression for production deployment.
+                        Learn advanced techniques like gradient checkpointing, mixed precision training,
+                        and distributed training for large-scale transformers.
                     </p>
-                    <p class="card-meta">3 lessons • 30-45 min each</p>
+                    <p class="card-meta">8 lessons • 15-30 min each</p>
                 </div>
             </div>
         </div>
@@ -745,7 +602,7 @@
                     <p class="card-meta">20 minutes</p>
                 </div>
                 
-                <div class="card" onclick="showLesson('complete-transformer-basic')">
+                <div class="card" onclick="showLesson('complete-transformer')">
                     <h2 class="card-title">Putting It All Together</h2>
                     <p class="card-description">
                         See how all transformer components work together to process and generate text.
@@ -831,6 +688,82 @@
             </div>
         </div>
 
+        <!-- Advanced Lessons Page -->
+        <div id="advanced-lessons-page" class="container hidden">
+            <button class="back-button" onclick="showAgenda('transformer-scratch')">← Back to Transformer from Scratch</button>
+
+            <div class="header">
+                <h1 class="main-title">Advanced: Optimization & Scaling</h1>
+                <p class="subtitle">Master the techniques used to train frontier AI models</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card" onclick="showLesson('gradient-checkpointing')">
+                    <h2 class="card-title">Gradient Checkpointing</h2>
+                    <p class="card-description">
+                        Trade compute for memory to train larger models. Learn how this technique enables frontier-scale training.
+                    </p>
+                    <p class="card-meta">20 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('mixed-precision-training')">
+                    <h2 class="card-title">Mixed Precision Training</h2>
+                    <p class="card-description">
+                        Use FP16/BF16 for 2-3x speedup. Understand loss scaling and how all modern models use mixed precision.
+                    </p>
+                    <p class="card-meta">25 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('memory-optimization')">
+                    <h2 class="card-title">Memory Optimization</h2>
+                    <p class="card-description">
+                        Learn Flash Attention and KV caching - the techniques enabling long context windows in modern AI.
+                    </p>
+                    <p class="card-meta">20 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('distributed-training-basics')">
+                    <h2 class="card-title">Distributed Training Basics</h2>
+                    <p class="card-description">
+                        Understand why frontier models require distributed training across hundreds of GPUs.
+                    </p>
+                    <p class="card-meta">15 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('data-parallelism')">
+                    <h2 class="card-title">Data Parallelism</h2>
+                    <p class="card-description">
+                        Learn the simplest distributed strategy: replicate the model, split the data.
+                    </p>
+                    <p class="card-meta">15 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('model-parallelism')">
+                    <h2 class="card-title">Model Parallelism</h2>
+                    <p class="card-description">
+                        Split models too large for one GPU across multiple devices. Essential for trillion-parameter models.
+                    </p>
+                    <p class="card-meta">20 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('pipeline-parallelism')">
+                    <h2 class="card-title">Pipeline Parallelism</h2>
+                    <p class="card-description">
+                        Use micro-batching to eliminate pipeline bubbles and achieve high GPU utilization.
+                    </p>
+                    <p class="card-meta">20 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('training-at-scale')">
+                    <h2 class="card-title">Training at Scale</h2>
+                    <p class="card-description">
+                        Put it all together: how GPT-4 and Claude combine all optimization techniques for frontier AI.
+                    </p>
+                    <p class="card-meta">30 minutes</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Basic Interpretability Page -->
         <div id="basic-interpretability-page" class="container hidden">
             <button class="back-button" onclick="showWelcome()">← Back to Home</button>
@@ -883,108 +816,78 @@
             </div>
         </div>
 
-        <!-- Advanced Lessons Page (Optimization & Scaling) -->
-        <div id="advanced-lessons-page" class="container hidden">
-            <button class="back-button" onclick="showAgenda('transformer-scratch')">← Back to Transformer from Scratch</button>
-
-            <div class="header">
-                <h1 class="main-title">Advanced: Optimization & Scaling</h1>
-                <p class="subtitle">Production-ready techniques for training and deploying transformers</p>
-            </div>
-
-            <div class="card-grid">
-                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
-                    <h2 class="card-title">
-                        Training Dynamics & Optimization
-                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
-                            Under Construction
-                        </span>
-                    </h2>
-                    <p class="card-description">
-                        Understand how training dynamics affect model behavior and safety. Learn about loss landscapes,
-                        learning rate scheduling, and gradient flow analysis.
-                    </p>
-                    <p class="card-meta">Coming Soon</p>
-                </div>
-
-                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
-                    <h2 class="card-title">
-                        Efficient Inference & Scaling
-                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
-                            Under Construction
-                        </span>
-                    </h2>
-                    <p class="card-description">
-                        Implement KV caching for faster generation, quantization for reduced memory, and
-                        understand the trade-offs for production deployment.
-                    </p>
-                    <p class="card-meta">Coming Soon</p>
-                </div>
-
-                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
-                    <h2 class="card-title">
-                        Model Compression & Deployment
-                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
-                            Under Construction
-                        </span>
-                    </h2>
-                    <p class="card-description">
-                        Learn knowledge distillation, pruning, and how to compress models while preserving
-                        safety properties and alignment.
-                    </p>
-                    <p class="card-meta">Coming Soon</p>
-                </div>
-            </div>
-        </div>
-
         <!-- Advanced Interpretability Page -->
         <div id="advanced-interpretability-page" class="container hidden">
             <button class="back-button" onclick="showWelcome()">← Back to Home</button>
 
             <div class="header">
                 <h1 class="main-title">Advanced Interpretability</h1>
-                <p class="subtitle">Cutting-edge mechanistic interpretability techniques</p>
+                <p class="subtitle">Master cutting-edge techniques for understanding frontier AI models</p>
             </div>
 
             <div class="card-grid">
-                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
-                    <h2 class="card-title">
-                        Circuit Analysis & Mechanistic Interpretability
-                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
-                            Under Construction
-                        </span>
-                    </h2>
+                <div class="card" onclick="showLesson('circuits-discovery')">
+                    <h2 class="card-title">Circuits & Circuit Discovery</h2>
                     <p class="card-description">
-                        Discover computational circuits in neural networks using activation patching,
-                        causal interventions, and graph analysis to understand how models implement algorithms.
+                        Learn to identify computational circuits within models - the algorithms that implement specific behaviors. Essential for understanding model internals.
                     </p>
-                    <p class="card-meta">Coming Soon</p>
+                    <p class="card-meta">25 minutes</p>
                 </div>
-            </div>
-        </div>
 
-        <!-- Adversarial Robustness Page -->
-        <div id="adversarial-robustness-page" class="container hidden">
-            <button class="back-button" onclick="showWelcome()">← Back to Home</button>
-
-            <div class="header">
-                <h1 class="main-title">Advanced: Adversarial Robustness</h1>
-                <p class="subtitle">Understanding and defending against adversarial attacks</p>
-            </div>
-
-            <div class="card-grid">
-                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
-                    <h2 class="card-title">
-                        Understanding Jailbreaking & Prompt Injection
-                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
-                            Under Construction
-                        </span>
-                    </h2>
+                <div class="card" onclick="showLesson('superposition-polysemanticity')">
+                    <h2 class="card-title">Superposition & Polysemanticity</h2>
                     <p class="card-description">
-                        Learn about adversarial prompting techniques, common jailbreaking patterns,
-                        and how to detect and defend against prompt injection attacks.
+                        Understand why neurons respond to multiple concepts and how models pack more features than dimensions. The core challenge of interpretability.
                     </p>
-                    <p class="card-meta">Coming Soon</p>
+                    <p class="card-meta">30 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('sparse-autoencoders')">
+                    <h2 class="card-title">Sparse Autoencoders (SAEs)</h2>
+                    <p class="card-description">
+                        Master the breakthrough technique for extracting interpretable features from superposition. Key to understanding frontier models.
+                    </p>
+                    <p class="card-meta">30 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('induction-heads')">
+                    <h2 class="card-title">Induction Heads</h2>
+                    <p class="card-description">
+                        Study the circuit that enables in-context learning. A landmark discovery showing models can be understood mechanistically.
+                    </p>
+                    <p class="card-meta">25 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('path-patching')">
+                    <h2 class="card-title">Path Patching</h2>
+                    <p class="card-description">
+                        Learn causal analysis techniques to isolate which circuits are responsible for specific behaviors. From correlation to causation.
+                    </p>
+                    <p class="card-meta">30 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('feature-visualization')">
+                    <h2 class="card-title">Feature Visualization</h2>
+                    <p class="card-description">
+                        Understand how to interpret what features represent and identify safety-relevant features in models.
+                    </p>
+                    <p class="card-meta">20 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('mechanistic-interpretability-scale')">
+                    <h2 class="card-title">Interpretability at Scale</h2>
+                    <p class="card-description">
+                        Explore the challenges and solutions for applying interpretability to frontier models like GPT-4 and Claude.
+                    </p>
+                    <p class="card-meta">20 minutes</p>
+                </div>
+
+                <div class="card" onclick="showLesson('safety-critical-circuits')">
+                    <h2 class="card-title">Safety-Critical Circuits</h2>
+                    <p class="card-description">
+                        Apply everything you've learned to find and intervene on circuits responsible for deception, harm, and misalignment.
+                    </p>
+                    <p class="card-meta">30 minutes</p>
                 </div>
             </div>
         </div>
@@ -1013,13 +916,6 @@
                         </div>
                         <div class="code-example" id="code-example">
                             print('Code example here')
-                        </div>
-                        <div id="expected-output-section" class="expected-output-section" style="display: none;">
-                            <div class="expected-output-label">
-                                Expected Console Output:
-                            </div>
-                            <div class="expected-output-panel" id="expected-output-panel">
-                            </div>
                         </div>
                         <div class="step-actions">
                             <button class="btn btn-primary" onclick="checkCode()">Check Code</button>
@@ -1221,8 +1117,6 @@
                 document.getElementById('basic-interpretability-page').classList.remove('hidden');
             } else if (type === 'advanced-interpretability') {
                 document.getElementById('advanced-interpretability-page').classList.remove('hidden');
-            } else if (type === 'adversarial-robustness') {
-                document.getElementById('adversarial-robustness-page').classList.remove('hidden');
             }
         }
 
@@ -1253,34 +1147,28 @@
         }
 
         function goBackToLessons() {
-
+          
     // Make sure to show the about button here too
     const aboutButton = document.querySelector('.nav-link-pill');
     if (aboutButton) {
         aboutButton.style.display = 'block';
     }
-
-            const basicLessons = ['tokenization-basics', 'embeddings-positional', 'attention-mechanism', 'mlp-layers', 'complete-transformer-basic', 'text-generation'];
-            const intermediateLessons = ['layernorm-implementation', 'embedding-layers', 'attention-implementation', 'mlp-implementation', 'transformer-blocks', 'sampling-methods-safety'];
-            const advancedLessons = ['training-dynamics', 'efficient-inference', 'model-compression'];
-            const interpretabilityLessons = ['attention-patterns', 'logit-lens', 'activation-analysis', 'probing-experiments', 'finding-features'];
-            const advancedInterpretabilityLessons = ['circuit-analysis'];
-            const adversarialRobustnessLessons = ['jailbreaking-intro'];
+            
+            const basicLessons = ['tokenization-basics', 'embeddings-positional', 'attention-mechanism', 'mlp-layers', 'complete-transformer', 'text-generation'];
+            const interpretabilityLessons = ['attention-patterns', 'logit-lens', 'activation-patching', 'probing-experiments', 'finding-features'];
+            const advancedLessons = ['gradient-checkpointing', 'mixed-precision-training', 'memory-optimization', 'distributed-training-basics', 'data-parallelism', 'model-parallelism', 'pipeline-parallelism', 'training-at-scale'];
+            const advancedInterpretabilityLessons = ['circuits-discovery', 'superposition-polysemanticity', 'sparse-autoencoders', 'induction-heads', 'path-patching', 'feature-visualization', 'mechanistic-interpretability-scale', 'safety-critical-circuits'];
 
             if (basicLessons.includes(currentLessonId)) {
                 showDifficulty('transformer-scratch', 'basic');
-            } else if (intermediateLessons.includes(currentLessonId)) {
-                showDifficulty('transformer-scratch', 'intermediate');
-            } else if (advancedLessons.includes(currentLessonId)) {
-                showDifficulty('transformer-scratch', 'advanced');
             } else if (interpretabilityLessons.includes(currentLessonId)) {
                 showAgenda('basic-interpretability');
             } else if (advancedInterpretabilityLessons.includes(currentLessonId)) {
                 showAgenda('advanced-interpretability');
-            } else if (adversarialRobustnessLessons.includes(currentLessonId)) {
-                showAgenda('adversarial-robustness');
+            } else if (advancedLessons.includes(currentLessonId)) {
+                showDifficulty('transformer-scratch', 'advanced');
             } else {
-                showWelcome();
+                showDifficulty('transformer-scratch', 'intermediate');
             }
         }
 
@@ -1290,7 +1178,7 @@
         }
 
         function hideAll() {
-            const pages = ['welcome-page', 'transformer-scratch-page', 'basic-lessons-page', 'intermediate-lessons-page', 'advanced-lessons-page', 'basic-interpretability-page', 'advanced-interpretability-page', 'adversarial-robustness-page', 'lesson-page', 'badge-page', 'about-page'];
+            const pages = ['welcome-page', 'transformer-scratch-page', 'basic-lessons-page', 'intermediate-lessons-page', 'advanced-lessons-page', 'basic-interpretability-page', 'advanced-interpretability-page', 'lesson-page', 'badge-page', 'about-page'];
             pages.forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
@@ -1317,17 +1205,7 @@
             } else {
                 whyDiv.style.display = 'none';
             }
-
-            // Display expected console output if present
-            const expectedOutputSection = document.getElementById('expected-output-section');
-            const expectedOutputPanel = document.getElementById('expected-output-panel');
-            if (step.expectedOutput) {
-                expectedOutputSection.style.display = 'block';
-                expectedOutputPanel.textContent = step.expectedOutput;
-            } else {
-                expectedOutputSection.style.display = 'none';
-            }
-
+            
             // Update UI based on exercise type
             const exerciseType = step.type || 'copy';
             const codeExample = document.getElementById('code-example');
