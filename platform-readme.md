@@ -11,37 +11,12 @@ ai-safety-platform/
 └── README.md        # This file
 ```
 
-## Setup
-
-1. Save both files (`index.html` and `lessons.js`) in the same directory
-2. Open `index.html` in a web browser
-3. Start learning!
-
 ## Features
 
 - **Interactive Coding Exercises**: Multiple exercise types including copy, fill-in-the-blank, multiple choice, and construct
 - **Progressive Learning**: Start with conceptual understanding, then move to implementation
 - **AI Safety Focus**: Every lesson connects technical concepts to AI safety implications
-- **No Setup Required**: Works directly in the browser
 
-## Adding New Lessons
-
-To add new lessons, edit `lessons.js` and add your lesson to the `LESSONS` object:
-
-```javascript
-LESSONS['your-lesson-id'] = {
-    title: "Your Lesson Title",
-    steps: [
-        {
-            instruction: "Step instruction",
-            code: "example code",
-            explanation: "Why this matters",
-            type: "copy", // or "fill-in", "multiple-choice", "construct"
-            // Additional properties based on type
-        }
-    ]
-};
-```
 
 ## Exercise Types
 

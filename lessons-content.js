@@ -117,7 +117,7 @@ const LESSONS = {
         {
             instruction: "Explore the vocabulary size:",
             code: "vocab_size = len(tokenizer.vocab)\nprint(f'Vocabulary size: {vocab_size}')\nprint(f'{vocab_size} different possible tokens')",
-            explanation: "GPT-2 knows about 50,000 different tokens. This finite vocabulary is the foundation that allows it to understand and generate human language!"
+            explanation: "GPT-2 has exactly 50,257 different tokens in its vocabulary. This finite vocabulary is the foundation that allows it to understand and generate human language!"
         },
         {
             instruction: "Let's see some interesting tokens in the vocabulary:",
@@ -266,8 +266,9 @@ print(f'Text: "{text}"')
 print(f'Tokens: {tokens}')
 
 # Start with embeddings (the initial residual stream)
-token_embeds = embed(tokens)
-pos_embeds = pos_embed(tokens)
+token_embeds = embedding(tokens)
+positions = torch.arange(len(tokens))
+pos_embeds = pos_embedding(positions)
 residual_stream = token_embeds + pos_embeds  # Shape: [seq_len, 768]
 
 print(f'\\nResidual stream shape: {residual_stream.shape}')
@@ -291,8 +292,8 @@ for i, token in enumerate(tokenizer.convert_ids_to_tokens(tokens)):
 # Visualize information capacity
 print(f'\\n=== Information Capacity ===')
 print(f'Each position has 768 numbers to encode:')
-print(f'  - Token identity (vocabulary size: {cfg.d_vocab})')
-print(f'  - Position (up to {cfg.n_ctx} positions)')
+print(f'  - Token identity (vocabulary size: 50257)')
+print(f'  - Position (up to 1024 positions)')
 print(f'  - Grammatical role')
 print(f'  - Semantic features')
 print(f'  - Relationships to other tokens')
@@ -327,8 +328,9 @@ tokens = torch.tensor(tokenizer.encode(text))
 n_tokens = len(tokens)
 
 # Get embeddings with and without position
-token_only = embed(tokens)
-with_position = embed(tokens) + pos_embed(tokens)
+token_only = embedding(tokens)
+positions_for_seq = torch.arange(len(tokens))
+with_position = embedding(tokens) + pos_embedding(positions_for_seq)
 
 print(f'Analyzing: "{text}"')
 print(f'Tokens: {tokenizer.convert_ids_to_tokens(tokens)}\\n')
@@ -339,7 +341,8 @@ print("(These dot products will become attention scores after softmax!)\\n")
 
 # Without position - only token similarity matters
 dots_no_pos = torch.matmul(token_only, token_only.T)
-# With position - both token AND position matter  
+# With position - both token AND position matter
+positions_seq = torch.arange(n_tokens)
 dots_with_pos = torch.matmul(with_position, with_position.T)
 
 # Normalize for comparison
@@ -378,6 +381,7 @@ print("Position embeddings shape these patterns before any learning!")`,
     why: "Embedding magnitude often correlates with token importance or frequency. Common words like 'the' might have different magnitudes than rare technical terms. For safety, sudden magnitude changes might indicate the model is processing sensitive content or making important decisions. This gives us a potential monitoring signal.",
     code: `# Analyze magnitude patterns
 # Let's explore how embedding magnitudes relate to token frequency and importance
+import numpy as np
 
 # Get some common and rare tokens
 common_words = ['the', 'a', 'is', 'and', 'to', 'in', 'it', 'of']
@@ -396,15 +400,15 @@ print("=== Embedding Magnitude Analysis ===\\n")
 common_mags = []
 print("Common words:")
 for word, token_id in zip(common_words, common_ids):
-    magnitude = torch.norm(embed.W_E[token_id]).item()
+    magnitude = torch.norm(embedding.weight[token_id]).item()
     common_mags.append(magnitude)
     print(f"  '{word}' (token {token_id}): magnitude = {magnitude:.3f}")
 
-# Rare words  
+# Rare words
 rare_mags = []
 print("\\nRare/technical words:")
 for word, token_id in zip(rare_words, rare_ids):
-    magnitude = torch.norm(embed.W_E[token_id]).item()
+    magnitude = torch.norm(embedding.weight[token_id]).item()
     rare_mags.append(magnitude)
     print(f"  '{word}' (token {token_id}): magnitude = {magnitude:.3f}")
 
@@ -412,7 +416,7 @@ for word, token_id in zip(rare_words, rare_ids):
 safety_mags = []
 print("\\nSafety-relevant words:")
 for word, token_id in zip(safety_words, safety_ids):
-    magnitude = torch.norm(embed.W_E[token_id]).item()
+    magnitude = torch.norm(embedding.weight[token_id]).item()
     safety_mags.append(magnitude)
     print(f"  '{word}' (token {token_id}): magnitude = {magnitude:.3f}")
 
@@ -423,7 +427,7 @@ print(f"Rare words: mean={np.mean(rare_mags):.3f}, std={np.std(rare_mags):.3f}")
 print(f"Safety words: mean={np.mean(safety_mags):.3f}, std={np.std(safety_mags):.3f}")
 
 # Find outliers across all embeddings
-all_magnitudes = torch.norm(embed.W_E, dim=1)
+all_magnitudes = torch.norm(embedding.weight, dim=1)
 mean_mag = all_magnitudes.mean().item()
 std_mag = all_magnitudes.std().item()
 threshold = mean_mag + 2 * std_mag
@@ -446,7 +450,7 @@ for idx in outlier_indices[:5]:
 print("\\n=== Safety Monitoring Example ===")
 test_text = "This model should not harm humans"
 test_tokens = torch.tensor(tokenizer.encode(test_text))
-test_embeds = embed(test_tokens)
+test_embeds = embedding(test_tokens)
 test_mags = torch.norm(test_embeds, dim=1)
 
 print(f'Text: "{test_text}"')
@@ -462,6 +466,7 @@ for i, (token_id, mag) in enumerate(zip(test_tokens, test_mags)):
     why: "Embeddings map similar concepts to nearby points in space. For AI safety, this means we might detect harmful content by looking for embeddings similar to known harmful concepts. This is the foundation of many safety techniques.",
     code: `# In trained models, similar words cluster together
 # Let's measure semantic similarity using embeddings
+import numpy as np
 
 # Define word groups to explore
 word_groups = {
@@ -476,7 +481,7 @@ word_groups = {
 # Function to get embedding for a word
 def get_word_embedding(word):
     token_id = tokenizer.encode(word)[0]  # Get first token
-    return embed.W_E[token_id]
+    return embedding.weight[token_id]
 
 # Calculate within-group similarity
 print("=== Within-Group Similarities ===")
@@ -533,11 +538,11 @@ target_emb = get_word_embedding(target_word)
 
 # Calculate similarity to all tokens (subsample for efficiency)
 sample_size = 1000
-sample_indices = torch.randperm(embed.W_E.shape[0])[:sample_size]
+sample_indices = torch.randperm(embedding.weight.shape[0])[:sample_size]
 similarities = []
 
 for idx in sample_indices:
-    sim = torch.cosine_similarity(target_emb, embed.W_E[idx], dim=0)
+    sim = torch.cosine_similarity(target_emb, embedding.weight[idx], dim=0)
     similarities.append((idx.item(), sim.item()))
 
 # Sort by similarity and show top 5
@@ -894,7 +899,7 @@ for term in test_terms:
             {
                 instruction: "The GELU activation function is crucial - let's see what it does:",
                 why: "GELU (Gaussian Error Linear Unit) allows the model to learn non-linear patterns. Without it, stacking layers would be pointless. For AI safety, non-linearity means models can learn complex decision boundaries between safe and unsafe content.",
-                code: "import matplotlib.pyplot as plt\nimport numpy as np\n\nx_sample = torch.linspace(-3, 3, 100)\ngelu_output = F.gelu(x_sample)\nrelu_output = F.relu(x_sample)\n\nplt.figure(figsize=(8, 4))\nplt.plot(x_sample, gelu_output, label='GELU', linewidth=2)\nplt.plot(x_sample, relu_output, label='ReLU', linewidth=2)\nplt.grid(True, alpha=0.3)\nplt.legend()\nplt.title('GELU vs ReLU Activation')\nplt.xlabel('Input')\nplt.ylabel('Output')\nplt.show()",
+                code: "import matplotlib.pyplot as plt\nimport numpy as np\nimport torch.nn.functional as F\n\nx_sample = torch.linspace(-3, 3, 100)\ngelu_output = F.gelu(x_sample)\nrelu_output = F.relu(x_sample)\n\nplt.figure(figsize=(8, 4))\nplt.plot(x_sample, gelu_output, label='GELU', linewidth=2)\nplt.plot(x_sample, relu_output, label='ReLU', linewidth=2)\nplt.grid(True, alpha=0.3)\nplt.legend()\nplt.title('GELU vs ReLU Activation')\nplt.xlabel('Input')\nplt.ylabel('Output')\nplt.show()",
                 explanation: "GELU (Gaussian Error Linear Unit) is smoother than ReLU. This allows for more nuanced transformations of the information."
             },
             {
@@ -3100,7 +3105,7 @@ for term in test_terms:
             {
                 instruction: "Let's understand floating point precision and why it matters for AI:",
                 why: "Precision isn't just about speed - it's about determinism and reproducibility, which are critical for AI safety research. If we can't reproduce a model's concerning behavior because of numerical instability, we can't study or fix it. Every bit of precision we trade for speed is a potential source of unpredictable behavior.",
-                code: "import torch\nimport torch.nn as nn\nimport numpy as np\nimport time\n\n# Understanding floating point formats\nprint(\"Floating Point Precision Formats:\")\nprint(\"\\nFP32 (Float32):\")\nprint(\"  - 32 bits: 1 sign + 8 exponent + 23 mantissa\")\nprint(\"  - Range: ~1.4e-45 to ~3.4e38\")\nprint(\"  - Precision: ~7 decimal digits\")\nprint(\"  - Standard for deep learning\")\n\nprint(\"\\nFP16 (Float16/Half):\")\nprint(\"  - 16 bits: 1 sign + 5 exponent + 10 mantissa\")\nprint(\"  - Range: ~6e-8 to ~65,504\")\nprint(\"  - Precision: ~3 decimal digits\")\nprint(\"  - 2x memory savings, 2-3x speedup on modern GPUs\")\nprint(\"  - Risk: Numerical instability\")\n\nprint(\"\\nBF16 (BFloat16):\")\nprint(\"  - 16 bits: 1 sign + 8 exponent + 7 mantissa\")\nprint(\"  - Range: Same as FP32 (~1.4e-45 to ~3.4e38)\")\nprint(\"  - Precision: ~2-3 decimal digits\")\nprint(\"  - Better for training than FP16 (wider range)\")\nprint(\"  - Used in TPUs and modern NVIDIA GPUs\")",
+                code: "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport numpy as np\nimport time\n\n# Understanding floating point formats\nprint(\"Floating Point Precision Formats:\")\nprint(\"\\nFP32 (Float32):\")\nprint(\"  - 32 bits: 1 sign + 8 exponent + 23 mantissa\")\nprint(\"  - Range: ~1.4e-45 to ~3.4e38\")\nprint(\"  - Precision: ~7 decimal digits\")\nprint(\"  - Standard for deep learning\")\n\nprint(\"\\nFP16 (Float16/Half):\")\nprint(\"  - 16 bits: 1 sign + 5 exponent + 10 mantissa\")\nprint(\"  - Range: ~6e-8 to ~65,504\")\nprint(\"  - Precision: ~3 decimal digits\")\nprint(\"  - 2x memory savings, 2-3x speedup on modern GPUs\")\nprint(\"  - Risk: Numerical instability\")\n\nprint(\"\\nBF16 (BFloat16):\")\nprint(\"  - 16 bits: 1 sign + 8 exponent + 7 mantissa\")\nprint(\"  - Range: Same as FP32 (~1.4e-45 to ~3.4e38)\")\nprint(\"  - Precision: ~2-3 decimal digits\")\nprint(\"  - Better for training than FP16 (wider range)\")\nprint(\"  - Used in TPUs and modern NVIDIA GPUs\")",
                 explanation: "Different precision formats trade memory/speed for numerical accuracy. Understanding these tradeoffs is crucial for both efficiency and safety.",
                 type: "copy"
             },
