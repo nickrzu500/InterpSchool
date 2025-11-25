@@ -286,7 +286,14 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
+        .simulated-output-disclaimer {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+            font-weight: 400;
+        }
+
         .run-button {
             background: #48bb78;
             color: white;
@@ -324,7 +331,10 @@
             overflow-y: auto;
             overflow-x: auto;
             flex-shrink: 0;
-            white-space: pre-wrap;
+        }
+
+        .output {
+            padding-top: 1rem;
         }
         
         .status-indicator {
@@ -905,7 +915,8 @@
                         <textarea id="code-editor" class="simple-editor" placeholder="Type your Python code here..."></textarea>
                     </div>
                     <div class="output-panel">
-                        <pre id="output">Add the new code shown above to your existing code, then click "Check Code" to continue...</pre>
+                        <span class="simulated-output-disclaimer">Output shown is simulated</span>
+                        <pre id="output" class="output">Add the new code shown above to your existing code, then click "Check Code" to continue...</pre>
                     </div>
                 </div>
             </div>
@@ -933,9 +944,9 @@
 			
 			<div class="about-content">
 				<div class="about-section">
-				    <h2>Our Mission</h2>
+				    <h2>The Mission</h2>
 				    <p>
-				        This platform was collaboratively built as a <strong>free resource</strong> for anyone wishing to learn more about technical AI safety or take their first steps into this crucial field. We believe that understanding how AI systems work is essential for ensuring they remain beneficial and aligned with human values.
+				        This platform was collaboratively built as a <strong>free resource</strong> for anyone wishing to learn more about technical AI safety or take their first steps into this crucial field. I believe that understanding how AI systems work is essential for ensuring they remain beneficial and aligned with human values.
 				    </p>
 				</div>
 
@@ -949,10 +960,10 @@
 				<div class="about-section">
 				    <h2>Attribution & Inspiration</h2>
 				    <p>
-				        The transformer lessons draw substantial inspiration from <strong>ARENA (AI Alignment Research Engineers Accelerator)</strong>, specifically their excellent Lesson 1.1 on building a transformer from scratch. ARENA's comprehensive curriculum has been invaluable in shaping our understanding of how to teach these concepts effectively.
+				        The transformer lessons draw substantial inspiration from <strong>ARENA (AI Alignment Research Engineers Accelerator)</strong>, specifically their excellent Lesson 1.1 on building a transformer from scratch. ARENA's comprehensive curriculum has been invaluable in shaping the approach of how to teach these concepts effectively.
 				    </p>
 				    <p>
-				        We encourage learners who complete our interactive exercises to explore ARENA's full curriculum for deeper study and more advanced topics.
+				        Learners who complete InterpSchool's interactive exercises are encouraged to explore ARENA's full curriculum for deeper study and more advanced topics.
 				    </p>
 				    <div class="attribution-links">
 				        <a href="https://www.arena.education/" target="_blank" class="attribution-link">
@@ -964,7 +975,7 @@
 				<div class="about-section">
 				    <h2>Open Source & Community</h2>
 				    <p>
-				        This platform is built on the principle that AI safety education should be accessible to everyone. We believe in:
+				        This platform is built on the principle that AI safety education should be accessible to everyone. This means:
 				    </p>
 				    <ul>
 				        <li>Free access to technical knowledge</li>
@@ -977,7 +988,7 @@
 				<div class="about-section">
 				    <h2>Get Involved</h2>
 				    <p>
-				        This is an open project aimed at expanding access to AI safety knowledge. We welcome:
+				        This is an open project aimed at expanding access to AI safety knowledge. Please feel free to provide:
 				    </p>
 				    <ul>
 				        <li>Feedback on existing lessons</li>
@@ -988,13 +999,6 @@
 				    <p>
 				        Together, we can build a community of informed researchers working toward beneficial AI.
 				    </p>
-
-                    <h2>Project Structure</h2>
-                    
-                    <pre><code>ai-safety-platform/
-            ├── index.html       # Main platform interface
-            ├── lessons.js       # All lesson content
-            └── README.md        # This file</code></pre>
                     
                     <h2>Features</h2>
                     
@@ -1004,23 +1008,6 @@
                         <li><strong>AI Safety Focus</strong>: Every lesson connects technical concepts to AI safety implications</li>
                         <li><strong>No Setup Required</strong>: Works directly in the browser</li>
                     </ul>
-                    
-                    <h2>Adding New Lessons</h2>
-                    
-                    <p>To add new lessons, edit <code>lessons.js</code> and add your lesson to the <code>LESSONS</code> object:</p>
-                    
-                    <pre><code>LESSONS['your-lesson-id'] = {
-                title: "Your Lesson Title",
-                steps: [
-                    {
-                        instruction: "Step instruction",
-                        code: "example code",
-                        explanation: "Why this matters",
-                        type: "copy", // or "fill-in", "multiple-choice", "construct"
-                        // Additional properties based on type
-                    }
-                ]
-            };</code></pre>
                     
                     <h2>Exercise Types</h2>
                     
@@ -1121,7 +1108,11 @@
 
         function showLesson(lessonId) {
             currentLessonId = lessonId || 'tokenization-basics';
-            currentStep = 0;
+            // Don't reset currentStep here - it may have been set by the router
+            // Only reset to 0 if currentStep is undefined or out of range
+            if (currentStep === undefined || currentStep < 0) {
+                currentStep = 0;
+            }
             hideAll();
 
             // Hide the about button when showing a lesson
@@ -1431,6 +1422,9 @@
             if (currentStep < currentLesson.steps.length - 1) {
                 currentStep++;
                 updateStep();
+                // Update URL to reflect current step
+                const newUrl = `?lesson=${currentLessonId}&step=${currentStep + 1}`;
+                window.history.pushState({}, '', newUrl);
             } else {
                 // Last step - show completion
                 showBadge();
@@ -1440,10 +1434,13 @@
         function nextStep() {
             const currentLesson = LESSONS[currentLessonId];
             if (!currentLesson) return;
-            
+
             if (currentStep < currentLesson.steps.length - 1) {
                 currentStep++;
                 updateStep();
+                // Update URL to reflect current step
+                const newUrl = `?lesson=${currentLessonId}&step=${currentStep + 1}`;
+                window.history.pushState({}, '', newUrl);
             } else {
                 showBadge();
             }
@@ -1481,26 +1478,36 @@
             // Handle routing based on URL
             handleRoute() {
                 const { lesson, step } = this.parseParams();
-                
+
                 // No lesson specified - show welcome
                 if (!lesson) {
                     showWelcome();
                     return;
                 }
-                
+
                 // Check if lesson exists
                 if (!LESSONS[lesson]) {
                     console.error(`Lesson '${lesson}' not found. Available lessons:`, Object.keys(LESSONS));
                     showWelcome();
                     return;
                 }
-                
+
                 // Navigate to lesson
-                showLesson(lesson);
-                
-                // Navigate to specific step if provided
+                currentLessonId = lesson;
                 if (step !== null) {
-                    this.navigateToStep(lesson, step);
+                    // Validate step before navigating
+                    const lessonData = LESSONS[lesson];
+                    if (step < 1 || step > lessonData.steps.length) {
+                        console.error(`Step ${step} out of range for lesson '${lesson}'. Valid range: 1-${lessonData.steps.length}`);
+                        currentStep = 0;
+                        showLesson(lesson, false); // Show step 1, don't reset currentStep
+                    } else {
+                        currentStep = step - 1; // Set the step before showing lesson
+                        showLesson(lesson, false); // Don't reset currentStep - we already set it
+                    }
+                } else {
+                    currentStep = 0;
+                    showLesson(lesson, false); // Don't reset currentStep - we already set it
                 }
             }
             
@@ -1592,11 +1599,19 @@
 
         // Override the existing showLesson to update URL
         const originalShowLesson = window.showLesson;
-        window.showLesson = function(lessonId) {
+        window.showLesson = function(lessonId, resetStep = true) {
+            // When called from lesson cards, reset to step 0
+            // When called from router, don't reset (step already set)
+            if (resetStep) {
+                currentStep = 0;
+            }
             originalShowLesson(lessonId);
             // Update URL to match current state
-            if (window.location.search !== `?lesson=${lessonId}`) {
-                window.history.pushState({}, '', `?lesson=${lessonId}`);
+            const targetUrl = currentStep > 0
+                ? `?lesson=${lessonId}&step=${currentStep + 1}`
+                : `?lesson=${lessonId}`;
+            if (window.location.search !== targetUrl) {
+                window.history.pushState({}, '', targetUrl);
             }
         };
 
