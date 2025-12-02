@@ -87,6 +87,28 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             background: rgba(255, 255, 255, 1);
         }
+
+        .card.completed {
+            border: 2px solid #48bb78;
+            position: relative;
+        }
+
+        .card.completed::after {
+            content: '✓';
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: #48bb78;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
         
         .card-title {
             font-size: 1.5rem;
@@ -580,42 +602,42 @@
             </div>
             
             <div class="card-grid">
-                <div class="card" onclick="showLesson('tokenization-basics')">
+                <div class="card" data-lesson="tokenization-basics" onclick="showLesson('tokenization-basics')">
                     <h2 class="card-title">Tokenization & Text Processing</h2>
                     <p class="card-description">
                         Learn how text becomes numbers that AI models can understand. This is the foundation of all language models.
                     </p>
                 </div>
-                
-                <div class="card" onclick="showLesson('embeddings-positional')">
+
+                <div class="card" data-lesson="embeddings-positional" onclick="showLesson('embeddings-positional')">
                     <h2 class="card-title">Embeddings & Positional Encoding</h2>
                     <p class="card-description">
                         Understand how tokens become vectors and how models know word positions in sequences.
                     </p>
                 </div>
-                
-                <div class="card" onclick="showLesson('attention-mechanism')">
+
+                <div class="card" data-lesson="attention-mechanism" onclick="showLesson('attention-mechanism')">
                     <h2 class="card-title">Attention Mechanism Basics</h2>
                     <p class="card-description">
                         Discover the core mechanism that allows transformers to focus on relevant parts of text.
                     </p>
                 </div>
-                
-                <div class="card" onclick="showLesson('mlp-layers')">
+
+                <div class="card" data-lesson="mlp-layers" onclick="showLesson('mlp-layers')">
                     <h2 class="card-title">MLP Layers</h2>
                     <p class="card-description">
                         Learn about the feed-forward networks where transformers do their computational processing.
                     </p>
                 </div>
                 
-                <div class="card" onclick="showLesson('complete-transformer')">
+                <div class="card" data-lesson="complete-transformer" onclick="showLesson('complete-transformer')">
                     <h2 class="card-title">Putting It All Together</h2>
                     <p class="card-description">
                         See how all transformer components work together to process and generate text.
                     </p>
                 </div>
-                
-                <div class="card" onclick="showLesson('text-generation')">
+
+                <div class="card" data-lesson="text-generation" onclick="showLesson('text-generation')">
                     <h2 class="card-title">Text Generation</h2>
                     <p class="card-description">
                         Understand how transformers convert internal representations back into human-readable text.
@@ -627,56 +649,56 @@
         <!-- Intermediate Lessons Page -->
         <div id="intermediate-lessons-page" class="container hidden">
             <button class="back-button" onclick="showAgenda('transformer-scratch')">← Back to Transformer from Scratch</button>
-            
+
             <div class="header">
                 <h1 class="main-title">Transformer Implementation</h1>
                 <p class="subtitle">Build every component from scratch with PyTorch</p>
             </div>
-            
+
             <div class="card-grid">
-                <div class="card" onclick="showLesson('layernorm-implementation')">
+                <div class="card" data-lesson="layernorm-implementation" onclick="showLesson('layernorm-implementation')">
                     <h2 class="card-title">LayerNorm Implementation</h2>
                     <p class="card-description">
                         Build LayerNorm from scratch with proper variance calculation and learn why it's crucial for training stability.
                     </p>
                 </div>
-                
-                <div class="card" onclick="showLesson('embedding-layers')">
+
+                <div class="card" data-lesson="embedding-layers" onclick="showLesson('embedding-layers')">
                     <h2 class="card-title">Embedding & Positional Layers</h2>
                     <p class="card-description">
                         Implement token embeddings and positional encodings exactly as used in GPT-2.
                     </p>
                 </div>
-                
-                <div class="card" onclick="showLesson('attention-implementation')">
+
+                <div class="card" data-lesson="attention-implementation" onclick="showLesson('attention-implementation')">
                     <h2 class="card-title">Attention Implementation</h2>
                     <p class="card-description">
                         Code the full attention mechanism with causal masking, scaling, and multi-head architecture.
                     </p>
                 </div>
-                
-                <div class="card" onclick="showLesson('mlp-implementation')">
+
+                <div class="card" data-lesson="mlp-implementation" onclick="showLesson('mlp-implementation')">
                     <h2 class="card-title">MLP Implementation</h2>
                     <p class="card-description">
                         Build the complete MLP layer with GELU activation and proper weight initialization.
                     </p>
                 </div>
-                
-                <div class="card" onclick="showLesson('transformer-blocks')">
+
+                <div class="card" data-lesson="transformer-blocks" onclick="showLesson('transformer-blocks')">
                     <h2 class="card-title">Transformer Blocks</h2>
                     <p class="card-description">
                         Assemble attention and MLP into complete transformer blocks with residual connections.
                     </p>
                 </div>
-                
-                <div class="card" onclick="showLesson('complete-transformer')">
+
+                <div class="card" data-lesson="complete-transformer" onclick="showLesson('complete-transformer')">
                     <h2 class="card-title">Complete Transformer Model</h2>
                     <p class="card-description">
                         Build the full transformer architecture and load real GPT-2 weights for testing.
                     </p>
                 </div>
-                
-                <div class="card" onclick="showLesson('sampling-methods-safety')">
+
+                <div class="card" data-lesson="sampling-methods-safety" onclick="showLesson('sampling-methods-safety')">
                     <h2 class="card-title">Sampling Methods for AI Safety</h2>
                     <p class="card-description">
                         Understand how temperature, top-k/p, and beam search affect model safety. Learn to identify and defend against sampling-based attacks.
@@ -695,56 +717,56 @@
             </div>
 
             <div class="card-grid">
-                <div class="card" onclick="showLesson('gradient-checkpointing')">
+                <div class="card" data-lesson="gradient-checkpointing" onclick="showLesson('gradient-checkpointing')">
                     <h2 class="card-title">Gradient Checkpointing</h2>
                     <p class="card-description">
                         Trade compute for memory to train larger models. Learn how this technique enables frontier-scale training.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('mixed-precision-training')">
+                <div class="card" data-lesson="mixed-precision-training" onclick="showLesson('mixed-precision-training')">
                     <h2 class="card-title">Mixed Precision Training</h2>
                     <p class="card-description">
                         Use FP16/BF16 for 2-3x speedup. Understand loss scaling and how all modern models use mixed precision.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('memory-optimization')">
+                <div class="card" data-lesson="memory-optimization" onclick="showLesson('memory-optimization')">
                     <h2 class="card-title">Memory Optimization</h2>
                     <p class="card-description">
                         Learn Flash Attention and KV caching - the techniques enabling long context windows in modern AI.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('distributed-training-basics')">
+                <div class="card" data-lesson="distributed-training-basics" onclick="showLesson('distributed-training-basics')">
                     <h2 class="card-title">Distributed Training Basics</h2>
                     <p class="card-description">
                         Understand why frontier models require distributed training across hundreds of GPUs.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('data-parallelism')">
+                <div class="card" data-lesson="data-parallelism" onclick="showLesson('data-parallelism')">
                     <h2 class="card-title">Data Parallelism</h2>
                     <p class="card-description">
                         Learn the simplest distributed strategy: replicate the model, split the data.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('model-parallelism')">
+                <div class="card" data-lesson="model-parallelism" onclick="showLesson('model-parallelism')">
                     <h2 class="card-title">Model Parallelism</h2>
                     <p class="card-description">
                         Split models too large for one GPU across multiple devices. Essential for trillion-parameter models.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('pipeline-parallelism')">
+                <div class="card" data-lesson="pipeline-parallelism" onclick="showLesson('pipeline-parallelism')">
                     <h2 class="card-title">Pipeline Parallelism</h2>
                     <p class="card-description">
                         Use micro-batching to eliminate pipeline bubbles and achieve high GPU utilization.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('training-at-scale')">
+                <div class="card" data-lesson="training-at-scale" onclick="showLesson('training-at-scale')">
                     <h2 class="card-title">Training at Scale</h2>
                     <p class="card-description">
                         Put it all together: how GPT-4 and Claude combine all optimization techniques for frontier AI.
@@ -756,42 +778,42 @@
         <!-- Basic Interpretability Page -->
         <div id="basic-interpretability-page" class="container hidden">
             <button class="back-button" onclick="showWelcome()">← Back to Home</button>
-            
+
             <div class="header">
                 <h1 class="main-title">Basic Interpretability</h1>
                 <p class="subtitle">Learn to understand what's happening inside transformer models</p>
             </div>
-            
+
             <div class="card-grid">
-                <div class="card" onclick="showLesson('attention-patterns')">
+                <div class="card" data-lesson="attention-patterns" onclick="showLesson('attention-patterns')">
                     <h2 class="card-title">Visualizing Attention Patterns</h2>
                     <p class="card-description">
                         Extract and visualize what tokens the model pays attention to. See how information flows between words.
                     </p>
                 </div>
-                
-                <div class="card" onclick="showLesson('logit-lens')">
+
+                <div class="card" data-lesson="logit-lens" onclick="showLesson('logit-lens')">
                     <h2 class="card-title">The Logit Lens</h2>
                     <p class="card-description">
                         Look at predictions from intermediate layers to understand how the model builds up its understanding.
                     </p>
                 </div>
-                
-                <div class="card" onclick="showLesson('activation-analysis')">
+
+                <div class="card" data-lesson="activation-analysis" onclick="showLesson('activation-analysis')">
                     <h2 class="card-title">Activation Analysis</h2>
                     <p class="card-description">
                         Find which neurons activate on specific concepts and understand what different layers detect.
                     </p>
                 </div>
                 
-                <div class="card" onclick="showLesson('probing-experiments')">
+                <div class="card" data-lesson="probing-experiments" onclick="showLesson('probing-experiments')">
                     <h2 class="card-title">Simple Probing</h2>
                     <p class="card-description">
                         Build linear probes to extract information from model representations. Discover what the model "knows".
                     </p>
                 </div>
-                
-                <div class="card" onclick="showLesson('finding-features')">
+
+                <div class="card" data-lesson="finding-features" onclick="showLesson('finding-features')">
                     <h2 class="card-title">Finding Safety-Relevant Features</h2>
                     <p class="card-description">
                         Look for neurons and attention patterns that respond to harmful vs helpful content.
@@ -810,56 +832,56 @@
             </div>
 
             <div class="card-grid">
-                <div class="card" onclick="showLesson('circuits-discovery')">
+                <div class="card" data-lesson="circuits-discovery" onclick="showLesson('circuits-discovery')">
                     <h2 class="card-title">Circuits & Circuit Discovery</h2>
                     <p class="card-description">
                         Learn to identify computational circuits within models - the algorithms that implement specific behaviors. Essential for understanding model internals.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('superposition-polysemanticity')">
+                <div class="card" data-lesson="superposition-polysemanticity" onclick="showLesson('superposition-polysemanticity')">
                     <h2 class="card-title">Superposition & Polysemanticity</h2>
                     <p class="card-description">
                         Understand why neurons respond to multiple concepts and how models pack more features than dimensions. The core challenge of interpretability.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('sparse-autoencoders')">
+                <div class="card" data-lesson="sparse-autoencoders" onclick="showLesson('sparse-autoencoders')">
                     <h2 class="card-title">Sparse Autoencoders (SAEs)</h2>
                     <p class="card-description">
                         Master the breakthrough technique for extracting interpretable features from superposition. Key to understanding frontier models.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('induction-heads')">
+                <div class="card" data-lesson="induction-heads" onclick="showLesson('induction-heads')">
                     <h2 class="card-title">Induction Heads</h2>
                     <p class="card-description">
                         Study the circuit that enables in-context learning. A landmark discovery showing models can be understood mechanistically.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('path-patching')">
+                <div class="card" data-lesson="path-patching" onclick="showLesson('path-patching')">
                     <h2 class="card-title">Path Patching</h2>
                     <p class="card-description">
                         Learn causal analysis techniques to isolate which circuits are responsible for specific behaviors. From correlation to causation.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('feature-visualization')">
+                <div class="card" data-lesson="feature-visualization" onclick="showLesson('feature-visualization')">
                     <h2 class="card-title">Feature Visualization</h2>
                     <p class="card-description">
                         Understand how to interpret what features represent and identify safety-relevant features in models.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('mechanistic-interpretability-scale')">
+                <div class="card" data-lesson="mechanistic-interpretability-scale" onclick="showLesson('mechanistic-interpretability-scale')">
                     <h2 class="card-title">Interpretability at Scale</h2>
                     <p class="card-description">
                         Explore the challenges and solutions for applying interpretability to frontier models like GPT-4 and Claude.
                     </p>
                 </div>
 
-                <div class="card" onclick="showLesson('safety-critical-circuits')">
+                <div class="card" data-lesson="safety-critical-circuits" onclick="showLesson('safety-critical-circuits')">
                     <h2 class="card-title">Safety-Critical Circuits</h2>
                     <p class="card-description">
                         Apply everything you've learned to find and intervene on circuits responsible for deception, harm, and misalignment.
@@ -1154,6 +1176,45 @@
         function showBadge() {
             hideAll();
             document.getElementById('badge-page').classList.remove('hidden');
+
+            // Mark lesson as completed in localStorage
+            if (currentLessonId) {
+                markLessonCompleted(currentLessonId);
+            }
+        }
+
+        // LocalStorage functions for tracking lesson completion
+        function getCompletedLessons() {
+            const stored = localStorage.getItem('completedLessons');
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function markLessonCompleted(lessonId) {
+            const completed = getCompletedLessons();
+            if (!completed.includes(lessonId)) {
+                completed.push(lessonId);
+                localStorage.setItem('completedLessons', JSON.stringify(completed));
+                // Update the card UI
+                updateCardCompletionStatus(lessonId);
+            }
+        }
+
+        function isLessonCompleted(lessonId) {
+            return getCompletedLessons().includes(lessonId);
+        }
+
+        function updateCardCompletionStatus(lessonId) {
+            const card = document.querySelector(`.card[data-lesson="${lessonId}"]`);
+            if (card && !card.classList.contains('completed')) {
+                card.classList.add('completed');
+            }
+        }
+
+        function initializeCompletionStatus() {
+            const completed = getCompletedLessons();
+            completed.forEach(lessonId => {
+                updateCardCompletionStatus(lessonId);
+            });
         }
 
         function hideAll() {
@@ -1583,6 +1644,11 @@
 
         // Initialize router
         const router = new SimpleRouter();
+
+        // Initialize completion status when DOM is ready
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeCompletionStatus();
+        });
 
         // Global navigation helpers
         window.goTo = (lessonId, stepNumber = null) => {
