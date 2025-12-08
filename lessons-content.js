@@ -9,185 +9,394 @@ const LESSONS = {
         title: "Tokenization & Text Processing",
         steps: [
         {
-            instruction: "Let's discover how AI models actually 'read' text - prepare to be surprised! First, import the tokenizer library:",
+            instruction: "Let's discover how AI models actually 'read' text - prepare to be surprised! First, import the tokenizer library. Which tokenizer class should we use for GPT-2?",
             why: "Tokenization is the foundation of how AI models understand text. Without it, models would have to process raw characters (inefficient) or entire words (can't handle new words). This seemingly simple step has profound implications: it explains why models struggle with arithmetic, why 'harmful' and ' harmful' (with a space) behave differently, and how adversaries can exploit tokenization boundaries to bypass safety filters. Understanding this is essential for AI safety work.",
+            type: "multiple-choice",
+            template: "pip install transformers\nfrom transformers import ___",
+            choices: ["GPT2TokenizerFast", "BertTokenizer", "GPT2LMHeadModel"],
+            correct: 0,
+            hint: "We want a tokenizer (not a model), and it should match the GPT-2 architecture",
+            freestyleHint: "Install the <code>transformers</code> library and import the GPT-2 tokenizer class. Use the 'Fast' version of the tokenizer for better performance.",
+            challengeTemplate: "pip install ___\nfrom ___ import ___",
+            challengeBlanks: ["transformers", "transformers", "GPT2TokenizerFast"],
             code: "pip install transformers\nfrom transformers import GPT2TokenizerFast",
-            explanation: "The transformers library gives us access to production tokenizers used by real AI systems. GPT2TokenizerFast is the same tokenizer used by GPT-2, GPT-3, and many other models. It uses Byte-Pair Encoding (BPE), which you'll understand deeply by the end of this lesson."
+            output: "Successfully installed transformers",
+            explanation: "GPT2TokenizerFast is the tokenizer we need for GPT-2. Note that tokenizers are separate from models - the model itself (like GPT2LMHeadModel) handles prediction, while the tokenizer handles text-to-token conversion. Each model architecture has its own tokenizer (BERT uses BertTokenizer, GPT-2 uses GPT2TokenizerFast). The transformers library gives us access to production tokenizers used by real AI systems. GPT2TokenizerFast uses Byte-Pair Encoding (BPE), which you'll understand deeply by the end of this lesson."
         },
         {
-            instruction: "Now let's load the GPT-2 tokenizer - this will download the exact vocabulary the model was trained with:",
+            instruction: "Now let's load the GPT-2 tokenizer. Which checkpoint name should we use to load the standard GPT-2 tokenizer?",
             why: "Each model family has its own tokenizer trained on specific data. Using the wrong tokenizer is like showing a French dictionary to someone who only reads English - complete gibberish! This is a critical mistake in production: using BERT's tokenizer with GPT-2, or loading a fine-tuned model but forgetting to load its matching tokenizer. The tokenizer isn't hardcoded into the model weights - it's a separate configuration that must be kept in sync. For AI safety, tokenizer mismatches can cause models to completely misinterpret inputs, potentially bypassing safety filters without any error message.",
+            type: "multiple-choice",
+            template: "# Always load the tokenizer from the same checkpoint as the model\ntokenizer = GPT2TokenizerFast.from_pretrained('___')\nprint(f\"Loaded tokenizer with {tokenizer.vocab_size:,} tokens\")",
+            choices: ["gpt2", "bert-base-uncased", "openai-gpt"],
+            correct: 0,
+            hint: "The checkpoint name should match the model architecture we're using",
+            freestyleHint: "Load the GPT-2 tokenizer using <code>from_pretrained()</code> with the 'gpt2' checkpoint. Print the vocabulary size using the <code>vocab_size</code> attribute.",
+            challengeTemplate: "# Always load the tokenizer from the same checkpoint as the model\ntokenizer = ___.from_pretrained('___')\nprint(f\"Loaded tokenizer with {tokenizer.___:,} tokens\")",
+            challengeBlanks: ["GPT2TokenizerFast", "gpt2", "vocab_size"],
             code: "# Always load the tokenizer from the same checkpoint as the model\ntokenizer = GPT2TokenizerFast.from_pretrained('gpt2')\nprint(f\"Loaded tokenizer with {tokenizer.vocab_size:,} tokens\")",
             output: "Loaded tokenizer with 50,257 tokens",
-            explanation: "This downloads GPT-2's tokenizer files (vocabulary, merge rules, config) which are bundled with the model checkpoint but stored separately. The tokenizer and model weights are distinct artifacts that were trained together - you must always load both from the same checkpoint. Best practice: when you load a model from 'my-model', load the tokenizer from 'my-model' too, never mix and match!"
+            explanation: "The 'gpt2' checkpoint downloads GPT-2's tokenizer files (vocabulary, merge rules, config). The tokenizer and model weights are distinct artifacts that were trained together - you must always load both from the same checkpoint. Using a mismatched tokenizer (like BERT's tokenizer with GPT-2) would give completely wrong results since they have different vocabularies. Best practice: when you load a model from 'my-model', load the tokenizer from 'my-model' too, never mix and match!"
         },
         {
-            instruction: "Now for the magic moment - let's convert text into numbers! Try tokenizing a simple word:",
+            instruction: "Now for the magic moment - let's convert text into numbers! Which method converts text to token IDs (numbers)?",
             why: "This is where we see how AI models bridge the gap between human language and mathematics. The model never sees the word 'Hello' - it only sees numbers. Understanding this number-based representation is crucial for AI safety: when we worry about harmful content, we need to remember the model is processing token IDs, not words. This explains why simple word filters don't work and why adversarial attacks can exploit the gap between text and tokens.",
+            type: "multiple-choice",
+            template: "tokens = tokenizer.___('Hello')\nprint(tokens)\nprint(f\"The word 'Hello' is token ID: {tokens[0]}\")",
+            choices: ["encode", "decode", "tokenize"],
+            correct: 0,
+            hint: "We want to convert text INTO numbers (IDs), not the other way around",
+            freestyleHint: "Use <code>tokenizer.encode()</code> to convert the text 'Hello' to token IDs. Store the result and print both the token list and the first token ID (index 0).",
+            challengeTemplate: "tokens = tokenizer.___('___')\nprint(tokens)\nprint(f\"The word 'Hello' is token ID: {tokens[___]}\")",
+            challengeBlanks: ["encode", "Hello", "0"],
             code: "tokens = tokenizer.encode('Hello')\nprint(tokens)\nprint(f\"The word 'Hello' is token ID: {tokens[0]}\")",
             output: "[15496]\nThe word 'Hello' is token ID: 15496",
-            explanation: "The encode() method converts text to token IDs - the actual numbers the model processes. You see [15496], meaning 'Hello' maps to position 15496 in the tokenizer's vocabulary (out of 50,257 total tokens). This is deterministic and always the same. Common words like 'Hello' typically get their own single token because they appeared frequently in the training data. Uncommon words get split into multiple tokens (we'll see this soon!)."
+            explanation: "encode() converts text to token IDs - the actual numbers the model processes. You see [15496], meaning 'Hello' maps to position 15496 in the vocabulary (out of 50,257 total tokens). This is deterministic and always the same. For reference: decode() does the opposite (IDs → text), and tokenize() returns text strings instead of IDs. Common words like 'Hello' typically get their own single token because they appeared frequently in the training data."
         },
         {
-            instruction: "We just saw the number (15496) - now let's see the text string that number represents:",
-            why: "Tokenizers maintain a two-way mapping: text strings ↔ token IDs. In step 3, encode() gave us the ID. Now tokenize() shows us the string. This distinction is crucial for debugging: when a model misbehaves, you need to check BOTH what IDs it's receiving AND what text those IDs represent. For AI safety work, this helps us verify that safety-critical words are being tokenized as we expect, not split in unexpected ways.",
+            instruction: "We just saw the number (15496) - now let's see the text string that number represents. Which method returns token strings (not IDs)?",
+            why: "Tokenizers maintain a two-way mapping: text strings ↔ token IDs. In step 3, encode() gave us the ID. Now we need the method that shows us the string representation. This distinction is crucial for debugging: when a model misbehaves, you need to check BOTH what IDs it's receiving AND what text those IDs represent. For AI safety work, this helps us verify that safety-critical words are being tokenized as we expect, not split in unexpected ways.",
+            type: "multiple-choice",
+            template: "token_strings = tokenizer.___('Hello')\nprint(token_strings)\nprint(f\"The string 'Hello' is token ID {tokenizer.encode('Hello')[0]}\")",
+            choices: ["tokenize", "encode", "convert"],
+            correct: 0,
+            hint: "We want to see the text strings (like 'Hello'), not numbers",
+            freestyleHint: "Use <code>tokenizer.tokenize()</code> to get the text representation of tokens for 'Hello'. Also show its token ID using <code>encode()</code>.",
+            challengeTemplate: "token_strings = tokenizer.___('___')\nprint(token_strings)\nprint(f\"The string 'Hello' is token ID {tokenizer.___('Hello')[___]}\")",
+            challengeBlanks: ["tokenize", "Hello", "encode", "0"],
             code: "token_strings = tokenizer.tokenize('Hello')\nprint(token_strings)\nprint(f\"The string 'Hello' is token ID {tokenizer.encode('Hello')[0]}\")",
             output: "['Hello']\nThe string 'Hello' is token ID 15496",
-            explanation: "The tokenize() method shows the text representation: ['Hello'] is a list containing one token string. This is the text fragment that maps to ID 15496 from step 3. Two representations of the same tokenization: tokenize() gives text, encode() gives numbers. The model uses the numbers (15496), but we humans debug using the text ('Hello'). Notice it's a single token because 'Hello' appeared frequently in training data."
+            explanation: "tokenize() returns the text representation: ['Hello'] is a list containing one token string. Two representations of the same tokenization: tokenize() gives text, encode() gives numbers. The model uses the numbers (15496), but we humans debug using the text ('Hello'). Notice it's a single token because 'Hello' appeared frequently in training data."
         },
         {
-            instruction: "Now for something shocking - let's see what happens when we add just ONE space before the word:",
+            instruction: "Now for something shocking - adding just ONE space before a word completely changes its tokenization. In GPT-2's tokenizer, what does the 'Ġ' character represent?",
             why: "This is one of the most important discoveries in this lesson. Spaces completely change tokenization, which completely changes model behavior. 'harmful' and ' harmful' are DIFFERENT TOKENS with different IDs, different embeddings, and different learned associations. This affects everything: prompt engineering, jailbreaks, safety filters. Adversaries exploit this - adding/removing spaces is a common technique to bypass content filters. Understanding space handling is fundamental to AI safety work.",
+            type: "multiple-choice",
+            template: "print(tokenizer.tokenize(' Hello'))\nprint(tokenizer.tokenize('Hello'))\n# The Ġ character in 'ĠHello' represents: ___",
+            choices: ["a leading space", "an uppercase marker", "a special control character"],
+            correct: 0,
+            hint: "Compare ' Hello' (with space) to 'Hello' (without) - what's the difference?",
+            freestyleHint: "Compare how ' Hello' (with leading space) and 'Hello' (without) tokenize differently. Use both <code>tokenize()</code> and <code>encode()</code> to show the text tokens and IDs for each.",
+            challengeTemplate: "print(tokenizer.___(' Hello'))\nprint(tokenizer.___('Hello'))\nprint(f\"With space: {tokenizer.___(' Hello')}\")\nprint(f\"Without space: {tokenizer.___('Hello')}\")",
+            challengeBlanks: ["tokenize", "tokenize", "encode", "encode"],
             code: "print(tokenizer.tokenize(' Hello'))\nprint(tokenizer.tokenize('Hello'))\nprint(f\"With space: {tokenizer.encode(' Hello')}\")\nprint(f\"Without space: {tokenizer.encode('Hello')}\")",
             output: "['ĠHello']\n['Hello']\nWith space: [18435]\nWithout space: [15496]",
-            explanation: "The 'Ġ' character represents a leading space - it's a visual marker GPT-2's tokenizer uses. Notice these are COMPLETELY DIFFERENT tokens: 'ĠHello' (ID 18435) vs 'Hello' (ID 15496). They have different embeddings, the model learned different patterns for each. This happened because BPE training on web text encountered both ' Hello' (starting sentences) and 'Hello' (in titles/names) frequently enough to make them separate tokens. This applies to EVERY word - ' cat' ≠ 'cat', ' the' ≠ 'the'. Spaces aren't just whitespace in AI systems - they fundamentally change meaning."
+            explanation: "The 'Ġ' represents a leading space! Notice these are COMPLETELY DIFFERENT tokens: 'ĠHello' (ID 18435) vs 'Hello' (ID 15496). They have different embeddings, the model learned different patterns for each. This happened because BPE training encountered both ' Hello' (mid-sentence) and 'Hello' (start of text) frequently enough to make them separate tokens. This applies to EVERY word - ' cat' ≠ 'cat', ' the' ≠ 'the'. Spaces aren't just whitespace in AI systems - they fundamentally change meaning."
         },
         {
-            instruction: "Spaces change tokens... what about capitalization? Let's test different cases of the same word:",
+            instruction: "Spaces change tokens... what about capitalization? Based on BPE's frequency principle, which capitalization do you think will split into MULTIPLE tokens?",
             why: "Like spaces, capitalization can completely change tokenization. This matters because models learn different associations for differently-capitalized tokens. 'Hello' (common in sentences) might have different learned patterns than 'HELLO' (emphasis/shouting) or 'hello' (lowercase). For AI safety: adversaries exploit this to bypass filters ('DANGER' vs 'danger'), and it affects how models process proper nouns, acronyms (NASA vs nasa), and code (function names are case-sensitive). Understanding this helps predict when case changes might alter model behavior.",
+            type: "multiple-choice",
+            template: "# Which capitalization will split into multiple tokens?\n# Think: which is LEAST common in training data?\ntest_word = '___'\nprint(f'{test_word}:', tokenizer.tokenize(test_word))",
+            choices: ["HELLO", "hello", "Hello"],
+            correct: 0,
+            hint: "BPE creates single tokens for COMMON patterns. Which capitalization style is rarest in typical web text?",
+            freestyleHint: "Test how different capitalizations of 'hello' tokenize: lowercase, Titlecase, UPPERCASE, and MiXeD case. Use <code>tokenize()</code> to see the tokens, and <code>encode()</code> to show the IDs for lowercase and titlecase.",
+            challengeTemplate: "print('lowercase:', tokenizer.___('hello'))\nprint('Titlecase:', tokenizer.___('Hello'))\nprint('UPPERCASE:', tokenizer.___('___'))\nprint('MiXeD:', tokenizer.___('HeLLo'))\nprint('\\nToken IDs:')\nprint('hello:', tokenizer.___('hello'))\nprint('Hello:', tokenizer.___('Hello'))",
+            challengeBlanks: ["tokenize", "tokenize", "HELLO", "tokenize", "encode", "encode"],
             code: "print('lowercase:', tokenizer.tokenize('hello'))\nprint('Titlecase:', tokenizer.tokenize('Hello'))\nprint('UPPERCASE:', tokenizer.tokenize('HELLO'))\nprint('MiXeD:', tokenizer.tokenize('HeLLo'))\nprint('\\nToken IDs:')\nprint('hello:', tokenizer.encode('hello'))\nprint('Hello:', tokenizer.encode('Hello'))",
             output: "lowercase: ['hello']\nTitlecase: ['Hello']\nUPPERCASE: ['HE', 'LL', 'O']\nMiXeD: ['He', 'LL', 'o']\n\nToken IDs:\nhello: [31373]\nHello: [15496]",
-            explanation: "Notice: 'hello' and 'Hello' are both single tokens but with DIFFERENT IDs (31373 vs 15496) - different embeddings, different learned patterns. 'HELLO' splits into 3 tokens ['HE', 'LL', 'O'] because all-caps is less common in training data. 'HeLLo' (random mixed case) also splits because it's rare. The pattern: common capitalizations (lowercase, titlecase) get their own tokens; rare capitalizations get split into pieces. This is why models sometimes struggle with all-caps text or unusual capitalization - they're seeing fragmented, unfamiliar token sequences instead of the familiar words they learned."
+            explanation: "HELLO splits into 3 tokens ['HE', 'LL', 'O'] because all-caps is less common in training data! 'hello' and 'Hello' are both single tokens (but with DIFFERENT IDs - 31373 vs 15496). 'HeLLo' (random mixed case) also splits because it's rare. The pattern: common capitalizations (lowercase, titlecase) get their own tokens; rare capitalizations get split into pieces. This is why models sometimes struggle with all-caps text - they're seeing fragmented, unfamiliar token sequences."
         },
         {
-            instruction: "Now let's put it all together - tokenize a real sentence and see those spaces and capitalization rules in action:",
+            instruction: "Now let's put it all together - tokenize a real sentence. Which method gives us the token IDs (numbers) that the model actually processes?",
             why: "Moving from individual words to full sentences shows how tokenization works in practice. This is crucial for AI safety because: (1) Token count determines context window usage - models have hard limits (GPT-3.5: 4096 tokens, GPT-4: 8192-128k), (2) Token count = API cost (you pay per token), (3) Understanding how your prompts tokenize helps you fit more information in context, (4) Token boundaries affect how models parse complex prompts. For safety work, knowing your safety instructions take X tokens helps ensure they fit alongside user input.",
+            type: "multiple-choice",
+            template: "text = 'The cat sat on the mat'\ntokens = tokenizer.___(text)\nprint(f\"Text: {text}\")\nprint(f\"Token IDs: {tokens}\")\nprint(f\"Number of tokens: {len(tokens)}\")",
+            choices: ["encode", "tokenize", "decode"],
+            correct: 0,
+            hint: "We want IDs (numbers), not text strings",
+            freestyleHint: "Encode the sentence 'The cat sat on the mat' to token IDs. Print the original text, the token IDs list, and the total number of tokens using <code>len()</code>.",
+            challengeTemplate: "text = '___'\ntokens = tokenizer.___(text)\nprint(f\"Text: {___}\")\nprint(f\"Token IDs: {___}\")\nprint(f\"Number of tokens: {___(tokens)}\")",
+            challengeBlanks: ["The cat sat on the mat", "encode", "text", "tokens", "len"],
             code: "text = 'The cat sat on the mat'\ntokens = tokenizer.encode(text)\nprint(f\"Text: {text}\")\nprint(f\"Token IDs: {tokens}\")\nprint(f\"Number of tokens: {len(tokens)}\")",
             output: "Text: The cat sat on the mat\nToken IDs: [464, 3797, 3332, 319, 262, 2603]\nNumber of tokens: 6",
-            explanation: "This simple sentence becomes 6 tokens - one per word, a perfect 1:1 ratio. Notice 'The' and 'the' will have different IDs because of capitalization (as we learned in step 6). Each number (464, 3797, etc.) is an index into the tokenizer's 50,257-token vocabulary from step 2. The model receives these 6 numbers, not the original text. This token count (6) would consume 6 tokens of the model's context window. In production, this is how you calculate: prompt tokens + response tokens = total cost. We got a 1:1 word-to-token ratio because these are all common English words that appear frequently in training data."
+            explanation: "encode() gives us IDs - the numbers the model processes. This 6-word sentence becomes 6 tokens (1:1 ratio for common English words). Each number (464, 3797, etc.) is an index into the vocabulary. The model receives these 6 numbers, not the original text. This token count (6) consumes 6 tokens of the model's context window. In production: prompt tokens + response tokens = total cost."
         },
         {
-            instruction: "Now let's see the text view of those same 6 tokens - watch for the Ġ characters from step 5!",
-            why: "This shows the text representation of the same tokenization from step 7. While encode() gives you IDs for the model, tokenize() gives you text for humans to debug. This is crucial for AI safety work: when investigating prompt injection or adversarial inputs, you need to see exactly where token boundaries fall. Tokenization issues are a common source of problems with: rare words, typos, code, math, numbers, unicode, and mixed languages. When debugging these edge cases, checking token_strings often reveals the issue - unexpected splits, missing spaces, etc.",
+            instruction: "Now let's see the text view of those same 6 tokens. Which method shows us the token STRINGS (not IDs)?",
+            why: "This shows the text representation of the same tokenization from step 7. While encode() gives you IDs for the model, tokenize() gives you text for humans to debug. This is crucial for AI safety work: when investigating prompt injection or adversarial inputs, you need to see exactly where token boundaries fall. Tokenization issues are a common source of problems with: rare words, typos, code, math, numbers, unicode, and mixed languages.",
+            type: "multiple-choice",
+            template: "token_strings = tokenizer.___(text)\nprint(token_strings)\nprint(f\"\\nFirst token has no Ġ: '{token_strings[0]}'\")\nprint(f\"Other tokens have Ġ: '{token_strings[1]}'\")",
+            choices: ["tokenize", "encode", "split"],
+            correct: 0,
+            hint: "We want to see the text strings (like 'The', 'Ġcat'), not numbers",
+            freestyleHint: "Use <code>tokenize()</code> on the text variable to get token strings. Print the list, then show the first token (index 0) has no Ġ, while the second token (index 1) has Ġ.",
+            challengeTemplate: "token_strings = tokenizer.___(text)\nprint(___)\nprint(f\"\\nFirst token has no Ġ: '{token_strings[___]}'\")\nprint(f\"Other tokens have Ġ: '{token_strings[___]}'\")",
+            challengeBlanks: ["tokenize", "token_strings", "0", "1"],
             code: "token_strings = tokenizer.tokenize(text)\nprint(token_strings)\nprint(f\"\\nFirst token has no Ġ: '{token_strings[0]}'\")\nprint(f\"Other tokens have Ġ: '{token_strings[1]}'\")",
             output: "['The', 'Ġcat', 'Ġsat', 'Ġon', 'Ġthe', 'Ġmat']\n\nFirst token has no Ġ: 'The'\nOther tokens have Ġ: 'Ġcat'",
-            explanation: "Notice the pattern from step 5 in action: 'The' (first word, no leading space) has no Ġ, but 'Ġcat', 'Ġsat', etc. all have Ġ because they had spaces before them in 'The cat sat on the mat'. This is how tokenizers preserve spacing - the Ġ marks where spaces were. These 6 text tokens map to the 6 IDs from step 7: 'The'→464, 'Ġcat'→3797, etc. Two views of the same tokenization. Use encode() when feeding to the model (needs numbers), use tokenize() when debugging (humans read text better). This is your primary debugging tool for understanding unexpected model behavior."
+            explanation: "tokenize() shows text strings! Notice the Ġ pattern: 'The' (first word, no leading space) has no Ġ, but 'Ġcat', 'Ġsat', etc. all have Ġ because they had spaces before them. This is how tokenizers preserve spacing. Use encode() when feeding to the model (needs numbers), use tokenize() when debugging (humans read text better). This is your primary tool for understanding unexpected model behavior."
         },
         {
-            instruction: "The fundamental principle: frequency in training data determines tokenization. Let's see BPE (Byte-Pair Encoding) in action:",
+            instruction: "The fundamental principle: FREQUENCY IN TRAINING DATA DETERMINES TOKENIZATION. Given that 'un', 'do', 'undo', and 'doing' are all common words, which word do you think will split into multiple tokens?",
             why: "BPE (Byte-Pair Encoding) counts character sequences in training data and merges the most common ones into tokens. This explains all the patterns we've seen - why 'Hello' is one token but 'HELLO' splits (different frequencies), why spaces matter (different strings in the data), why common words are single tokens (high frequency). For AI safety: rare words and typos split into fragments. Models see less training data per rare token, making behavior less predictable. Adversaries exploit this by crafting unusual tokenizations to bypass safety filters.",
+            type: "multiple-choice",
+            template: "# BPE merges common character sequences from training data\n# Which word will split into multiple tokens?\ntest_word = '___'\nprint(f\"{test_word} -> {tokenizer.tokenize(test_word)}\")",
+            choices: ["undoing", "doing", "undo"],
+            correct: 0,
+            hint: "Common words become single tokens. Which combination is LESS common than its parts?",
+            freestyleHint: "Create a list of words: 'un', 'do', 'undo', 'doing', 'undoing'. Loop through them and print each word's tokenization using <code>tokenize()</code>, showing the token count with <code>len()</code>.",
+            challengeTemplate: "# BPE merges common character sequences from training data\nwords = ['un', 'do', 'undo', 'doing', '___']\nfor word in ___:\n    tokens = tokenizer.___(word)\n    print(f\"{word:10} -> {tokens} ({___(tokens)} tokens)\")",
+            challengeBlanks: ["undoing", "words", "tokenize", "len"],
             code: "# BPE merges common character sequences from training data\nwords = ['un', 'do', 'undo', 'doing', 'undoing']\nfor word in words:\n    tokens = tokenizer.tokenize(word)\n    print(f\"{word:10} -> {tokens} ({len(tokens)} tokens)\")",
             output: "un         -> ['un'] (1 token)\ndo         -> ['do'] (1 token)\nundo       -> ['undo'] (1 token)\ndoing      -> ['doing'] (1 token)\nundoing    -> ['un', 'doing'] (2 tokens)",
-            explanation: "See the principle in action: 'un', 'do', 'undo', 'doing' all appeared frequently enough in training to become single tokens. But 'undoing' is rarer - BPE splits it into the longest common pieces it knows: 'un' (common prefix) + 'doing' (very common word). This is how tokenizers handle ANY word, even ones never seen before: break it into known pieces. The BPE algorithm: (1) Start with individual characters, (2) Count all adjacent pairs in training data, (3) Merge the most common pair into a new token, (4) Repeat for 50,000+ iterations. Result: frequent sequences like 'ing', 'the', 'un', 'tion' become tokens. This frequency-based approach explains everything from step 6 (rare 'HELLO' splits) to step 5 (different strings = different tokens)."
+            explanation: "'undoing' splits into ['un', 'doing'] because it's rarer than its parts! 'un', 'do', 'undo', 'doing' all appeared frequently enough in training to become single tokens. But 'undoing' is less common - BPE splits it into the longest known pieces. This is how tokenizers handle ANY word: break it into known pieces. The BPE algorithm merges the most common character pairs iteratively. Result: frequent sequences like 'ing', 'the', 'un', 'tion' become tokens."
         },
         {
-            instruction: "We've converted text to tokens - now let's go the other direction. Can we perfectly reverse the process?",
+            instruction: "We've converted text to tokens (encode). Now let's reverse it - which method converts token IDs back to text?",
             why: "Decoding is essential because it's how we get text back from models. When a model generates a response, it outputs token IDs - these must be decoded to text for humans to read. Understanding this roundtrip (text → encode → IDs → decode → text) shows tokenization is lossless for typical text. This matters for AI safety: the model's actual output (token IDs) is what we analyze for safety, but users see the decoded text. Both representations need to be checked.",
+            type: "multiple-choice",
+            template: "# Convert token IDs back to text\ndecoded = tokenizer.___(tokens)\nprint(f\"Original: {text}\")\nprint(f\"Decoded:  {decoded}\")\nprint(f\"Match: {text == decoded}\")",
+            choices: ["decode", "encode", "tokenize"],
+            correct: 0,
+            hint: "We want to go from numbers (IDs) back to text - the reverse of encode",
+            freestyleHint: "Use <code>decode()</code> to convert the tokens variable (list of IDs) back to text. Compare the decoded result with the original text to verify they match.",
+            challengeTemplate: "# Decode the tokens back to text\ndecoded = tokenizer.___(___)\nprint(f\"Original: {text}\")\nprint(f\"Decoded:  {___}\")\nprint(f\"Match: {text == ___}\")",
+            challengeBlanks: ["decode", "tokens", "decoded", "decoded"],
             code: "# Decode the tokens back to text\ndecoded = tokenizer.decode(tokens)\nprint(f\"Original: {text}\")\nprint(f\"Decoded:  {decoded}\")\nprint(f\"Match: {text == decoded}\")",
             output: "Original: The cat sat on the mat\nDecoded:  The cat sat on the mat\nMatch: True",
-            explanation: "Perfect roundtrip: encode and decode are inverse operations. The original text and decoded text match exactly. This is how language models work: they receive token IDs (from encoding your prompt), process them, generate new token IDs, then decode those IDs back to text you can read. Every response you see from ChatGPT or Claude went through this decode step. For most text, tokenization is lossless - you can always recover the original. The Ġ characters we saw preserve spaces perfectly, capitalization is preserved, everything reconstructs exactly."
+            explanation: "decode() converts IDs back to text - the inverse of encode(). Perfect roundtrip! This is how language models work: they receive token IDs (from encoding your prompt), process them, generate new token IDs, then decode those IDs back to text you can read. Every response you see from ChatGPT or Claude went through this decode step. For most text, tokenization is lossless - the Ġ characters preserve spaces perfectly, capitalization is preserved, everything reconstructs exactly."
         },
         {
-            instruction: "Now let's test the BPE principle from step 9: what happens to a rare, complex word?",
+            instruction: "How many tokens do you think the rare word 'antidisestablishmentarianism' will become? (Hint: BPE splits into known pieces)",
             why: "This demonstrates how BPE's frequency-based approach handles rare words. Since 'antidisestablishmentarianism' rarely appears in training data, BPE breaks it into common pieces it knows: prefixes like 'anti', 'dis', common words like 'establishment', and suffixes like 'ism'. This means the model processes it as separate tokens, not as a unified concept. For AI safety: technical terms, domain-specific jargon, and neologisms often split into many tokens, consuming more context window and potentially being processed differently than common vocabulary.",
+            type: "multiple-choice",
+            template: "uncommon = 'antidisestablishmentarianism'\ntokens = tokenizer.tokenize(uncommon)\n# How many tokens? ___\nprint(f\"Token count: {len(tokens)} tokens for 1 word\")",
+            choices: ["5 tokens", "1 token", "28 tokens (one per letter)"],
+            correct: 0,
+            hint: "BPE finds the longest known pieces: 'anti', 'dis', 'establishment'...",
+            freestyleHint: "Tokenize the word 'antidisestablishmentarianism' and print the word, its tokens, and the token count. This rare word will split into multiple pieces.",
+            challengeTemplate: "uncommon = '___'\ntokens = tokenizer.___(uncommon)\nprint(f\"Word: {___}\")\nprint(f\"Tokens: {tokens}\")\nprint(f\"Token count: {___(tokens)} tokens for 1 word\")",
+            challengeBlanks: ["antidisestablishmentarianism", "tokenize", "uncommon", "len"],
             code: "uncommon = 'antidisestablishmentarianism'\ntokens = tokenizer.tokenize(uncommon)\nprint(f\"Word: {uncommon}\")\nprint(f\"Tokens: {tokens}\")\nprint(f\"Token count: {len(tokens)} tokens for 1 word\")",
             output: "Word: antidisestablishmentarianism\nTokens: ['anti', 'dis', 'establishment', 'arian', 'ism']\nToken count: 5 tokens for 1 word",
-            explanation: "BPE in action: this rare 28-letter word splits into 5 tokens based on common subword pieces. Compare to step 7 where 'cat' was 1 token - here one word becomes 5 tokens. Each piece ('anti', 'dis', 'establishment', 'arian', 'ism') appeared frequently enough in training to be learned. The model doesn't have a single token for this word, so it processes it as a sequence of morphemes. This works for tokenization but means: (1) uses 5x the context window of a common word, (2) the model learned patterns for each piece separately, not for the complete word. This is how tokenizers handle rare words, technical jargon, and made-up words - break them into the longest known pieces."
+            explanation: "5 tokens! BPE splits this rare word into known pieces: ['anti', 'dis', 'establishment', 'arian', 'ism']. The word is too rare to be a single token, but BPE is smart enough to find longer chunks rather than splitting into individual letters. Each piece appeared frequently enough in training to be learned. This is how tokenizers handle rare words: break them into the longest known pieces. This word uses 5x the context window of a common word like 'cat'."
         },
         {
-            instruction: "Typos create rare strings - let's see how BPE's frequency-based approach handles them:",
+            instruction: "Typos create rare strings. Which version of 'dangerous' will be a SINGLE token?",
             why: "Typos demonstrate why BPE's frequency-based approach can be fragile. Correct spellings like 'dangerous' are common and get learned as single tokens. But typos like 'dangeorus' are rare, so BPE splits them into fragments. This matters for AI safety: models process typos differently than correct words, potentially changing behavior. While modern safety systems use multiple techniques (not just token matching), understanding tokenization differences helps explain some model inconsistencies with misspelled or obfuscated text.",
+            type: "multiple-choice",
+            template: "# Which spelling will be a single token?\ntest_word = '___'\nprint(f'{test_word}:', tokenizer.tokenize(test_word))",
+            choices: ["dangerous", "dangeorus", "dang3rous"],
+            correct: 0,
+            hint: "BPE learns common patterns - which spelling appears most often in training data?",
+            freestyleHint: "Compare how 'dangerous' (correct), 'dangeorus' (typo), and 'dang3rous' (leet speak) tokenize. Use <code>tokenize()</code> for each to see how typos split into multiple tokens.",
+            challengeTemplate: "# Compare correct spelling vs typos\nprint('Correct: ', tokenizer.___('___'))\nprint('Transposed:', tokenizer.___('dangeorus'))  # swap e/o\nprint('Leet speak:', tokenizer.___('dang3rous'))  # 3 for e",
+            challengeBlanks: ["tokenize", "dangerous", "tokenize", "tokenize"],
             code: "# Compare correct spelling vs typos\nprint('Correct: ', tokenizer.tokenize('dangerous'))\nprint('Transposed:', tokenizer.tokenize('dangeorus'))  # swap e/o\nprint('Leet speak:', tokenizer.tokenize('dang3rous'))  # 3 for e",
             output: "Correct:  ['dangerous']\nTransposed: ['dange', 'orus']\nLeet speak: ['dang', '3', 'rous']",
-            explanation: "See the fragmentation: 'dangerous' (common, correct) = 1 token. 'dangeorus' (rare typo) splits into 2 tokens ['dange', 'orus']. 'dang3rous' (leet speak) splits into 3 tokens ['dang', '3', 'rous'] because this character combination is very rare in training data. Each split means the model processes it differently - it doesn't see 'dangerous' as a unified concept but as separate fragments. The model learned patterns for 'dangerous' during training, but has little/no direct training on 'dangeorus' or 'dang3rous' as complete units. This is BPE's tradeoff: handles any text (even misspellings) but processes non-standard text as fragments rather than cohesive tokens."
+            explanation: "'dangerous' (correct spelling) = 1 token because it's common! 'dangeorus' (typo) splits into 2 tokens ['dange', 'orus']. 'dang3rous' (leet speak) splits into 3 tokens ['dang', '3', 'rous']. Each split means the model processes it differently - it doesn't see 'dangerous' as a unified concept. This is why typos and obfuscation can affect model behavior."
         },
         {
-            instruction: "Numbers aren't words - let's see how BPE handles them:",
+            instruction: "Numbers aren't words - BPE treats them as character sequences. Which number do you think will be a SINGLE token?",
             why: "Numbers present a challenge for BPE because they're not semantic units like words. BPE treats them as character sequences, learning which digit combinations appear frequently. '42' might be common (cultural reference), while '1379' is rare. This inconsistent tokenization is one factor (among several) that contributes to why language models struggle with arithmetic - they process numbers as text patterns rather than mathematical quantities.",
+            type: "multiple-choice",
+            template: "# Which number will be a single token?\ntest_num = '___'\nprint(f'{test_num}:', tokenizer.tokenize(test_num))",
+            choices: ["42", "1337", "1379"],
+            correct: 0,
+            hint: "Think about which number appears most frequently in text (cultural references, common usage)",
+            freestyleHint: "Tokenize the math expression '42 + 1337 = 1379' to see how different numbers tokenize. Notice that '42' (culturally significant) stays whole while larger numbers split.",
+            challengeTemplate: "# See how numbers tokenize in a simple math expression\nprint(tokenizer.___('___ + 1337 = 1379'))",
+            challengeBlanks: ["tokenize", "42"],
             code: "# See how numbers tokenize in a simple math expression\nprint(tokenizer.tokenize('42 + 1337 = 1379'))",
             output: "['42', 'Ġ+', 'Ġ', '13', '37', 'Ġ=', 'Ġ', '13', '79']",
-            explanation: "Notice the inconsistency: '42' is 1 token (appears often in training data), but '1337' splits into ['13', '37'] - two tokens. '1379' becomes ['13', '79']. The model sees this not as an arithmetic problem but as a sequence of text tokens. The operators and spaces each become their own tokens too. BPE doesn't understand that '1337' represents a quantity - it just learned that '13' and '37' are common digit sequences. This fragmentation is one reason (along with architecture and training) why language models find arithmetic challenging."
+            explanation: "'42' is 1 token (famous cultural reference - 'the answer to everything'!). But '1337' splits into ['13', '37'] and '1379' becomes ['13', '79']. BPE doesn't understand math - it just learned that '42' appears together frequently, while '1337' and '1379' are rarer as complete sequences. This inconsistent tokenization is one reason language models struggle with arithmetic."
         },
         {
-            instruction: "Let's test a range of numbers to see the pattern more clearly:",
+            instruction: "Let's test more numbers. Which of these do you think will SPLIT into multiple tokens?",
             why: "Exploring different numbers reveals how unpredictable number tokenization can be. Round numbers like '1000' might be common (appearing frequently in training text), while specific numbers like '98765' are rare. This inconsistency is one contributing factor to why language models struggle with arithmetic - numbers aren't treated as mathematical quantities but as text patterns learned from frequency in training data.",
+            type: "multiple-choice",
+            template: "# Which number will split into multiple tokens?\ntest_num = ___\nprint(f'{test_num}:', tokenizer.tokenize(str(test_num)))",
+            choices: ["1234", "1000", "100"],
+            correct: 0,
+            hint: "Round numbers appear frequently in text. Which number is LEAST commonly written as-is?",
+            freestyleHint: "Loop through numbers [42, 100, 1000, 1234, 98765, 1000000] and tokenize each (convert to string first). Print each number with its tokens and token count to see which round numbers stay whole.",
+            challengeTemplate: "# Test various numbers to see tokenization patterns\nfor num in [42, 100, 1000, ___, 98765, 1000000]:\n    tokens = tokenizer.___(str(num))\n    print(f\"{num:>7} -> {tokens} ({___(tokens)} tokens)\")",
+            challengeBlanks: ["1234", "tokenize", "len"],
             code: "# Test various numbers to see tokenization patterns\nfor num in [42, 100, 1000, 1234, 98765, 1000000]:\n    tokens = tokenizer.tokenize(str(num))\n    print(f\"{num:>7} -> {tokens} ({len(tokens)} tokens)\")",
             output: "     42 -> ['42'] (1 token)\n    100 -> ['100'] (1 token)\n   1000 -> ['1000'] (1 token)\n   1234 -> ['12', '34'] (2 tokens)\n  98765 -> ['987', '65'] (2 tokens)\n1000000 -> ['1000000'] (1 token)",
-            explanation: "See the pattern: common/round numbers (42, 100, 1000, 1000000) are single tokens because they appear frequently in text. But '1234' splits into ['12', '34'] and '98765' into ['987', '65'] because these specific sequences are rarer. BPE learned '42' (cultural reference), '100'/'1000' (round numbers), and '1000000' (million) as complete units. The splits aren't based on mathematical properties - they're based on which digit sequences appeared together frequently in training data. This is why adjacent numbers can tokenize completely differently, making arithmetic tasks challenging for models designed for language."
+            explanation: "'1234' splits into ['12', '34'] because it's not a commonly written number! Round numbers (100, 1000, 1000000) are single tokens - they appear frequently in text. But specific numbers like '1234' and '98765' split because BPE didn't see them together often enough. The splits are based on text frequency, not mathematical properties."
         },
         {
-            instruction: "Code is just text - let's see how BPE handles programming syntax:",
+            instruction: "Code is just text to BPE. How do you think the Python keyword 'def' will tokenize?",
             why: "Understanding code tokenization matters because the same tokenizer handles both natural language and code. GPT-2 was trained on some code from the internet, so common programming patterns got learned. This affects code generation models and has security implications: malicious code might tokenize differently than safe code, and code injection attacks exploit how models process code tokens vs natural language tokens.",
+            type: "multiple-choice",
+            template: "# How will 'def' tokenize?\nkeyword = '___'\nprint(f'{keyword}:', tokenizer.tokenize(keyword))",
+            choices: ["def (single token)", "d, e, f (three tokens)", "de, f (two tokens)"],
+            correct: 0,
+            hint: "'def' is a very common Python keyword that appears frequently in training data",
+            freestyleHint: "Tokenize a Python function definition: <code>def hello_world():\\n    print(\"Hello!\")</code>. Print the tokens and total count. Notice how 'def' is a single token but indentation creates multiple Ġ tokens.",
+            challengeTemplate: "# Tokenize a simple Python function\ncode = '___ hello_world():\\n    print(\"Hello!\")'\ntokens = tokenizer.___(code)\nprint(___)\nprint(f\"Total tokens: {___(tokens)}\")",
+            challengeBlanks: ["def", "tokenize", "tokens", "len"],
             code: "# Tokenize a simple Python function\ncode = 'def hello_world():\\n    print(\"Hello!\")'\ntokens = tokenizer.tokenize(code)\nprint(tokens)\nprint(f\"Total tokens: {len(tokens)}\")",
             output: "['def', 'Ġhello', '_', 'world', '():', '\\n', 'Ġ', 'Ġ', 'Ġ', 'Ġprint', '(\"', 'Hello', '!\")']\nTotal tokens: 13",
-            explanation: "Code tokenizes just like text - BPE doesn't understand syntax. Notice: 'def' is one token (common keyword), 'hello_world' splits into ['hello', '_', 'world'] (underscore separate), '():' is one token (common pattern), '\\n' is the newline, each space in the indentation is a separate 'Ġ' token, 'print' with leading space is one token, parentheses and quotes get grouped with adjacent characters. This 2-line function becomes 13 tokens. The tokenizer learned common code patterns from training data, but treats code as text - it doesn't understand Python syntax."
+            explanation: "'def' is a single token because it's a common Python keyword! Notice: 'hello_world' splits into ['hello', '_', 'world'] (underscore is separate), '():' is one token (common pattern), each space in indentation is a separate 'Ġ' token. BPE learned common code patterns from training data, but treats code as text - it doesn't understand Python syntax."
         },
         {
-            instruction: "Let's examine how a safety-critical phrase actually tokenizes:",
+            instruction: "Let's examine how a safety-critical phrase tokenizes. Will 'harmful' be a single token or split?",
             why: "This is where tokenization knowledge becomes crucial for AI safety work. How models tokenize safety-critical content affects their behavior. If safety training used certain tokenizations, but users input slight variations that tokenize differently, safety mechanisms might not activate as intended. Understanding tokenization helps us: (1) design better safety training, (2) anticipate edge cases, (3) understand why adversarial prompts work.",
+            type: "multiple-choice",
+            template: "# Will 'harmful' be a single token?\nword = '___'\nprint(f'{word}:', tokenizer.tokenize(word))",
+            choices: ["harmful (single token)", "harm, ful (two tokens)", "h, arm, ful (three tokens)"],
+            correct: 0,
+            hint: "'harmful' is a common word in safety-related training data",
+            freestyleHint: "Tokenize the phrase 'This could be harmful to humans'. Print the phrase, its tokens, and separately tokenize just the word 'harmful' to show it's a single token.",
+            challengeTemplate: "# Analyze a safety-critical phrase\nsafety_phrase = 'This could be ___ to humans'\ntokens = tokenizer.___(safety_phrase)\nprint(f\"Phrase: {___}\")\nprint(f\"Tokens: {tokens}\")\nprint(f\"Key word 'harmful': {tokenizer.___('harmful')}\")",
+            challengeBlanks: ["harmful", "tokenize", "safety_phrase", "tokenize"],
             code: "# Analyze a safety-critical phrase\nsafety_phrase = 'This could be harmful to humans'\ntokens = tokenizer.tokenize(safety_phrase)\nprint(f\"Phrase: {safety_phrase}\")\nprint(f\"Tokens: {tokens}\")\nprint(f\"Key word 'harmful': {tokenizer.tokenize('harmful')}\")",
             output: "Phrase: This could be harmful to humans\nTokens: ['This', 'Ġcould', 'Ġbe', 'Ġharmful', 'Ġto', 'Ġhumans']\nKey word 'harmful': ['harmful']",
-            explanation: "Each word tokenizes cleanly: 'This', 'Ġcould', 'Ġbe', 'Ġharmful', 'Ġto', 'Ġhumans' - 6 tokens total. The critical word 'harmful' is a single token because it appears frequently in training data (including safety training). This is actually good for safety - the model has a unified representation for this concept. But what if someone writes 'h4rmful' or 'harm ful'? Different tokenizations mean the model sees different input, potentially bypassing patterns learned during safety training. This is why robust safety systems need to account for tokenization variations."
+            explanation: "'harmful' is a single token - good for safety! The model has a unified representation for this critical word. But what if someone writes 'h4rmful' or 'harm ful'? Different tokenizations mean the model sees different input, potentially bypassing patterns learned during safety training. This is why robust safety systems need to account for tokenization variations."
         },
         {
-            instruction: "Compare how related safety-critical words tokenize - do they share tokens or split differently?",
+            instruction: "Do 'harm', 'harmful', and 'harmless' share a common 'harm' token, or are they each separate tokens?",
             why: "How related words tokenize affects model behavior. If 'harmful' and 'harmless' share the token 'harm', the model might process them similarly initially. If they tokenize completely differently, they're processed as unrelated concepts. Understanding these patterns helps us predict model behavior and design better safety training that accounts for word relationships.",
+            type: "multiple-choice",
+            template: "# Do related words share tokens?\n# Prediction: ___\nfor word in ['harm', 'harmful', 'harmless']:\n    print(f\"{word}: {tokenizer.tokenize(word)}\")",
+            choices: ["Each is its own single token", "They share 'harm' as a base token", "Only 'harmful' and 'harmless' share tokens"],
+            correct: 0,
+            hint: "Think about frequency - all three words are common in English",
+            freestyleHint: "Loop through the words ['harm', 'harmful', 'harmless'] and tokenize each. Print them formatted to see whether they share a common 'harm' token or are each separate tokens.",
+            challengeTemplate: "# Compare related safety-critical words\nwords = ['harm', '___', 'harmless']\nfor word in ___:\n    tokens = tokenizer.___(word)\n    print(f\"{word:10} -> {tokens}\")",
+            challengeBlanks: ["harmful", "words", "tokenize"],
             code: "# Compare related safety-critical words\nwords = ['harm', 'harmful', 'harmless']\nfor word in words:\n    tokens = tokenizer.tokenize(word)\n    print(f\"{word:10} -> {tokens}\")",
             output: "harm       -> ['harm']\nharmful    -> ['harmful']\nharmless   -> ['harmless']",
-            explanation: "Interestingly, all three are single tokens: 'harm', 'harmful', 'harmless'. They don't share a common 'harm' token - each is learned as a complete unit because all three words appear frequently in training data. This means the model has separate embeddings for each, learning their meanings independently. The model doesn't automatically understand that 'harmless' is the opposite of 'harmful' just from tokenization - it must learn these relationships from training data. This is different from rare words where you might see shared subwords: a rare word like 'ultraharmful' might tokenize as ['ultra', 'harmful'], actually sharing the 'harmful' token."
+            explanation: "Each is its own single token! They DON'T share a common 'harm' token - BPE learned each as a complete unit because all three appear frequently. The model has separate embeddings for each, learning their meanings independently. A rare word like 'ultraharmful' WOULD split as ['ultra', 'harmful'], sharing the 'harmful' token."
         },
         {
-            instruction: "Let's see how invisible characters affect tokenization - this matters for understanding adversarial inputs:",
+            instruction: "Invisible characters can manipulate tokenization. How many tokens will 'test phrase' with a zero-width space become?",
             why: "Adversaries sometimes try to manipulate tokenization using invisible characters (like zero-width spaces), extra spaces, or homoglyphs (similar-looking characters from different alphabets). Understanding how these affect tokenization helps us build more robust safety systems. Note: modern safety systems use multiple layers of defense beyond just token matching, but tokenization awareness is still important.",
+            type: "multiple-choice",
+            template: "# Zero-width space is invisible but affects tokenization\n# Normal 'test phrase' = 2 tokens\n# With zero-width space = ___ tokens\nprint('Zero-width:', tokenizer.tokenize('test\\u200bphrase'))",
+            choices: ["4 tokens (splits unusually)", "2 tokens (same as normal)", "1 token (joins words)"],
+            correct: 0,
+            hint: "Invisible characters are rare in training data, so BPE handles them unusually",
+            freestyleHint: "Compare tokenization of: 'test phrase' (normal), 'test  phrase' (extra space), and 'test\\u200bphrase' (with zero-width space \\u200b). Show how invisible characters create unusual tokens.",
+            challengeTemplate: "# Compare normal text vs text with invisible/extra characters\nprint('Normal:      ', tokenizer.___('test phrase'))\nprint('Extra space: ', tokenizer.___('test  phrase'))\nprint('Zero-width:  ', tokenizer.___('test\\u200bphrase'))  # \\u200b is zero-width space",
+            challengeBlanks: ["tokenize", "tokenize", "tokenize"],
             code: "# Compare normal text vs text with invisible/extra characters\nprint('Normal:      ', tokenizer.tokenize('test phrase'))\nprint('Extra space: ', tokenizer.tokenize('test  phrase'))\nprint('Zero-width:  ', tokenizer.tokenize('test\\u200bphrase'))  # \\u200b is zero-width space",
             output: "Normal:       ['test', 'Ġphrase']\nExtra space:  ['test', 'Ġ', 'Ġphrase']\nZero-width:   ['test', 'âĢ', 'ĭ', 'phrase']",
-            explanation: "Notice how each version tokenizes differently: (1) Normal: 2 tokens ['test', 'Ġphrase'], (2) Extra space: 3 tokens - the double space creates an extra 'Ġ' token, (3) Zero-width space (\\u200b): splits into unusual tokens ['test', 'âĢ', 'ĭ', 'phrase'] because the invisible character is rare in training data. These differences mean the model receives different input for text that looks identical to humans. Early/naive safety filters that just checked for specific token sequences could be bypassed this way. Modern systems typically normalize text and use semantic understanding, but knowing these tokenization quirks helps us anticipate edge cases."
+            explanation: "4 tokens! The invisible zero-width space creates unusual tokens ['test', 'âĢ', 'ĭ', 'phrase']. Text that looks identical to humans produces different tokenizations. Early/naive safety filters could be bypassed this way. Modern systems typically normalize text, but knowing these quirks helps anticipate edge cases."
         },
         {
-            instruction: "How does BPE handle punctuation and contractions?",
+            instruction: "How will the contraction \"I'm\" tokenize - as one token or split?",
             why: "Punctuation affects meaning (question vs statement) and tone (! vs .). How punctuation tokenizes determines how the model processes these distinctions. Contractions like \"I'm\" are interesting because they combine a word and punctuation - does BPE keep them together or split them?",
+            type: "multiple-choice",
+            template: "# How will \"I'm\" tokenize?\n# Prediction: ___\nprint(tokenizer.tokenize(\"I'm\"))",
+            choices: ["['I', \"'m\"] (two tokens)", "[\"I'm\"] (one token)", "['I', \"'\", 'm'] (three tokens)"],
+            correct: 0,
+            hint: "Think about common patterns in English text - the apostrophe often stays with what follows",
+            freestyleHint: "Tokenize the sentence \"Hello! How are you? I'm fine.\" Print the sentence, tokens, and count. Notice how punctuation (!, ?) and contractions (I'm) tokenize.",
+            challengeTemplate: "# See how punctuation and contractions tokenize\nsentence = \"Hello! How are you? ___'m fine.\"\ntokens = tokenizer.___(sentence)\nprint(f\"Sentence: {___}\")\nprint(f\"Tokens: {tokens}\")\nprint(f\"Token count: {___(tokens)}\")",
+            challengeBlanks: ["I", "tokenize", "sentence", "len"],
             code: "# See how punctuation and contractions tokenize\nsentence = \"Hello! How are you? I'm fine.\"\ntokens = tokenizer.tokenize(sentence)\nprint(f\"Sentence: {sentence}\")\nprint(f\"Tokens: {tokens}\")\nprint(f\"Token count: {len(tokens)}\")",
             output: "Sentence: Hello! How are you? I'm fine.\nTokens: ['Hello', '!', 'ĠHow', 'Ġare', 'Ġyou', '?', 'ĠI', \"'m\", 'Ġfine', '.']\nToken count: 10",
-            explanation: "Punctuation analysis: '!' and '?' and '.' are separate tokens - the model can distinguish sentence types. The contraction \"I'm\" splits into ['ĠI', \"'m\"] - two tokens. This means the model processes \"I'm\" and \"I am\" differently (\"I am\" would be ['ĠI', 'Ġam']). BPE learned common patterns: standalone punctuation marks are frequent enough to be their own tokens, but the apostrophe in contractions stays attached to what follows ('m, 're, 'll, etc.) because that pattern is common in training data."
+            explanation: "\"I'm\" splits into ['I', \"'m\"] - two tokens! The apostrophe stays attached to 'm' because that pattern ('m, 're, 'll, etc.) is common in training data. This means the model processes \"I'm\" and \"I am\" differently. Punctuation marks (!, ?, .) are their own tokens, allowing the model to distinguish sentence types."
         },
         {
-            instruction: "We've mentioned vocabulary size throughout - let's verify it directly:",
+            instruction: "How do we access the vocabulary size? Which attribute of the tokenizer gives us this?",
             why: "The vocabulary size determines the model's embedding layer dimensions. GPT-2's 50,257 tokens represent everything it can 'see' - if a character sequence isn't in the vocabulary, it gets split into pieces that are. This fixed vocabulary is a key design choice: too small and common words split unnecessarily, too large and the embedding matrix becomes huge. Understanding vocabulary size helps you estimate model memory requirements and tokenization efficiency.",
+            type: "multiple-choice",
+            template: "# How to get vocabulary size?\nvocab_size = len(tokenizer.___)\nprint(f\"Vocabulary size: {vocab_size:,} tokens\")",
+            choices: ["vocab", "tokens", "words"],
+            correct: 0,
+            hint: "The vocabulary is the mapping from tokens to IDs",
+            freestyleHint: "Get the vocabulary size using <code>len(tokenizer.vocab)</code>. Print the vocabulary size (use :, formatting) and note that this equals the number of rows in the embedding matrix.",
+            challengeTemplate: "# Check the actual vocabulary size\nvocab_size = ___(tokenizer.___)\nprint(f\"Vocabulary size: {vocab_size:,} tokens\")\nprint(f\"This means the embedding matrix has {___:,} rows\")",
+            challengeBlanks: ["len", "vocab", "vocab_size"],
             code: "# Check the actual vocabulary size\nvocab_size = len(tokenizer.vocab)\nprint(f\"Vocabulary size: {vocab_size:,} tokens\")\nprint(f\"This means the embedding matrix has {vocab_size:,} rows\")",
             output: "Vocabulary size: 50,257 tokens\nThis means the embedding matrix has 50,257 rows",
-            explanation: "Confirmed: exactly 50,257 tokens, matching what we discussed in step 2. Why this specific number? GPT-2 uses 50,000 BPE merges + 256 byte tokens + 1 special token = 50,257. The embedding matrix is shape [50,257 × embedding_dim], where each row is a learned vector representing one token. This is a significant portion of model parameters. For GPT-2 small (768 dimensions), the embedding matrix alone has 50,257 × 768 = 38.6 million parameters. Every token ID we've seen (like 15496 for 'Hello') is just an index into this matrix."
+            explanation: "tokenizer.vocab is the vocabulary dictionary! Exactly 50,257 tokens. Why this number? GPT-2 uses 50,000 BPE merges + 256 byte tokens + 1 special token = 50,257. The embedding matrix is shape [50,257 × 768], which is 38.6 million parameters just for embeddings. Every token ID (like 15496 for 'Hello') is an index into this matrix."
         },
         {
-            instruction: "What's actually in this vocabulary? Let's sample tokens at different positions:",
+            instruction: "What's at the very start of the vocabulary? What kind of tokens do you think have IDs 0 and 1?",
             why: "The vocabulary contains a mix of individual characters, common words, and word fragments created during BPE training. Sampling at different IDs reveals the variety of tokens the model can 'see'. Understanding what's in the vocabulary helps you predict how new text will tokenize and debug unexpected tokenizations.",
+            type: "multiple-choice",
+            template: "# What are the first tokens in the vocabulary?\n# Prediction for ID 0 and 1: ___\nprint(f\"ID 0: {repr(tokenizer.decode([0]))}\")\nprint(f\"ID 1: {repr(tokenizer.decode([1]))}\")",
+            choices: ["Single characters like '!' and '\"'", "Common words like 'the' and 'a'", "Special tokens like <PAD>"],
+            correct: 0,
+            hint: "BPE starts with individual bytes/characters before merging into larger tokens",
+            freestyleHint: "Loop through IDs [0, 1, 100, 1000, 10000, 40000, 50000] and decode each (pass as a list [i]). Print each ID with its decoded token using <code>repr()</code> to show escape characters.",
+            challengeTemplate: "# Sample tokens from different parts of the vocabulary\nfor i in [0, ___, 100, 1000, 10000, 40000, 50000]:\n    token = tokenizer.___([i])\n    print(f\"ID {i:>5}: {___(token)}\")",
+            challengeBlanks: ["1", "decode", "repr"],
             code: "# Sample tokens from different parts of the vocabulary\nfor i in [0, 1, 100, 1000, 10000, 40000, 50000]:\n    token = tokenizer.decode([i])\n    print(f\"ID {i:>5}: {repr(token)}\")",
             output: "ID     0: '!'\nID     1: '\"'\nID   100: 'Ġon'\nID  1000: 'Ġsaid'\nID 10000: 'Ġexplained'\nID 40000: 'ĠÃ©'\nID 50000: 'rawdownload'",
-            explanation: "The vocabulary contains diverse tokens: single characters ('!', '\"'), common short words with leading spaces ('Ġon'), longer common words ('Ġsaid'), less common words ('Ġexplained'), non-ASCII sequences ('ĠÃ©'), and rare compounds ('rawdownload'). The repr() function shows the exact string including escape characters. Notice the variety - the vocabulary isn't neatly organized by length or type. BPE created this vocabulary by repeatedly merging frequent character pairs during training, resulting in tokens ranging from single characters to multi-word sequences, whatever appeared frequently together in the training data."
+            explanation: "IDs 0 and 1 are single characters ('!', '\"')! BPE starts with individual bytes. The vocabulary contains diverse tokens: single characters at low IDs, common words in the middle, rare compounds at high IDs. The vocabulary isn't organized by length - it reflects BPE's frequency-based construction."
         },
         {
-            instruction: "GPT-2 was trained primarily on English - how does it handle other languages?",
+            instruction: "GPT-2 was trained on English. How many tokens do you think Chinese '你好世界' (Hello world) will need compared to English's 2 tokens?",
             why: "Tokenizers trained on English text are inefficient for other languages. Chinese characters might each become multiple tokens, making the model slower and more expensive for non-English users. This is a fairness consideration in AI systems: users of some languages pay more (in tokens/cost) and get less context window for the same content.",
+            type: "multiple-choice",
+            template: "# How many tokens for Chinese 'Hello world'?\n# English 'Hello world' = 2 tokens\n# Chinese '你好世界' = ___ tokens\nprint(len(tokenizer.tokenize('你好世界')), 'tokens')",
+            choices: ["12 tokens (6x more)", "2 tokens (same)", "4 tokens (2x more)"],
+            correct: 0,
+            hint: "GPT-2 wasn't trained on much Chinese - it treats unfamiliar scripts as byte sequences",
+            freestyleHint: "Compare token counts for: 'Hello world' (English), 'Hola mundo' (Spanish), '你好世界' (Chinese), 'مرحبا بالعالم' (Arabic), and '🌍🚀🤖' (emojis). Loop through and print token count for each.",
+            challengeTemplate: "# Compare token counts across languages (all mean roughly 'Hello world')\ntexts = ['Hello world', 'Hola mundo', '___', 'مرحبا بالعالم', '🌍🚀🤖']\nfor text in ___:\n    tokens = tokenizer.___(text)\n    print(f\"{___(tokens):2} tokens: {text}\")",
+            challengeBlanks: ["你好世界", "texts", "tokenize", "len"],
             code: "# Compare token counts across languages (all mean roughly 'Hello world')\ntexts = ['Hello world', 'Hola mundo', '你好世界', 'مرحبا بالعالم', '🌍🚀🤖']\nfor text in texts:\n    tokens = tokenizer.tokenize(text)\n    print(f\"{len(tokens):2} tokens: {text}\")",
             output: " 2 tokens: Hello world\n 3 tokens: Hola mundo\n12 tokens: 你好世界\n15 tokens: مرحبا بالعالم\n 9 tokens: 🌍🚀🤖",
-            explanation: "The disparity is stark: 'Hello world' = 2 tokens, but the equivalent Chinese '你好世界' = 12 tokens (6x more), and Arabic = 15 tokens (7.5x more). Emojis also tokenize inefficiently (3 emojis = 9 tokens). This happens because GPT-2's BPE was trained on English web text - it learned efficient representations for English character sequences but treats non-Latin scripts as unfamiliar byte sequences that fragment heavily. This means: (1) non-English users consume context window faster, (2) API costs are higher for the same content, (3) the model has less 'room to think' when processing non-English text. Newer multilingual tokenizers address this, but GPT-2's English bias is a clear example of how training data shapes tokenization fairness."
+            explanation: "12 tokens - 6x more than English! Arabic is even worse at 15 tokens (7.5x). This happens because GPT-2's BPE was trained on English web text - it treats non-Latin scripts as unfamiliar byte sequences. This is a fairness issue: non-English users consume context window faster and pay more per equivalent content."
         },
         {
-            instruction: "What special tokens does GPT-2 use to control generation?",
+            instruction: "What is GPT-2's End of Sequence (EOS) token ID? (Hint: it's the last token in the vocabulary)",
             why: "Special tokens are control signals that tell the model when to start, stop, or handle sequences. Understanding these is essential for AI safety - the EOS token determines when models stop generating. If a model doesn't properly respect EOS, it might generate endlessly or leak into unintended content. Special tokens are also used to separate user input from system prompts in chat models.",
+            type: "multiple-choice",
+            template: "# What's the EOS token ID?\n# Vocabulary size is 50,257, so EOS ID is ___\nprint(f\"EOS token ID: {tokenizer.eos_token_id}\")",
+            choices: ["50256 (last in vocabulary)", "0 (first in vocabulary)", "50257 (after vocabulary)"],
+            correct: 0,
+            hint: "The vocabulary has 50,257 tokens (IDs 0-50256). EOS is the last one.",
+            freestyleHint: "Print GPT-2's special tokens: <code>eos_token</code>, <code>eos_token_id</code>, <code>bos_token</code>, and <code>pad_token</code>. These are all attributes of the tokenizer object.",
+            challengeTemplate: "# Check GPT-2's special tokens\nprint(f\"EOS token: {tokenizer.___}\")\nprint(f\"EOS token ID: {tokenizer.___}\")\nprint(f\"BOS token: {tokenizer.___}\")\nprint(f\"PAD token: {tokenizer.___}\")",
+            challengeBlanks: ["eos_token", "eos_token_id", "bos_token", "pad_token"],
             code: "# Check GPT-2's special tokens\nprint(f\"EOS token: {tokenizer.eos_token}\")\nprint(f\"EOS token ID: {tokenizer.eos_token_id}\")\nprint(f\"BOS token: {tokenizer.bos_token}\")\nprint(f\"PAD token: {tokenizer.pad_token}\")",
             output: "EOS token: <|endoftext|>\nEOS token ID: 50256\nBOS token: <|endoftext|>\nPAD token: None",
-            explanation: "GPT-2 has one main special token: '<|endoftext|>' (ID 50256 - the last token in the vocabulary). EOS (End of Sequence) tells the model where text ends - during training, this separates documents. BOS (Beginning of Sequence) is the same token in GPT-2. PAD (Padding) is None - GPT-2 doesn't have a dedicated padding token. Notice: modern chat models like ChatGPT use additional special tokens to separate system prompts, user messages, and assistant responses. Understanding these tokens is crucial for prompt injection defense - attackers try to inject fake special tokens to confuse the model about message boundaries."
+            explanation: "EOS token ID is 50256 - the last token in the vocabulary! It's '<|endoftext|>' and tells the model where text ends. Interestingly, GPT-2 uses the same token for BOS (Beginning of Sequence) and has no dedicated PAD token. Modern chat models use additional special tokens to separate system prompts, user messages, and assistant responses."
         },
         {
-            instruction: "One word can be many tokens - let's see the extremes:",
+            instruction: "How many tokens will the rare word 'Supercalifragilisticexpialidocious' (34 characters) become?",
             why: "Token count determines context window usage and API cost, not word count or character count. Understanding this helps you estimate how much text fits in a model's context and how much API calls will cost. A short but rare word might use more tokens than a long common phrase.",
+            type: "multiple-choice",
+            template: "# How many tokens for this 34-character rare word?\nword = 'Supercalifragilisticexpialidocious'\n# Prediction: ___ tokens\nprint(f'{word} = {len(tokenizer.encode(word))} tokens')",
+            choices: ["10 tokens", "1 token", "34 tokens (one per letter)"],
+            correct: 0,
+            hint: "BPE splits rare words into known pieces - common subword units",
+            freestyleHint: "Compare token counts for 'Hi' (short, common) vs 'Supercalifragilisticexpialidocious' (34 chars, rare). Use <code>encode()</code> and <code>len()</code> to show the dramatic difference.",
+            challengeTemplate: "# Compare: short common word vs long rare word\nprint(f\"'Hi' = {___(tokenizer.___('Hi'))} token(s)\")\nprint(f\"'Supercalifragilisticexpialidocious' = {___(tokenizer.___('___'))} tokens\")",
+            challengeBlanks: ["len", "encode", "len", "encode", "Supercalifragilisticexpialidocious"],
             code: "# Compare: short common word vs long rare word\nprint(f\"'Hi' = {len(tokenizer.encode('Hi'))} token(s)\")\nprint(f\"'Supercalifragilisticexpialidocious' = {len(tokenizer.encode('Supercalifragilisticexpialidocious'))} tokens\")",
             output: "'Hi' = 1 token(s)\n'Supercalifragilisticexpialidocious' = 10 tokens",
-            explanation: "'Hi' (2 characters, very common) = 1 token. 'Supercalifragilisticexpialidocious' (34 characters, rare) = 10 tokens. The long word uses 10x more of your context window than the short word, even though both are single words. This is BPE in action: 'Hi' was common enough to be learned as one token, but the long word must be split into known pieces. For context window planning: you can't just count words. A technical document with rare jargon will use more tokens than casual conversation with common words."
+            explanation: "10 tokens for 34 characters! Compare: 'Hi' (2 chars) = 1 token. The rare word uses 10x more context window than the short word, even though both are single words. For context window planning: you can't just count words. Technical jargon uses more tokens than casual conversation."
         },
         {
-            instruction: "Let's measure tokenization efficiency - how do characters, words, and tokens relate?",
+            instruction: "For common English text, approximately how many characters per token is typical?",
             why: "Understanding the relationship between characters, words, and tokens helps you estimate context usage and costs. Different types of text have different efficiencies - common English prose is efficient, while code, jargon, or non-English text is less efficient.",
+            type: "multiple-choice",
+            template: "# What's the typical chars per token for English?\ntext = 'The quick brown fox jumps over the lazy dog.'\n# Prediction: approximately ___ chars per token\nprint(f\"Chars per token: {len(text) / len(tokenizer.encode(text)):.1f}\")",
+            choices: ["4-5 characters per token", "1 character per token", "10+ characters per token"],
+            correct: 0,
+            hint: "Common English words are typically 4-6 letters, and most become single tokens",
+            freestyleHint: "Analyze 'The quick brown fox jumps over the lazy dog.' Calculate character count, word count (using <code>split()</code>), and token count (using <code>encode()</code>). Print chars per token and tokens per word ratios.",
+            challengeTemplate: "# Analyze the classic pangram\ntext = 'The quick brown fox jumps over the lazy dog.'\nchar_count = ___(text)\nword_count = ___(text.split())\ntoken_count = ___(tokenizer.___(text))\n\nprint(f\"Text: '{text}'\")\nprint(f\"Characters: {char_count}\")\nprint(f\"Words: {word_count}\")\nprint(f\"Tokens: {token_count}\")\nprint(f\"Chars per token: {char_count / token_count:.1f}\")\nprint(f\"Tokens per word: {token_count / word_count:.2f}\")",
+            challengeBlanks: ["len", "len", "len", "encode"],
             code: "# Analyze the classic pangram\ntext = 'The quick brown fox jumps over the lazy dog.'\nchar_count = len(text)\nword_count = len(text.split())\ntoken_count = len(tokenizer.encode(text))\n\nprint(f\"Text: '{text}'\")\nprint(f\"Characters: {char_count}\")\nprint(f\"Words: {word_count}\")\nprint(f\"Tokens: {token_count}\")\nprint(f\"Chars per token: {char_count / token_count:.1f}\")\nprint(f\"Tokens per word: {token_count / word_count:.2f}\")",
             output: "Text: 'The quick brown fox jumps over the lazy dog.'\nCharacters: 44\nWords: 9\nTokens: 10\nChars per token: 4.4\nTokens per word: 1.11",
-            explanation: "This sentence has 44 characters, 9 words, and 10 tokens. Key metrics: ~4.4 characters per token (typical for English), ~1.11 tokens per word (very efficient - nearly 1:1). This sentence is efficient because it uses common English words. Compare: technical jargon or rare words would have lower chars/token (more splitting). These ratios help you estimate: 'I have 1000 words of common English text' → roughly 1100-1300 tokens. For API pricing or context window planning, this lets you convert word counts to approximate token counts."
+            explanation: "~4.4 characters per token is typical for English! This sentence has 9 words → 10 tokens (1.11 tokens per word - very efficient). These ratios help you estimate: 1000 words of common English ≈ 1100-1300 tokens. Technical jargon or non-English text is less efficient."
         },
         {
-            instruction: "Final exercise: analyze how common safety instructions tokenize:",
+            instruction: "Final exercise: 'Refuse' vs 'refuse' - which one will split into multiple tokens?",
             why: "As a capstone, let's apply everything we've learned to real safety instructions. Understanding how these critical phrases tokenize helps us design robust safety systems and anticipate how models might process safety-critical content.",
+            type: "multiple-choice",
+            template: "# Which will split: 'Refuse' or 'refuse'?\n# Prediction: ___ will split\nprint('Refuse:', tokenizer.tokenize('Refuse'))\nprint('refuse:', tokenizer.tokenize('refuse'))",
+            choices: ["Refuse (titlecase splits)", "refuse (lowercase splits)", "Both split the same way"],
+            correct: 0,
+            hint: "Remember step 6: uncommon capitalizations split more often",
+            freestyleHint: "Create a list of safety instructions: 'Do not harm humans', 'Be helpful and harmless', 'Refuse dangerous requests'. Loop through and tokenize each, printing the instruction, its tokens, and token count.",
+            challengeTemplate: "# Analyze common safety instruction patterns\ninstructions = [\n    'Do not ___ humans',\n    'Be helpful and harmless',\n    '___ dangerous requests'\n]\nfor inst in ___:\n    tokens = tokenizer.___(inst)\n    print(f\"{inst}\")\n    print(f\"  Tokens: {tokens}\")\n    print(f\"  Count: {___(tokens)}\\n\")",
+            challengeBlanks: ["harm", "Refuse", "instructions", "tokenize", "len"],
             code: "# Analyze common safety instruction patterns\ninstructions = [\n    'Do not harm humans',\n    'Be helpful and harmless',\n    'Refuse dangerous requests'\n]\nfor inst in instructions:\n    tokens = tokenizer.tokenize(inst)\n    print(f\"{inst}\")\n    print(f\"  Tokens: {tokens}\")\n    print(f\"  Count: {len(tokens)}\\n\")",
             output: "Do not harm humans\n  Tokens: ['Do', 'Ġnot', 'Ġharm', 'Ġhumans']\n  Count: 4\n\nBe helpful and harmless\n  Tokens: ['Be', 'Ġhelpful', 'Ġand', 'Ġharmless']\n  Count: 4\n\nRefuse dangerous requests\n  Tokens: ['Ref', 'use', 'Ġdangerous', 'Ġrequests']\n  Count: 4",
-            explanation: "All three instructions tokenize cleanly into 4 tokens each with common words. Notice 'Refuse' splits into ['Ref', 'use'] - it's less common than 'refuse' (lowercase). Key takeaways from this lesson: (1) Tokenization is the foundation - models see token IDs, not text, (2) Frequency in training data determines tokenization, (3) Spaces, capitalization, and rare characters all affect tokenization, (4) Different tokenizations = different model behavior, (5) Understanding tokenization is essential for AI safety work: designing robust prompts, anticipating adversarial inputs, and understanding model behavior. You now have the tools to analyze any text's tokenization and predict how models will process it."
+            explanation: "'Refuse' (titlecase) splits into ['Ref', 'use'] - it's less common than 'refuse' (lowercase)! Key takeaways: (1) Models see token IDs, not text, (2) Frequency determines tokenization, (3) Spaces, capitalization, and rare characters all affect tokenization, (4) Different tokenizations = different model behavior. You now have the tools to analyze any text's tokenization!"
         }
         ]
     },
@@ -197,16 +406,18 @@ const LESSONS = {
         title: "Embeddings & Positional Encoding",
         steps: [
             {
-                instruction: "Now that we have tokens (numbers), we need to convert them to vectors. Let's import PyTorch:",
-                why: "Tokens are just ID numbers - they have no inherent meaning or relationships. We need to convert them to vectors because vectors can encode similarities, differences, and complex relationships through their directions and distances in high-dimensional space. This is how models 'understand' language.",
-                code: "import torch",
-                explanation: "PyTorch is the framework we'll use to create and manipulate the vectors that represent our tokens."
+                instruction: "In the tokenization lesson, we converted text to numbers (token IDs). But a number like 15496 doesn't inherently mean 'Hello' - it's just an index. Now we'll see how models give these numbers meaning by converting them to vectors:",
+                why: "Token IDs are arbitrary integers with no semantic content - ID 15496 being numerically adjacent to ID 15497 doesn't mean those tokens are semantically related. To give tokens meaning, we convert them to high-dimensional vectors where geometric relationships (distances, directions, angles) encode semantic relationships. This is the foundation of how neural networks 'understand' language: similar concepts become nearby points in vector space. For AI safety, this matters because we can potentially detect harmful content by measuring distances in embedding space.",
+                code: "import torch\nimport torch.nn as nn\nprint(f\"PyTorch version: {torch.__version__}\")",
+                output: "PyTorch version: 2.0.1",
+                explanation: "PyTorch provides the tensor operations and neural network layers we need. The key insight: we're about to transform meaningless integers into rich vector representations where mathematical operations correspond to semantic operations. 'King - Man + Woman ≈ Queen' is possible because embeddings encode meaning geometrically."
             },
             {
-                instruction: "Let's create a simple embedding layer - a lookup table from token IDs to vectors:",
-                why: "Think of this as a massive dictionary where each word gets assigned a 'home' in 768-dimensional space. The magic is that during training, similar words will move to nearby homes. This 768 dimensions gives the model enormous flexibility to encode subtle differences - 'bank' (financial) vs 'bank' (river) can point in slightly different directions.",
-                code: "vocab_size = 50257\nd_model = 768\nembedding = torch.nn.Embedding(vocab_size, d_model)",
-                explanation: "This creates a lookup table with 50,257 rows (one for each token) and 768 columns (the vector size). Each token gets its own unique vector."
+                instruction: "An embedding is just a lookup table: each token ID maps to a vector. Let's create one with GPT-2's dimensions:",
+                why: "Think of the embedding matrix as a massive table with 50,257 rows (one per token) and 768 columns (the vector dimensions). When we look up token ID 15496, we simply retrieve row 15496. Initially these vectors are random, but during training, tokens that appear in similar contexts will develop similar vectors. This is how 'cat' ends up near 'dog' but far from 'car' - not because we told the model about animals, but because 'cat' and 'dog' appear in similar sentences.",
+                code: "# GPT-2's dimensions\nvocab_size = 50257  # number of tokens\nd_model = 768       # embedding dimension\n\n# Create the embedding lookup table\nembedding = nn.Embedding(vocab_size, d_model)\nprint(f\"Embedding matrix shape: {embedding.weight.shape}\")\nprint(f\"Total parameters: {vocab_size * d_model:,}\")",
+                output: "Embedding matrix shape: torch.Size([50257, 768])\nTotal parameters: 38,597,376",
+                explanation: "The embedding matrix has shape [50257, 768] - that's 38.6 million parameters just for the token embeddings! Each of the 50,257 tokens gets its own 768-dimensional vector. This matrix is learned during training: the model adjusts these vectors so that tokens appearing in similar contexts develop similar representations. The embedding layer accounts for a significant portion of smaller models' parameters."
             },
             {
                 instruction: "Let's see what embeddings look like initially:",
@@ -3928,6 +4139,167 @@ for term in test_terms:
                     "How would you contribute to making interpretability-based safety a reality?",
                     "What's the most important unsolved problem in this field?"
                 ]
+            }
+        ]
+    },
+
+    // ========================================
+    // DEVELOPMENTAL INTERPRETABILITY
+    // ========================================
+
+    'devinterp-intro': {
+        title: "What is Developmental Interpretability?",
+        steps: [
+            {
+                instruction: "Let's start by understanding what we're trying to do. Developmental interpretability studies how neural networks change during training. Which library do we need for building neural network models?",
+                why: "Most interpretability work analyzes trained models - a snapshot at the end. But dangerous capabilities don't appear from nowhere. They develop during training. If we can understand this development process, we might predict when concerning behaviors will emerge and intervene before they solidify.",
+                type: "multiple-choice",
+                template: "pip install ___ matplotlib numpy\nimport torch\nimport matplotlib.pyplot as plt\nimport numpy as np",
+                choices: ["torch", "tensorflow", "sklearn", "pandas"],
+                correct: 0,
+                hint: "We need a deep learning framework for building and training neural networks",
+                challengeTemplate: "pip install ___ ___ ___\nimport ___\nimport matplotlib.pyplot as plt\nimport numpy as np",
+                challengeBlanks: ["torch", "matplotlib", "numpy", "torch"],
+                code: "pip install torch matplotlib numpy\nimport torch\nimport matplotlib.pyplot as plt\nimport numpy as np",
+                output: "Successfully installed torch matplotlib numpy",
+                explanation: "We'll use PyTorch for models, matplotlib for visualization, and numpy for numerical work. These are the basic tools for examining how models change over time."
+            },
+            {
+                instruction: "The key insight: a trained model is like a photograph, but training is like a movie. To ensure reproducibility, we set a random seed. Which function sets PyTorch's random seed?",
+                why: "Understanding training dynamics matters for AI safety because capabilities emerge during training. A model that seems safe at step 1000 might develop dangerous capabilities by step 10000. We need tools to watch this movie, not just examine the final frame.",
+                type: "multiple-choice",
+                template: "torch.___(42)\nsteps = 100\nlosses = []\nfor step in range(steps):\n    loss = 2.0 * np.exp(-step/30) + 0.1 * np.random.randn() + 0.3\n    losses.append(loss)\nprint(f\"Training loss went from {losses[0]:.3f} to {losses[-1]:.3f}\")\nprint(f\"But what happened in between?\")",
+                choices: ["manual_seed", "random_seed", "set_seed", "seed"],
+                correct: 0,
+                hint: "PyTorch uses 'manual_seed' for setting reproducible random states",
+                challengeTemplate: "torch.___(___)\nsteps = ___\nlosses = []\nfor step in range(steps):\n    loss = 2.0 * np.exp(-step/30) + 0.1 * np.random.randn() + 0.3\n    losses.___(loss)\nprint(f\"Training loss went from {losses[0]:.3f} to {losses[-1]:.3f}\")",
+                challengeBlanks: ["manual_seed", "42", "100", "append"],
+                code: "torch.manual_seed(42)\nsteps = 100\nlosses = []\nfor step in range(steps):\n    loss = 2.0 * np.exp(-step/30) + 0.1 * np.random.randn() + 0.3\n    losses.append(loss)\nprint(f\"Training loss went from {losses[0]:.3f} to {losses[-1]:.3f}\")\nprint(f\"But what happened in between?\")",
+                output: "Training loss went from 2.198 to 0.412\nBut what happened in between?",
+                explanation: "Loss going down tells us the model improved, but not how. Did it memorize? Generalize? Develop shortcuts? The loss curve alone can't tell us. Developmental interpretability gives us tools to look inside."
+            },
+            {
+                instruction: "Let's visualize this training trajectory. Which matplotlib function do we use to create a line plot?",
+                type: "multiple-choice",
+                template: "plt.figure(figsize=(10, 4))\nplt.___(losses, 'b-', alpha=0.7)\nplt.xlabel('Training Step')\nplt.ylabel('Loss')\nplt.title('Training Loss Over Time')\nplt.grid(True, alpha=0.3)\nplt.show()\nprint(\"Loss decreases, but not uniformly - there are periods of rapid change and plateaus\")",
+                choices: ["plot", "scatter", "bar", "hist"],
+                correct: 0,
+                hint: "We want a continuous line connecting our loss values over time",
+                challengeTemplate: "plt.figure(figsize=(10, 4))\nplt.___(losses, 'b-', alpha=0.7)\nplt.___('Training Step')\nplt.___('Loss')\nplt.___('Training Loss Over Time')\nplt.grid(True, alpha=0.3)\nplt.show()",
+                challengeBlanks: ["plot", "xlabel", "ylabel", "title"],
+                code: "plt.figure(figsize=(10, 4))\nplt.plot(losses, 'b-', alpha=0.7)\nplt.xlabel('Training Step')\nplt.ylabel('Loss')\nplt.title('Training Loss Over Time')\nplt.grid(True, alpha=0.3)\nplt.show()\nprint(\"Loss decreases, but not uniformly - there are periods of rapid change and plateaus\")",
+                output: "Training Loss Over Time\n\nLoss\n2.5 |*\n    | **\n2.0 |   ***\n    |      **                      <- rapid early descent\n1.5 |        ***\n    |           ****\n1.0 |               *****\n    |                    ******    <- plateau\n0.5 |                          *********\n    |                                    <- slower descent\n0.0 +------------------------------------\n    0    20    40    60    80    100\n                Training Step\n\nLoss decreases, but not uniformly - there are periods of rapid change and plateaus",
+                explanation: "Real training curves often show distinct phases - rapid improvement, plateaus, sometimes sudden drops. These aren't random. They often correspond to the model discovering new strategies or reorganizing its internal representations. Developmental interpretability tries to understand what's happening during these transitions."
+            },
+            {
+                instruction: "Here's the core question developmental interpretability asks: what's actually changing inside the model? In PyTorch, what base class do we inherit from to create a neural network?",
+                why: "When a model's loss drops suddenly, something changed internally. Maybe it found a shortcut. Maybe it learned to generalize. Maybe it developed a new capability. For AI safety, distinguishing between these possibilities is crucial - a shortcut might fail dangerously out of distribution.",
+                type: "multiple-choice",
+                template: "class TinyModel(torch.nn.___):\n    def __init__(self):\n        super().__init__()\n        self.layer1 = torch.nn.Linear(2, 4)\n        self.layer2 = torch.nn.Linear(4, 1)\n    \n    def forward(self, x):\n        x = torch.relu(self.layer1(x))\n        return self.layer2(x)\n\nmodel = TinyModel()\nprint(f\"Model has {sum(p.numel() for p in model.parameters())} parameters\")",
+                choices: ["Module", "Model", "Network", "Layer"],
+                correct: 0,
+                hint: "PyTorch's base class for all neural network modules",
+                challengeTemplate: "class TinyModel(torch.nn.___):\n    def __init__(self):\n        super().__init__()\n        self.layer1 = torch.nn.___(2, 4)\n        self.layer2 = torch.nn.___(4, 1)\n    \n    def forward(self, x):\n        x = torch.___(self.layer1(x))\n        return self.layer2(x)",
+                challengeBlanks: ["Module", "Linear", "Linear", "relu"],
+                code: "class TinyModel(torch.nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.layer1 = torch.nn.Linear(2, 4)\n        self.layer2 = torch.nn.Linear(4, 1)\n    \n    def forward(self, x):\n        x = torch.relu(self.layer1(x))\n        return self.layer2(x)\n\nmodel = TinyModel()\nprint(f\"Model has {sum(p.numel() for p in model.parameters())} parameters\")\nprint(f\"Layer 1 weights shape: {model.layer1.weight.shape}\")\nprint(f\"Layer 2 weights shape: {model.layer2.weight.shape}\")",
+                output: "Model has 17 parameters\nLayer 1 weights shape: torch.Size([4, 2])\nLayer 2 weights shape: torch.Size([1, 4])",
+                explanation: "Even this tiny 17-parameter model has structure we can analyze. During training, these weights change. But how they change - which neurons become important, which connections strengthen or weaken - tells us about what the model is learning."
+            },
+            {
+                instruction: "Let's train this model on a simple task and save checkpoints. Which PyTorch optimizer should we use for basic gradient descent?",
+                why: "Checkpoints let us rewind and examine the model at any point in training. This is essential for developmental interpretability - we need to compare the model at step 10 vs step 100 vs step 1000 to understand how it developed.",
+                type: "multiple-choice",
+                template: "X = torch.randn(100, 2)\ny = (X[:, 0] * X[:, 1] > 0).float().unsqueeze(1)\n\noptimizer = torch.optim.___(model.parameters(), lr=0.1)\ncriterion = torch.nn.BCEWithLogitsLoss()\ncheckpoints = {}\n\nfor step in range(201):\n    optimizer.zero_grad()\n    pred = model(X)\n    loss = criterion(pred, y)\n    loss.backward()\n    optimizer.step()\n    \n    if step % 50 == 0:\n        checkpoints[step] = {k: v.clone() for k, v in model.state_dict().items()}\n        print(f\"Step {step:3d}: loss = {loss.item():.4f}\")",
+                choices: ["SGD", "Adam", "RMSprop", "Adagrad"],
+                correct: 0,
+                hint: "Stochastic Gradient Descent is the most basic optimizer",
+                challengeTemplate: "X = torch.___(100, 2)\ny = (X[:, 0] * X[:, 1] > 0).float().unsqueeze(1)\n\noptimizer = torch.optim.___(model.parameters(), lr=0.1)\ncriterion = torch.nn.___Loss()\ncheckpoints = {}\n\nfor step in range(201):\n    optimizer.zero_grad()\n    pred = model(X)\n    loss = criterion(pred, y)\n    loss.___() \n    optimizer.step()",
+                challengeBlanks: ["randn", "SGD", "BCEWithLogits", "backward"],
+                code: "X = torch.randn(100, 2)\ny = (X[:, 0] * X[:, 1] > 0).float().unsqueeze(1)\n\noptimizer = torch.optim.SGD(model.parameters(), lr=0.1)\ncriterion = torch.nn.BCEWithLogitsLoss()\ncheckpoints = {}\n\nfor step in range(201):\n    optimizer.zero_grad()\n    pred = model(X)\n    loss = criterion(pred, y)\n    loss.backward()\n    optimizer.step()\n    \n    if step % 50 == 0:\n        checkpoints[step] = {k: v.clone() for k, v in model.state_dict().items()}\n        print(f\"Step {step:3d}: loss = {loss.item():.4f}\")",
+                output: "Step   0: loss = 0.7891\nStep  50: loss = 0.5234\nStep 100: loss = 0.3847\nStep 150: loss = 0.2956\nStep 200: loss = 0.2413",
+                explanation: "We saved 5 checkpoints during training. Each checkpoint is a complete snapshot of the model's weights at that moment. Now we can ask: how did the model's internal structure change between these snapshots?"
+            },
+            {
+                instruction: "Now let's compare how the weights changed between checkpoints. Which PyTorch method computes the L2 norm (magnitude) of a tensor?",
+                type: "multiple-choice",
+                template: "def weight_distance(ckpt1, ckpt2):\n    total_diff = 0\n    for key in ckpt1:\n        diff = (ckpt1[key] - ckpt2[key]).___()\n        total_diff += diff.item()\n    return total_diff\n\nprint(\"Weight changes between consecutive checkpoints:\")\nsteps = sorted(checkpoints.keys())\nfor i in range(len(steps)-1):\n    s1, s2 = steps[i], steps[i+1]\n    dist = weight_distance(checkpoints[s1], checkpoints[s2])\n    print(f\"  Step {s1} -> {s2}: {dist:.4f}\")",
+                choices: ["norm", "abs", "sum", "mean"],
+                correct: 0,
+                hint: "The norm() function computes the magnitude (length) of a vector",
+                challengeTemplate: "def weight_distance(ckpt1, ckpt2):\n    total_diff = 0\n    for key in ckpt1:\n        diff = (ckpt1[key] - ckpt2[key]).___().item()\n        total_diff += diff\n    return total_diff\n\nsteps = ___(checkpoints.keys())\nfor i in range(___(steps)-1):\n    s1, s2 = steps[i], steps[i+1]\n    dist = weight_distance(checkpoints[s1], checkpoints[s2])",
+                challengeBlanks: ["norm", "sorted", "len"],
+                code: "def weight_distance(ckpt1, ckpt2):\n    total_diff = 0\n    for key in ckpt1:\n        diff = (ckpt1[key] - ckpt2[key]).norm().item()\n        total_diff += diff\n    return total_diff\n\nprint(\"Weight changes between consecutive checkpoints:\")\nsteps = sorted(checkpoints.keys())\nfor i in range(len(steps)-1):\n    s1, s2 = steps[i], steps[i+1]\n    dist = weight_distance(checkpoints[s1], checkpoints[s2])\n    print(f\"  Step {s1} -> {s2}: {dist:.4f}\")",
+                output: "Weight changes between consecutive checkpoints:\n  Step 0 -> 50: 2.3471\n  Step 50 -> 100: 1.1823\n  Step 100 -> 150: 0.6547\n  Step 150 -> 200: 0.4102",
+                explanation: "The weights changed most dramatically early in training (0→50), then changes slowed down. This is typical - models often make big adjustments early, then fine-tune. But weight distance alone doesn't tell us whether the model found a good solution or a shortcut."
+            },
+            {
+                instruction: "Weight changes tell us something moved, but not what the model learned. When computing activations, which PyTorch context manager disables gradient computation for efficiency?",
+                why: "For AI safety, we care about what strategy the model learned, not just that the weights changed. A model might learn a robust general rule or a brittle shortcut - both can achieve low loss but behave very differently on new inputs. Tracking neuron activation patterns helps distinguish these.",
+                type: "multiple-choice",
+                template: "def get_activations(model, X):\n    with torch.___():\n        hidden = torch.relu(model.layer1(X))\n        return hidden.mean(dim=0)\n\nprint(\"Average neuron activations at each checkpoint:\")\nfor step in sorted(checkpoints.keys()):\n    model.load_state_dict(checkpoints[step])\n    acts = get_activations(model, X)\n    print(f\"  Step {step:3d}: [{acts[0]:.3f}, {acts[1]:.3f}, {acts[2]:.3f}, {acts[3]:.3f}]\")",
+                choices: ["no_grad", "eval", "inference", "disable_grad"],
+                correct: 0,
+                hint: "We're not training, just computing forward passes - no gradients needed",
+                challengeTemplate: "def get_activations(model, X):\n    with torch.___():\n        hidden = torch.___(model.layer1(X))\n        return hidden.___(dim=0)\n\nfor step in sorted(checkpoints.keys()):\n    model.___(checkpoints[step])\n    acts = get_activations(model, X)",
+                challengeBlanks: ["no_grad", "relu", "mean", "load_state_dict"],
+                code: "def get_activations(model, X):\n    with torch.no_grad():\n        hidden = torch.relu(model.layer1(X))\n        return hidden.mean(dim=0)\n\nprint(\"Average neuron activations at each checkpoint:\")\nfor step in sorted(checkpoints.keys()):\n    model.load_state_dict(checkpoints[step])\n    acts = get_activations(model, X)\n    print(f\"  Step {step:3d}: [{acts[0]:.3f}, {acts[1]:.3f}, {acts[2]:.3f}, {acts[3]:.3f}]\")",
+                output: "Average neuron activations at each checkpoint:\n  Step   0: [0.312, 0.287, 0.198, 0.423]\n  Step  50: [0.156, 0.534, 0.089, 0.612]\n  Step 100: [0.023, 0.687, 0.012, 0.743]\n  Step 150: [0.008, 0.701, 0.005, 0.758]\n  Step 200: [0.003, 0.712, 0.002, 0.761]",
+                explanation: "Something interesting happened: neurons 0 and 2 became nearly inactive (values near 0), while neurons 1 and 3 became dominant. The model 'chose' to use only 2 of its 4 hidden neurons. This is a form of internal simplification - the model found it only needs 2 features to solve the task."
+            },
+            {
+                instruction: "This simplification - where the model uses fewer resources than available - is a key phenomenon. To count active neurons, which method converts a boolean tensor to a count?",
+                why: "When models simplify their internal structure, it often indicates they've found a generalizable solution rather than memorizing. But simplification can also mean the model is ignoring important features. Understanding when and why models simplify is crucial for predicting their behavior on new inputs.",
+                type: "multiple-choice",
+                template: "def effective_neurons(model, X, threshold=0.1):\n    acts = get_activations(model, X)\n    return (acts > threshold).___().item()\n\nprint(\"Number of 'active' neurons (activation > 0.1) at each checkpoint:\")\nfor step in sorted(checkpoints.keys()):\n    model.load_state_dict(checkpoints[step])\n    n_active = effective_neurons(model, X)\n    print(f\"  Step {step:3d}: {n_active}/4 neurons active\")",
+                choices: ["sum", "count", "len", "size"],
+                correct: 0,
+                hint: "True=1, False=0, so summing a boolean tensor counts the True values",
+                challengeTemplate: "def effective_neurons(model, X, threshold=___):\n    acts = get_activations(model, X)\n    return (acts > threshold).___().item()\n\nfor step in sorted(checkpoints.keys()):\n    model.load_state_dict(checkpoints[step])\n    n_active = ___(model, X)\n    print(f\"  Step {step:3d}: {n_active}/4 neurons active\")",
+                challengeBlanks: ["0.1", "sum", "effective_neurons"],
+                code: "def effective_neurons(model, X, threshold=0.1):\n    acts = get_activations(model, X)\n    return (acts > threshold).sum().item()\n\nprint(\"Number of 'active' neurons (activation > 0.1) at each checkpoint:\")\nfor step in sorted(checkpoints.keys()):\n    model.load_state_dict(checkpoints[step])\n    n_active = effective_neurons(model, X)\n    print(f\"  Step {step:3d}: {n_active}/4 neurons active\")",
+                output: "Number of 'active' neurons (activation > 0.1) at each checkpoint:\n  Step   0: 4/4 neurons active\n  Step  50: 3/4 neurons active\n  Step 100: 2/4 neurons active\n  Step 150: 2/4 neurons active\n  Step 200: 2/4 neurons active",
+                explanation: "The model started using all 4 neurons, but by step 100 settled into using only 2. This 'effective dimensionality' - how much of its capacity a model actually uses - is exactly what Singular Learning Theory (which we'll cover next) helps us measure precisely."
+            },
+            {
+                instruction: "We observed three things during training: loss decreased, weight changes slowed, and neurons deactivated. What's the key insight about what the model did?",
+                why: "This connects to a deep result from Singular Learning Theory: Bayesian learning naturally prefers simpler models. Neural networks don't just minimize loss - they're implicitly pushed toward solutions that use fewer effective parameters. This is why models can generalize despite having more parameters than training examples.",
+                type: "multiple-choice",
+                template: "# The model didn't just improve at the task - it found a ___ solution\ninsight = \"___\"\nprint(f\"Key insight: {insight}\")",
+                choices: ["faster", "simpler", "more accurate", "more complex"],
+                correct: 1,
+                hint: "Think about what happened to the number of active neurons",
+                challengeTemplate: "# The model didn't just improve at the task - it found a ___ solution\ninsight = \"___\"\nprint(f\"Key ___: {insight}\")",
+                challengeBlanks: ["simpler", "simpler", "insight"],
+                code: "# The model didn't just improve at the task - it found a simpler solution\ninsight = \"simpler\"\nprint(f\"Key insight: {insight}\")",
+                output: "Key insight: simpler",
+                explanation: "The model went from using 4 neurons to 2 - it simplified. This isn't accidental. Singular Learning Theory explains why neural networks naturally find simpler solutions. The 'learning coefficient' we'll learn to measure quantifies exactly this: how simple or complex is the model's current solution?"
+            },
+            {
+                instruction: "Dangerous AI capabilities don't appear from nowhere - they develop during training. If we can track internal structural changes, what might we be able to do?",
+                why: "Dangerous capabilities - deception, power-seeking, goal manipulation - develop during training, just like the simplification we observed. Developmental interpretability gives us tools to watch this process.",
+                type: "multiple-choice",
+                template: "# If we track structural changes during training, we might:\ngoal = \"detect concerning developments ___ they manifest as harmful behavior\"\nprint(f\"Goal: {goal}\")",
+                choices: ["after", "before", "while", "instead of"],
+                correct: 1,
+                hint: "Think about whether we want to react or prevent",
+                challengeTemplate: "# If we track structural changes during training, we might:\ngoal = \"detect ___ developments ___ they manifest as ___ behavior\"\nprint(f\"Goal: {goal}\")",
+                challengeBlanks: ["concerning", "before", "harmful"],
+                code: "# If we track structural changes during training, we might:\ngoal = \"detect concerning developments before they manifest as harmful behavior\"\nprint(f\"Goal: {goal}\")",
+                output: "Goal: detect concerning developments before they manifest as harmful behavior",
+                explanation: "The promise of developmental interpretability for AI safety: if structural changes precede capability emergence, we might detect dangerous capabilities forming and intervene before the model can cause harm. This is proactive safety rather than reactive."
+            },
+            {
+                instruction: "The core tool we'll learn is the Local Learning Coefficient (LLC). Based on what we observed with neuron activations, what do you think LLC measures?",
+                type: "multiple-choice",
+                template: "# The Local Learning Coefficient (LLC) measures:\nllc_measures = \"effective ___ of the model's solution\"\nprint(f\"LLC measures: {llc_measures}\")",
+                choices: ["speed", "accuracy", "complexity", "size"],
+                correct: 2,
+                hint: "Remember: the model went from 4 active neurons to 2",
+                challengeTemplate: "# The ___ Learning Coefficient (___) measures:\nllc_measures = \"effective ___ of the model's solution\"\nprint(f\"LLC measures: {___}\")",
+                challengeBlanks: ["Local", "LLC", "complexity", "llc_measures"],
+                code: "# The Local Learning Coefficient (LLC) measures:\nllc_measures = \"effective complexity of the model's solution\"\nprint(f\"LLC measures: {llc_measures}\")",
+                output: "LLC measures: effective complexity of the model's solution",
+                explanation: "LLC quantifies what we observed informally: how much of the model's capacity is actually being used. Lower LLC means simpler solution (like our 2-neuron result). In the coming lessons, you'll learn the theory behind LLC and how to estimate it precisely using SGLD sampling."
             }
         ]
     }

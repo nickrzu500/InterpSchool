@@ -40,7 +40,67 @@
 			transform: translateY(-2px);
 			box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 		}
-        
+
+        /* Mode toggle pills */
+        .mode-toggle {
+            display: flex;
+            gap: 0;
+            margin: 1rem 0;
+            background: #e2e8f0;
+            border-radius: 25px;
+            padding: 4px;
+            width: fit-content;
+        }
+
+        .mode-pill {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #4a5568;
+            transition: all 0.2s ease;
+        }
+
+        .mode-pill:hover {
+            color: #2d3748;
+        }
+
+        .mode-pill.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .challenge-input {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: 1px solid #3e3e3e;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 0.9rem;
+            min-width: 80px;
+        }
+
+        .challenge-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        .challenge-input.correct {
+            border-color: #48bb78;
+            background: rgba(72, 187, 120, 0.1);
+        }
+
+        .challenge-input.incorrect {
+            border-color: #f56565;
+            background: rgba(245, 101, 101, 0.1);
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -519,36 +579,22 @@
                     <p class="card-meta">14 lessons • Basic to Advanced Implementation</p>
                 </div>
                 
-                <div class="card" onclick="showAgenda('basic-interpretability')">
-                    <h2 class="card-title">Basic Interpretability</h2>
+                <div class="card" onclick="showAgenda('mechanistic-interpretability')">
+                    <h2 class="card-title">Mechanistic Interpretability</h2>
                     <p class="card-description">
-                        Learn to peek inside transformer models. Visualize attention patterns, analyze neuron activations, 
-                        and understand how models make decisions - essential skills for AI safety research.
+                        Learn to reverse-engineer neural networks. Visualize attention patterns, discover circuits,
+                        and understand how models actually work - essential skills for AI safety research.
                     </p>
-                    <p class="card-meta">5 lessons • Hands-on Analysis</p>
+                    <p class="card-meta">13 lessons • Basic to Advanced</p>
                 </div>
                 
-                <div class="card" onclick="showAgenda('advanced-interpretability')">
-                    <h2 class="card-title">Advanced Interpretability</h2>
+                <div class="card" onclick="showAgenda('developmental-interpretability')">
+                    <h2 class="card-title">Developmental Interpretability</h2>
                     <p class="card-description">
-                        Explore cutting-edge interpretability research including circuits, superposition,
-                        and advanced mechanistic interpretability techniques.
+                        Study how AI systems learn and develop capabilities over time using Singular Learning Theory.
+                        Track training dynamics and detect phase transitions.
                     </p>
-                    <p class="card-meta">8 lessons • Deep Technical Understanding</p>
-                </div>
-                
-                <div class="card" style="opacity: 0.6; cursor: not-allowed;" onclick="event.preventDefault(); return false;">
-                    <h2 class="card-title">
-                        Developmental Interpretability 
-                        <span style="font-size: 0.8rem; background: #f59e0b; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
-                            Under Construction
-                        </span>
-                    </h2>
-                    <p class="card-description">
-                        Study how AI systems learn and develop capabilities over time, including 
-                        training dynamics and emergent behaviors.
-                    </p>
-                    <p class="card-meta">Coming Soon</p>
+                    <p class="card-meta">10 lessons • Theory to Practice</p>
                 </div>
             </div>
         </div>
@@ -775,9 +821,39 @@
             </div>
         </div>
 
+        <!-- Mechanistic Interpretability Module Page -->
+        <div id="mechanistic-interpretability-page" class="container hidden">
+            <button class="back-button" onclick="showWelcome()">← Back to Home</button>
+
+            <div class="header">
+                <h1 class="main-title">Mechanistic Interpretability</h1>
+                <p class="subtitle">Reverse-engineer neural networks to understand how they work</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card" onclick="showAgenda('basic-interpretability')">
+                    <h2 class="card-title">Basic Interpretability</h2>
+                    <p class="card-description">
+                        Learn foundational techniques: visualize attention patterns, analyze activations,
+                        and build probes to understand what models know.
+                    </p>
+                    <p class="card-meta">5 lessons • Foundation</p>
+                </div>
+
+                <div class="card" onclick="showAgenda('advanced-interpretability')">
+                    <h2 class="card-title">Advanced Interpretability</h2>
+                    <p class="card-description">
+                        Explore cutting-edge research: circuits, superposition, sparse autoencoders,
+                        and techniques for understanding frontier models.
+                    </p>
+                    <p class="card-meta">8 lessons • Deep Technical</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Basic Interpretability Page -->
         <div id="basic-interpretability-page" class="container hidden">
-            <button class="back-button" onclick="showWelcome()">← Back to Home</button>
+            <button class="back-button" onclick="showAgenda('mechanistic-interpretability')">← Back to Mechanistic Interpretability</button>
 
             <div class="header">
                 <h1 class="main-title">Basic Interpretability</h1>
@@ -824,7 +900,7 @@
 
         <!-- Advanced Interpretability Page -->
         <div id="advanced-interpretability-page" class="container hidden">
-            <button class="back-button" onclick="showWelcome()">← Back to Home</button>
+            <button class="back-button" onclick="showAgenda('mechanistic-interpretability')">← Back to Mechanistic Interpretability</button>
 
             <div class="header">
                 <h1 class="main-title">Advanced Interpretability</h1>
@@ -890,6 +966,88 @@
             </div>
         </div>
 
+        <!-- Developmental Interpretability Page -->
+        <div id="developmental-interpretability-page" class="container hidden">
+            <button class="back-button" onclick="showWelcome()">← Back to Home</button>
+
+            <div class="header">
+                <h1 class="main-title">Developmental Interpretability</h1>
+                <p class="subtitle">Understand how neural networks develop during training using Singular Learning Theory</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card" data-lesson="devinterp-intro" onclick="showLesson('devinterp-intro')">
+                    <h2 class="card-title">1. What is Developmental Interpretability?</h2>
+                    <p class="card-description">
+                        Learn why studying training dynamics matters for AI safety. Watch models develop internal structure in real time.
+                    </p>
+                </div>
+
+                <div class="card" data-lesson="slt-foundations" onclick="showLesson('slt-foundations')">
+                    <h2 class="card-title">2. Introduction to Singular Learning Theory</h2>
+                    <p class="card-description">
+                        Understand why neural networks are "singular" and how Bayesian learning naturally prefers simpler solutions.
+                    </p>
+                </div>
+
+                <div class="card" data-lesson="learning-coefficient" onclick="showLesson('learning-coefficient')">
+                    <h2 class="card-title">3. The Learning Coefficient (RLCT)</h2>
+                    <p class="card-description">
+                        Master the key observable: the learning coefficient that measures effective model complexity.
+                    </p>
+                </div>
+
+                <div class="card" data-lesson="phase-transitions" onclick="showLesson('phase-transitions')">
+                    <h2 class="card-title">4. Phase Transitions in Learning</h2>
+                    <p class="card-description">
+                        Discover how models undergo discrete structural changes during training, not smooth optimization.
+                    </p>
+                </div>
+
+                <div class="card" data-lesson="devinterp-setup" onclick="showLesson('devinterp-setup')">
+                    <h2 class="card-title">5. Setting Up the Devinterp Toolkit</h2>
+                    <p class="card-description">
+                        Install the devinterp library and set up your environment for LLC estimation.
+                    </p>
+                </div>
+
+                <div class="card" data-lesson="llc-estimation" onclick="showLesson('llc-estimation')">
+                    <h2 class="card-title">6. Estimating the Local Learning Coefficient</h2>
+                    <p class="card-description">
+                        Learn SGLD sampling and run your first LLC estimates on real models.
+                    </p>
+                </div>
+
+                <div class="card" data-lesson="llc-calibration" onclick="showLesson('llc-calibration')">
+                    <h2 class="card-title">7. Calibration and Diagnostics</h2>
+                    <p class="card-description">
+                        Verify your LLC estimates are accurate using known geometries and diagnostic tools.
+                    </p>
+                </div>
+
+                <div class="card" data-lesson="llc-tracking" onclick="showLesson('llc-tracking')">
+                    <h2 class="card-title">8. Tracking LLC Across Training</h2>
+                    <p class="card-description">
+                        Compute LLC at multiple checkpoints and watch models develop over time.
+                    </p>
+                </div>
+
+                <div class="card" data-lesson="detecting-transitions" onclick="showLesson('detecting-transitions')">
+                    <h2 class="card-title">9. Detecting Phase Transitions</h2>
+                    <p class="card-description">
+                        Learn to identify discrete developmental stages and correlate them with capability emergence.
+                    </p>
+                </div>
+
+                <div class="card" data-lesson="devinterp-safety" onclick="showLesson('devinterp-safety')">
+                    <h2 class="card-title">10. Devinterp for AI Safety Monitoring</h2>
+                    <p class="card-description">
+                        Apply LLC tracking to monitor for dangerous capability emergence during training.
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <!-- Lesson IDE -->
         <div id="lesson-page" class="hidden">
             <div class="lesson-ide">
@@ -909,6 +1067,11 @@
                         <div class="step-why" id="step-why" style="display: none;">
                             <strong>Why?</strong> <span id="step-why-text"></span>
                         </div>
+                        <div id="mode-toggle-container" class="mode-toggle" style="display: none;">
+                            <button class="mode-pill active" id="guided-mode-btn" onclick="setExerciseMode('guided')">Guided</button>
+                            <button class="mode-pill" id="challenge-mode-btn" onclick="setExerciseMode('challenge')">Challenge</button>
+                            <button class="mode-pill" id="freestyle-mode-btn" onclick="setExerciseMode('freestyle')">Freestyle</button>
+                        </div>
                         <div id="exercise-label" style="font-size: 0.9rem; color: #667eea; margin-top: 0.5rem; margin-bottom: 0.5rem;">
                             <strong>Add this code:</strong>
                         </div>
@@ -916,7 +1079,7 @@
                             print('Code example here')
                         </div>
                         <div class="step-actions">
-                            <button class="btn btn-primary" onclick="checkCode()">Check Code</button>
+                            <button id="check-code-btn" class="btn btn-primary" onclick="checkCode()">Check Code</button>
                             <!--<button class="btn btn-secondary" onclick="showHint()">Hint</button>-->
                             <button class="btn btn-dev" onclick="copyCode()">Copy Code (Dev)</button>
                             <button class="btn btn-dev" onclick="skipStep()">Skip Step (Dev)</button>
@@ -1093,7 +1256,247 @@
         let currentStep = 0;
         let stepStatus = 'waiting';
         let currentLessonId = 'tokenization-basics';
-        
+        let exerciseMode = 'guided'; // 'guided', 'challenge', or 'freestyle'
+
+        // Set exercise mode (Guided, Challenge, or Freestyle)
+        function setExerciseMode(mode) {
+            exerciseMode = mode;
+
+            // Update pill button states
+            document.getElementById('guided-mode-btn').classList.toggle('active', mode === 'guided');
+            document.getElementById('challenge-mode-btn').classList.toggle('active', mode === 'challenge');
+            document.getElementById('freestyle-mode-btn').classList.toggle('active', mode === 'freestyle');
+
+            // Re-render the current step with new mode
+            updateStepDisplay();
+        }
+
+        // Update step display based on current mode
+        function updateStepDisplay() {
+            const currentLesson = LESSONS[currentLessonId];
+            if (!currentLesson) return;
+
+            const step = currentLesson.steps[currentStep];
+            const exerciseType = step.type || 'type-along';
+            const exerciseLabel = document.getElementById('exercise-label');
+            const codeExample = document.getElementById('code-example');
+
+            // Only show mode toggle for multiple-choice steps
+            const modeToggle = document.getElementById('mode-toggle-container');
+            if (exerciseType === 'multiple-choice') {
+                modeToggle.style.display = 'flex';
+            } else {
+                modeToggle.style.display = 'none';
+            }
+
+            if (exerciseType === 'multiple-choice') {
+                if (exerciseMode === 'guided') {
+                    // Guided mode: show MCQ with radio buttons
+                    exerciseLabel.innerHTML = '<strong>Choose the correct option:</strong>';
+                    let choicesHtml = `<pre style="margin: 0; white-space: pre-wrap;">${step.template.replace(/___/g, '<span style="background: #ffe4b5; padding: 2px 8px; border-radius: 3px;">___</span>')}</pre><br>`;
+                    step.choices.forEach((choice, i) => {
+                        choicesHtml += `<label style="display: block; margin: 5px 0; cursor: pointer;">
+                            <input type="radio" name="mc-choice" value="${i}" style="margin-right: 8px;" onchange="fillMCChoice(${i})">
+                            ${String.fromCharCode(97 + i)}) ${choice}
+                        </label>`;
+                    });
+                    if (step.hint) {
+                        choicesHtml += `<div style="margin-top: 10px; font-size: 0.85rem; color: #718096;"><em>Hint: ${step.hint}</em></div>`;
+                    }
+                    codeExample.innerHTML = choicesHtml;
+                } else if (exerciseMode === 'challenge') {
+                    // Challenge mode: show fill-in-the-blank with input fields
+                    exerciseLabel.innerHTML = '<strong>Fill in the blanks:</strong>';
+
+                    // Use challengeTemplate if available, otherwise derive from code
+                    const template = step.challengeTemplate || step.code;
+
+                    // Create the challenge HTML with input fields
+                    let challengeHtml = createChallengeTemplate(template, step);
+                    codeExample.innerHTML = challengeHtml;
+                } else if (exerciseMode === 'freestyle') {
+                    // Freestyle mode: show instructions only, user writes code from scratch
+                    exerciseLabel.innerHTML = '<strong>Write the code yourself:</strong>';
+
+                    // Build freestyle instructions
+                    let freestyleHtml = '<div style="background: #f0f4f8; padding: 12px; border-radius: 8px; border-left: 4px solid #667eea;">';
+                    freestyleHtml += '<div style="font-weight: 600; margin-bottom: 8px; color: #2d3748;">📝 Task:</div>';
+                    freestyleHtml += `<div style="margin-bottom: 10px;">${step.freestyleHint || step.instruction}</div>`;
+
+                    // Show expected output as a hint
+                    if (step.output) {
+                        freestyleHtml += '<div style="font-weight: 600; margin-top: 12px; margin-bottom: 4px; color: #2d3748;">Expected output:</div>';
+                        freestyleHtml += `<pre style="margin: 0; background: #1e1e1e; color: #d4d4d4; padding: 8px; border-radius: 4px; font-size: 0.85rem;">${step.output}</pre>`;
+                    }
+                    freestyleHtml += '</div>';
+
+                    codeExample.innerHTML = freestyleHtml;
+                }
+            } else if (exerciseType === 'type-along') {
+                exerciseLabel.innerHTML = '<strong>Add this code:</strong>';
+                codeExample.innerHTML = `<pre style="margin: 0; white-space: pre-wrap;">${step.code}</pre>`;
+            } else if (exerciseType === 'construct') {
+                exerciseLabel.innerHTML = '<strong>Write code based on this description:</strong>';
+                codeExample.innerHTML = `<p>${step.description}</p>`;
+            } else {
+                // Default: show code as-is
+                exerciseLabel.innerHTML = '<strong>Add this code:</strong>';
+                codeExample.innerHTML = `<pre style="margin: 0; white-space: pre-wrap;">${step.code || ''}</pre>`;
+            }
+
+            // Hide Check Code button in challenge mode (auto-completes when all blanks are correct)
+            const checkCodeBtn = document.getElementById('check-code-btn');
+            if (exerciseType === 'multiple-choice' && exerciseMode === 'challenge') {
+                checkCodeBtn.style.display = 'none';
+            } else {
+                checkCodeBtn.style.display = '';
+            }
+        }
+
+        // Create challenge template with input blanks
+        function createChallengeTemplate(code, step) {
+            // Get the blanks from challengeBlanks or derive from template
+            let blanks = step.challengeBlanks || [];
+
+            // If no explicit blanks, try to extract key parts from the code
+            if (blanks.length === 0 && step.template) {
+                // Use the template's blank position as a starting point
+                // The template already has ___ for the MCQ blank
+                // For challenge mode, we'll add more blanks based on key elements
+                const templateBlank = step.choices[step.correct];
+                blanks.push(templateBlank);
+            }
+
+            // Escape HTML and format as code block
+            let html = '<pre style="margin: 0; white-space: pre-wrap; line-height: 1.8;">';
+
+            // Replace each blank marker with an input field
+            let codeWithBlanks = code;
+            let blankIndex = 0;
+
+            // Find all blank markers (___) and replace with inputs
+            codeWithBlanks = codeWithBlanks.replace(/___(\d)?/g, (match, num) => {
+                const idx = num ? parseInt(num) : blankIndex++;
+                const answer = blanks[idx] || '';
+                const width = Math.max(80, answer.length * 10);
+                return `<input type="text" class="challenge-input" data-blank="${idx}" data-answer="${escapeHtml(answer)}" style="width: ${width}px;" placeholder="..." onkeyup="checkChallengeInput(this)">`;
+            });
+
+            html += codeWithBlanks;
+            html += '</pre>';
+
+            if (step.hint) {
+                html += `<div style="margin-top: 10px; font-size: 0.85rem; color: #718096;"><em>Hint: ${step.hint}</em></div>`;
+            }
+
+            return html;
+        }
+
+        // Escape HTML for safe display
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Check a challenge input field
+        function checkChallengeInput(input) {
+            const answer = input.dataset.answer;
+            const value = input.value.trim();
+
+            if (value === '') {
+                input.classList.remove('correct', 'incorrect');
+            } else if (value === answer) {
+                input.classList.add('correct');
+                input.classList.remove('incorrect');
+            } else {
+                input.classList.add('incorrect');
+                input.classList.remove('correct');
+            }
+
+            // Check if all inputs are now correct - if so, auto-trigger success
+            const allInputs = document.querySelectorAll('.challenge-input');
+            let allCorrect = true;
+            let hasEmpty = false;
+
+            allInputs.forEach(inp => {
+                const ans = inp.dataset.answer;
+                const val = inp.value.trim();
+                if (val === '') {
+                    hasEmpty = true;
+                } else if (val !== ans) {
+                    allCorrect = false;
+                }
+            });
+
+            // If all filled and all correct, auto-trigger the success flow
+            if (!hasEmpty && allCorrect && stepStatus !== 'correct') {
+                setTimeout(() => {
+                    autoCompleteChallengeStep();
+                }, 300); // Small delay for visual feedback
+            }
+        }
+
+        // Auto-complete challenge step when all inputs are correct
+        function autoCompleteChallengeStep() {
+            const currentLesson = LESSONS[currentLessonId];
+            if (!currentLesson) return;
+
+            const step = currentLesson.steps[currentStep];
+
+            // Copy the correct code to the editor
+            let accumulatedCode = '';
+            for (let i = 0; i <= currentStep; i++) {
+                if (currentLesson.steps[i].code) {
+                    accumulatedCode += currentLesson.steps[i].code;
+                    if (!accumulatedCode.endsWith('\n') && i < currentStep) {
+                        accumulatedCode += '\n';
+                    }
+                }
+            }
+            document.getElementById('code-editor').value = accumulatedCode;
+
+            // Mark as correct and show output
+            stepStatus = 'correct';
+            document.getElementById('status-indicator').className = 'status-indicator status-correct';
+
+            let outputMessage = '';
+            if (step.output) {
+                outputMessage = step.output + '\n\n';
+            }
+            // Show explanation but adapt it for challenge mode
+            // Remove MCQ-specific phrases like "X is correct!" from the start
+            let explanation = step.explanation || '';
+            explanation = explanation.replace(/^[^.!]+\s+(is correct|are correct)[!.]?\s*/i, '');
+            outputMessage += '✓ Correct!\n\n' + (explanation || step.explanation);
+            document.getElementById('output').textContent = outputMessage;
+
+            // Show the next button
+            document.getElementById('next-btn').classList.remove('hidden');
+            document.getElementById('next-btn').textContent = currentStep === currentLesson.steps.length - 1 ? 'Complete Lesson 🎉' : 'Next Step →';
+        }
+
+        // Check all challenge inputs (legacy, kept for compatibility)
+        function checkAllChallengeInputs() {
+            const inputs = document.querySelectorAll('.challenge-input');
+            let allCorrect = true;
+
+            inputs.forEach(input => {
+                const answer = input.dataset.answer;
+                const value = input.value.trim();
+                if (value !== answer) {
+                    allCorrect = false;
+                    input.classList.add('incorrect');
+                    input.classList.remove('correct');
+                } else {
+                    input.classList.add('correct');
+                    input.classList.remove('incorrect');
+                }
+            });
+
+            return allCorrect;
+        }
+
         //About Page Show
         function showAbout() {
 			hideAll();
@@ -1110,10 +1513,14 @@
             hideAll();
             if (type === 'transformer-scratch') {
                 document.getElementById('transformer-scratch-page').classList.remove('hidden');
+            } else if (type === 'mechanistic-interpretability') {
+                document.getElementById('mechanistic-interpretability-page').classList.remove('hidden');
             } else if (type === 'basic-interpretability') {
                 document.getElementById('basic-interpretability-page').classList.remove('hidden');
             } else if (type === 'advanced-interpretability') {
                 document.getElementById('advanced-interpretability-page').classList.remove('hidden');
+            } else if (type === 'developmental-interpretability') {
+                document.getElementById('developmental-interpretability-page').classList.remove('hidden');
             }
         }
 
@@ -1159,6 +1566,7 @@
             const interpretabilityLessons = ['attention-patterns', 'logit-lens', 'activation-patching', 'probing-experiments', 'finding-features'];
             const advancedLessons = ['gradient-checkpointing', 'mixed-precision-training', 'memory-optimization', 'distributed-training-basics', 'data-parallelism', 'model-parallelism', 'pipeline-parallelism', 'training-at-scale'];
             const advancedInterpretabilityLessons = ['circuits-discovery', 'superposition-polysemanticity', 'sparse-autoencoders', 'induction-heads', 'path-patching', 'feature-visualization', 'mechanistic-interpretability-scale', 'safety-critical-circuits'];
+            const devinterpLessons = ['devinterp-intro', 'slt-foundations', 'learning-coefficient', 'phase-transitions', 'devinterp-setup', 'llc-estimation', 'llc-calibration', 'llc-tracking', 'detecting-transitions', 'devinterp-safety'];
 
             if (basicLessons.includes(currentLessonId)) {
                 showDifficulty('transformer-scratch', 'basic');
@@ -1166,6 +1574,8 @@
                 showAgenda('basic-interpretability');
             } else if (advancedInterpretabilityLessons.includes(currentLessonId)) {
                 showAgenda('advanced-interpretability');
+            } else if (devinterpLessons.includes(currentLessonId)) {
+                showAgenda('developmental-interpretability');
             } else if (advancedLessons.includes(currentLessonId)) {
                 showDifficulty('transformer-scratch', 'advanced');
             } else {
@@ -1218,7 +1628,7 @@
         }
 
         function hideAll() {
-            const pages = ['welcome-page', 'transformer-scratch-page', 'basic-lessons-page', 'intermediate-lessons-page', 'advanced-lessons-page', 'basic-interpretability-page', 'advanced-interpretability-page', 'lesson-page', 'badge-page', 'about-page'];
+            const pages = ['welcome-page', 'transformer-scratch-page', 'basic-lessons-page', 'intermediate-lessons-page', 'advanced-lessons-page', 'mechanistic-interpretability-page', 'basic-interpretability-page', 'advanced-interpretability-page', 'developmental-interpretability-page', 'lesson-page', 'badge-page', 'about-page'];
             pages.forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
@@ -1254,41 +1664,10 @@
             } else {
                 whyDiv.style.display = 'none';
             }
-            
-            // Update UI based on exercise type
-            const exerciseType = step.type || 'copy';
-            const codeExample = document.getElementById('code-example');
-            const exerciseLabel = document.getElementById('exercise-label');
-            
-            // Update the exercise label
-            if (exerciseType === 'fill-in') {
-                exerciseLabel.innerHTML = '<strong>Fill in the blanks:</strong>';
-            } else if (exerciseType === 'multiple-choice') {
-                exerciseLabel.innerHTML = '<strong>Choose the correct option:</strong>';
-            } else if (exerciseType === 'construct') {
-                exerciseLabel.innerHTML = '<strong>Write code based on this description:</strong>';
-            } else {
-                exerciseLabel.innerHTML = '<strong>Add this code:</strong>';
-            }
-            
-            // Update the code example area
-            if (exerciseType === 'fill-in') {
-                codeExample.innerHTML = `${step.template.replace(/___/g, '<span style="background: #ffe4b5; padding: 2px 8px; border-radius: 3px;">___</span>')}`;
-            } else if (exerciseType === 'multiple-choice') {
-                let choicesHtml = `${step.template.replace(/___/g, '<span style="background: #ffe4b5; padding: 2px 8px; border-radius: 3px;">___</span>')}<br><br>`;
-                step.choices.forEach((choice, i) => {
-                    choicesHtml += `<label style="display: block; margin: 5px 0; cursor: pointer;">
-                        <input type="radio" name="mc-choice" value="${i}" style="margin-right: 8px;">
-                        ${String.fromCharCode(97 + i)}) ${choice}
-                    </label>`;
-                });
-                codeExample.innerHTML = choicesHtml;
-            } else if (exerciseType === 'construct') {
-                codeExample.innerHTML = `<div style="color: #4a5568; margin-bottom: 10px;">${step.description}</div><strong>Template:</strong><br>${step.template}`;
-            } else {
-                codeExample.textContent = step.code;
-            }
-            
+
+            // Update the exercise display (handles mode toggle and content)
+            updateStepDisplay();
+
             // Reset status
             stepStatus = 'waiting';
             document.getElementById('status-indicator').className = 'status-indicator status-waiting';
@@ -1329,7 +1708,13 @@
                         outputMessage = 'Fill in the blanks in the code, then click "Check Code" to continue...';
                         break;
                     case 'multiple-choice':
-                        outputMessage = 'First select an option above, then type the complete line in the editor and click "Check Code"...';
+                        if (exerciseMode === 'challenge') {
+                            outputMessage = 'Fill in all the blanks correctly to continue...';
+                        } else if (exerciseMode === 'freestyle') {
+                            outputMessage = 'Write the code from scratch based on the task description, then click "Check Code"...';
+                        } else {
+                            outputMessage = 'Select an option above to fill in the blank, then click "Check Code" to verify...';
+                        }
                         break;
                     case 'construct':
                         outputMessage = 'Write the code based on the description, then click "Check Code" to continue...';
@@ -1339,6 +1724,37 @@
                 }
             }
             document.getElementById('output').textContent = outputMessage;
+        }
+
+        // Fill editor with selected multiple choice option
+        function fillMCChoice(choiceIndex) {
+            const currentLesson = LESSONS[currentLessonId];
+            if (!currentLesson) return;
+
+            const step = currentLesson.steps[currentStep];
+            if (step.type !== 'multiple-choice') return;
+
+            const selectedChoice = step.choices[choiceIndex];
+
+            // Build accumulated code from previous steps
+            let accumulatedCode = '';
+            for (let i = 0; i < currentStep; i++) {
+                if (currentLesson.steps[i].code) {
+                    accumulatedCode += currentLesson.steps[i].code;
+                    if (!accumulatedCode.endsWith('\n')) {
+                        accumulatedCode += '\n';
+                    }
+                }
+            }
+
+            // Replace ___ in template with selected choice
+            const filledCode = step.template.replace(/___/g, selectedChoice);
+
+            // Set editor content
+            document.getElementById('code-editor').value = accumulatedCode + filledCode;
+
+            // Update output to show they've made a selection
+            document.getElementById('output').textContent = `Selected: "${selectedChoice}"\n\nClick "Check Code" to verify your answer.`;
         }
 
         function checkCode() {
@@ -1360,18 +1776,59 @@
                 }
             }
             
-            // For multiple choice, check if they selected the right option first
+            // For multiple choice, check based on current mode
             if (exerciseType === 'multiple-choice') {
-                const selectedOption = document.querySelector('input[name="mc-choice"]:checked');
-                if (!selectedOption) {
-                    document.getElementById('output').textContent = 'Please select an option first!';
-                    return;
-                }
-                if (parseInt(selectedOption.value) !== step.correct) {
-                    stepStatus = 'error';
-                    document.getElementById('status-indicator').className = 'status-indicator status-error';
-                    document.getElementById('output').textContent = `That's not quite right. Think about ${step.hint || 'which option makes the most sense'}`;
-                    return;
+                if (exerciseMode === 'guided') {
+                    // Guided mode: check radio button selection
+                    const selectedOption = document.querySelector('input[name="mc-choice"]:checked');
+                    if (!selectedOption) {
+                        document.getElementById('output').textContent = 'Please select an option first!';
+                        return;
+                    }
+                    if (parseInt(selectedOption.value) !== step.correct) {
+                        stepStatus = 'error';
+                        document.getElementById('status-indicator').className = 'status-indicator status-error';
+                        document.getElementById('output').textContent = `That's not quite right. ${step.hint || 'Think about which option makes the most sense'}`;
+                        return;
+                    }
+                } else {
+                    // Challenge mode: check all input fields
+                    const inputs = document.querySelectorAll('.challenge-input');
+                    if (inputs.length === 0) {
+                        document.getElementById('output').textContent = 'No blanks to fill in!';
+                        return;
+                    }
+
+                    let allCorrect = true;
+                    let hasEmpty = false;
+
+                    inputs.forEach(input => {
+                        const answer = input.dataset.answer;
+                        const value = input.value.trim();
+                        if (value === '') {
+                            hasEmpty = true;
+                            input.classList.remove('correct', 'incorrect');
+                        } else if (value !== answer) {
+                            allCorrect = false;
+                            input.classList.add('incorrect');
+                            input.classList.remove('correct');
+                        } else {
+                            input.classList.add('correct');
+                            input.classList.remove('incorrect');
+                        }
+                    });
+
+                    if (hasEmpty) {
+                        document.getElementById('output').textContent = 'Please fill in all the blanks!';
+                        return;
+                    }
+
+                    if (!allCorrect) {
+                        stepStatus = 'error';
+                        document.getElementById('status-indicator').className = 'status-indicator status-error';
+                        document.getElementById('output').textContent = `Some answers are incorrect. ${step.hint || 'Check the highlighted fields'}`;
+                        return;
+                    }
                 }
             }
             
@@ -1479,7 +1936,7 @@
             document.getElementById('status-indicator').className = 'status-indicator status-correct';
             document.getElementById('output').textContent = '✓ [DEV MODE] Step skipped! ' + currentLesson.steps[currentStep].explanation;
 
-            // Auto-advance to next step
+            // Auto-advance to next step or show Complete button
             if (currentStep < currentLesson.steps.length - 1) {
                 currentStep++;
                 updateStep();
@@ -1487,8 +1944,9 @@
                 const newUrl = `?lesson=${currentLessonId}&step=${currentStep + 1}`;
                 window.history.pushState({}, '', newUrl);
             } else {
-                // Last step - show completion
-                showBadge();
+                // Last step - show Complete Lesson button instead of auto-advancing
+                document.getElementById('next-btn').classList.remove('hidden');
+                document.getElementById('next-btn').textContent = 'Complete Lesson 🎉';
             }
         }
 
