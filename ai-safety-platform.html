@@ -1188,20 +1188,21 @@
                     <h2>Features</h2>
                     
                     <ul>
-                        <li><strong>Interactive Coding Exercises</strong>: Multiple exercise types including copy, fill-in-the-blank, multiple choice, and construct</li>
-                        <li><strong>Progressive Learning</strong>: Start with conceptual understanding, then move to implementation</li>
+                        <li><strong>Interactive Coding Exercises</strong>: Multiple exercise types including guided (mcq), challenge (fill-in-the-blank), and freestyle (write from scratch)</li>
+                        <li><strong>Learn by Doing</strong>: Concepts and implementation are integrated - understand an idea, then code it immediately</li>
                         <li><strong>AI Safety Focus</strong>: Every lesson connects technical concepts to AI safety implications</li>
                         <li><strong>No Setup Required</strong>: Works directly in the browser</li>
                     </ul>
                     
-                    <h2>Exercise Types</h2>
-                    
-                    <ol>
-                        <li><strong>Copy</strong>: Users type the exact code shown</li>
-                        <li><strong>Fill-in</strong>: Complete code with blanks (<code>___</code>)</li>
-                        <li><strong>Multiple Choice</strong>: Select from options then type the complete line</li>
-                        <li><strong>Construct</strong>: Write code based on a description</li>
-                    </ol>
+                    <h2>Learning Modes</h2>
+
+                    <p>Each exercise offers three modes to match your learning style:</p>
+                    <ul>
+                        <li><strong>Guided (MCQ)</strong>: Select the correct answer from multiple choices - great for beginners or quick review</li>
+                        <li><strong>Challenge</strong>: Fill in the blanks (<code>___</code>) in code templates - test your recall without starting from scratch</li>
+                        <li><strong>Freestyle</strong>: Write the code from scratch using only hints - the ultimate test of understanding</li>
+                    </ul>
+                    <p>Switch between modes anytime using the toggle at the top of each exercise!</p>
                     
                     <h2>Future Enhancements</h2>
                     
@@ -1216,6 +1217,7 @@
                     <h2>Contributing</h2>
                     
                     <p>This is an open project aimed at lowering barriers to AI safety research. Contributions welcome!</p>
+                    <p>Contact me at mikolaj.rzuczkowski@gmail.com.</p>
                 </div>
 			</div>
 		</div>
@@ -1501,12 +1503,16 @@
         function showAbout() {
 			hideAll();
 			document.getElementById('about-page').classList.remove('hidden');
+			// Update URL to reflect about page
+			window.history.pushState({}, '', '?page=about');
 		}
 
         // Navigation functions
         function showWelcome() {
             hideAll();
             document.getElementById('welcome-page').classList.remove('hidden');
+            // Set URL to root for clean home page URL
+            window.history.pushState({}, '', '/');
         }
 
         function showAgenda(type) {
@@ -1522,6 +1528,8 @@
             } else if (type === 'developmental-interpretability') {
                 document.getElementById('developmental-interpretability-page').classList.remove('hidden');
             }
+            // Update URL to reflect module page
+            window.history.pushState({}, '', `?module=${type}`);
         }
 
         function showDifficulty(agenda, difficulty) {
@@ -1533,13 +1541,18 @@
             } else if (agenda === 'transformer-scratch' && difficulty === 'advanced') {
                 document.getElementById('advanced-lessons-page').classList.remove('hidden');
             }
+            // Update URL to reflect difficulty/level page
+            window.history.pushState({}, '', `?module=${agenda}&level=${difficulty}`);
         }
 
-        function showLesson(lessonId) {
+        function showLesson(lessonId, updateUrl = true) {
             currentLessonId = lessonId || 'tokenization-basics';
-            // Don't reset currentStep here - it may have been set by the router
-            // Only reset to 0 if currentStep is undefined or out of range
-            if (currentStep === undefined || currentStep < 0) {
+
+            // If updateUrl is true, user clicked a lesson card - start from step 0
+            // If updateUrl is false, router called us - currentStep was already set
+            if (updateUrl) {
+                currentStep = 0;
+            } else if (currentStep === undefined || currentStep < 0) {
                 currentStep = 0;
             }
             hideAll();
@@ -1552,6 +1565,12 @@
 
             document.getElementById('lesson-page').classList.remove('hidden');
             updateStep();
+
+            // Update URL to reflect current lesson and step
+            if (updateUrl) {
+                const newUrl = `?lesson=${currentLessonId}&step=${currentStep + 1}`;
+                window.history.pushState({}, '', newUrl);
+            }
         }
 
         function goBackToLessons() {
@@ -1699,29 +1718,30 @@
             }
             
             // Update output message based on exercise type
+            const exerciseType = step.type || 'type-along';
             let outputMessage = '';
-            if (currentStep === 0) {
-                outputMessage = 'Type the code shown above, then click "Check Code" to continue...';
-            } else {
-                switch (exerciseType) {
-                    case 'fill-in':
-                        outputMessage = 'Fill in the blanks in the code, then click "Check Code" to continue...';
-                        break;
-                    case 'multiple-choice':
-                        if (exerciseMode === 'challenge') {
-                            outputMessage = 'Fill in all the blanks correctly to continue...';
-                        } else if (exerciseMode === 'freestyle') {
-                            outputMessage = 'Write the code from scratch based on the task description, then click "Check Code"...';
-                        } else {
-                            outputMessage = 'Select an option above to fill in the blank, then click "Check Code" to verify...';
-                        }
-                        break;
-                    case 'construct':
-                        outputMessage = 'Write the code based on the description, then click "Check Code" to continue...';
-                        break;
-                    default:
+            switch (exerciseType) {
+                case 'fill-in':
+                    outputMessage = 'Fill in the blanks in the code, then click "Check Code" to continue...';
+                    break;
+                case 'multiple-choice':
+                    if (exerciseMode === 'challenge') {
+                        outputMessage = 'Fill in all the blanks correctly to continue...';
+                    } else if (exerciseMode === 'freestyle') {
+                        outputMessage = 'Write the code from scratch based on the task description, then click "Check Code"...';
+                    } else {
+                        outputMessage = 'Select an option above, then click "Check Code" to verify...';
+                    }
+                    break;
+                case 'construct':
+                    outputMessage = 'Write the code based on the description, then click "Check Code" to continue...';
+                    break;
+                default:
+                    if (currentStep === 0) {
+                        outputMessage = 'Type the code shown above, then click "Check Code" to continue...';
+                    } else {
                         outputMessage = 'Add the new code shown above to your existing code, then click "Check Code" to continue...';
-                }
+                    }
             }
             document.getElementById('output').textContent = outputMessage;
         }
@@ -1791,7 +1811,19 @@
                         document.getElementById('output').textContent = `That's not quite right. ${step.hint || 'Think about which option makes the most sense'}`;
                         return;
                     }
-                } else {
+                    // Correct! Show success for guided MCQ
+                    stepStatus = 'correct';
+                    document.getElementById('status-indicator').className = 'status-indicator status-correct';
+                    let outputMessage = '';
+                    if (step.output) {
+                        outputMessage = step.output + '\n\n';
+                    }
+                    outputMessage += '✓ ' + step.explanation;
+                    document.getElementById('output').textContent = outputMessage;
+                    document.getElementById('next-btn').classList.remove('hidden');
+                    document.getElementById('next-btn').textContent = currentStep === currentLesson.steps.length - 1 ? 'Complete Lesson 🎉' : 'Next Step →';
+                    return;
+                } else if (exerciseMode === 'challenge') {
                     // Challenge mode: check all input fields
                     const inputs = document.querySelectorAll('.challenge-input');
                     if (inputs.length === 0) {
@@ -1970,8 +2002,8 @@
             document.getElementById('output').textContent = 'Demo Mode: Code would execute here\nYour code:\n' + userCode + '\n(To enable real execution, add your API keys)';
         }
 
-        // Initialize
-        showWelcome();
+        // Initialize - router will handle showing the correct page based on URL
+        // (don't call showWelcome() here as it would clear URL params before router reads them)
 
         // Simple Router for AI Safety Platform
 
@@ -1979,35 +2011,87 @@
             constructor() {
                 this.routes = {};
                 this.currentRoute = null;
-                
-                // Listen for URL changes
+
+                // Listen for URL changes (back/forward buttons)
                 window.addEventListener('popstate', () => this.handleRoute());
-                window.addEventListener('DOMContentLoaded', () => this.handleRoute());
+
+                // Handle initial route - check if DOM is already ready
+                if (document.readyState === 'loading') {
+                    window.addEventListener('DOMContentLoaded', () => this.handleRoute());
+                } else {
+                    // DOM already loaded, handle route immediately
+                    this.handleRoute();
+                }
             }
             
             // Parse URL parameters
             parseParams() {
                 const params = new URLSearchParams(window.location.search);
                 return {
+                    page: params.get('page'),
+                    module: params.get('module'),
+                    level: params.get('level'),
                     lesson: params.get('lesson'),
                     step: params.get('step') ? parseInt(params.get('step')) : null
                 };
             }
-            
+
             // Handle routing based on URL
             handleRoute() {
-                const { lesson, step } = this.parseParams();
+                const { page, module, level, lesson, step } = this.parseParams();
 
-                // No lesson specified - show welcome
+                // Handle page routes (about, etc.)
+                if (page === 'about') {
+                    hideAll();
+                    document.getElementById('about-page').classList.remove('hidden');
+                    return;
+                }
+
+                // Handle module routes (agenda pages)
+                if (module && !lesson) {
+                    hideAll();
+
+                    // If level is specified, show the difficulty/lessons page
+                    if (level) {
+                        if (module === 'transformer-scratch') {
+                            if (level === 'basic') {
+                                document.getElementById('basic-lessons-page').classList.remove('hidden');
+                            } else if (level === 'intermediate') {
+                                document.getElementById('intermediate-lessons-page').classList.remove('hidden');
+                            } else if (level === 'advanced') {
+                                document.getElementById('advanced-lessons-page').classList.remove('hidden');
+                            }
+                        }
+                        return;
+                    }
+
+                    // Show the agenda/module page
+                    if (module === 'transformer-scratch') {
+                        document.getElementById('transformer-scratch-page').classList.remove('hidden');
+                    } else if (module === 'mechanistic-interpretability') {
+                        document.getElementById('mechanistic-interpretability-page').classList.remove('hidden');
+                    } else if (module === 'basic-interpretability') {
+                        document.getElementById('basic-interpretability-page').classList.remove('hidden');
+                    } else if (module === 'advanced-interpretability') {
+                        document.getElementById('advanced-interpretability-page').classList.remove('hidden');
+                    } else if (module === 'developmental-interpretability') {
+                        document.getElementById('developmental-interpretability-page').classList.remove('hidden');
+                    }
+                    return;
+                }
+
+                // No params or unrecognized - show welcome
                 if (!lesson) {
-                    showWelcome();
+                    hideAll();
+                    document.getElementById('welcome-page').classList.remove('hidden');
                     return;
                 }
 
                 // Check if lesson exists
                 if (!LESSONS[lesson]) {
                     console.error(`Lesson '${lesson}' not found. Available lessons:`, Object.keys(LESSONS));
-                    showWelcome();
+                    hideAll();
+                    document.getElementById('welcome-page').classList.remove('hidden');
                     return;
                 }
 
@@ -2129,7 +2213,7 @@
             if (resetStep) {
                 currentStep = 0;
             }
-            originalShowLesson(lessonId);
+            originalShowLesson(lessonId, resetStep);
             // Update URL to match current state
             const targetUrl = currentStep > 0
                 ? `?lesson=${lessonId}&step=${currentStep + 1}`

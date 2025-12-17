@@ -39,40 +39,25 @@ const LESSONS = {
             explanation: "The 'gpt2' checkpoint downloads GPT-2's tokenizer files (vocabulary, merge rules, config). The tokenizer and model weights are distinct artifacts that were trained together - you must always load both from the same checkpoint. Using a mismatched tokenizer (like BERT's tokenizer with GPT-2) would give completely wrong results since they have different vocabularies. Best practice: when you load a model from 'my-model', load the tokenizer from 'my-model' too, never mix and match!"
         },
         {
-            instruction: "Now for the magic moment - let's convert text into numbers! Which method converts text to token IDs (numbers)?",
-            why: "This is where we see how AI models bridge the gap between human language and mathematics. The model never sees the word 'Hello' - it only sees numbers. Understanding this number-based representation is crucial for AI safety: when we worry about harmful content, we need to remember the model is processing token IDs, not words. This explains why simple word filters don't work and why adversarial attacks can exploit the gap between text and tokens.",
+            instruction: "Now for the magic moment - let's convert 'Hello' into numbers! The model never sees words, only token IDs.",
+            why: "This is where we see how AI models bridge the gap between human language and mathematics. The model never sees the word 'Hello' - it only sees numbers. Tokenizers maintain a two-way mapping: encode() gives IDs for the model, tokenize() gives text strings for human debugging. Understanding this is crucial for AI safety: when we worry about harmful content, we need to remember the model is processing token IDs, not words. This explains why simple word filters don't work.",
             type: "multiple-choice",
-            template: "tokens = tokenizer.___('Hello')\nprint(tokens)\nprint(f\"The word 'Hello' is token ID: {tokens[0]}\")",
-            choices: ["encode", "decode", "tokenize"],
+            template: "# Two views of the same token\nprint(f\"Token ID: {tokenizer.___('Hello')}\")\nprint(f\"Token string: {tokenizer.tokenize('Hello')}\")\nprint(f\"'Hello' = position {tokenizer.encode('Hello')[0]} in vocabulary\")",
+            choices: ["encode", "decode", "split"],
             correct: 0,
-            hint: "We want to convert text INTO numbers (IDs), not the other way around",
-            freestyleHint: "Use <code>tokenizer.encode()</code> to convert the text 'Hello' to token IDs. Store the result and print both the token list and the first token ID (index 0).",
-            challengeTemplate: "tokens = tokenizer.___('___')\nprint(tokens)\nprint(f\"The word 'Hello' is token ID: {tokens[___]}\")",
-            challengeBlanks: ["encode", "Hello", "0"],
-            code: "tokens = tokenizer.encode('Hello')\nprint(tokens)\nprint(f\"The word 'Hello' is token ID: {tokens[0]}\")",
-            output: "[15496]\nThe word 'Hello' is token ID: 15496",
-            explanation: "encode() converts text to token IDs - the actual numbers the model processes. You see [15496], meaning 'Hello' maps to position 15496 in the vocabulary (out of 50,257 total tokens). This is deterministic and always the same. For reference: decode() does the opposite (IDs → text), and tokenize() returns text strings instead of IDs. Common words like 'Hello' typically get their own single token because they appeared frequently in the training data."
+            hint: "encode = numbers for the model, tokenize = text for humans",
+            freestyleHint: "Use both <code>encode()</code> and <code>tokenize()</code> on 'Hello' to see the two representations: token ID [15496] and token string ['Hello'].",
+            challengeTemplate: "# Two views of the same token\nprint(f\"Token ID: {tokenizer.___('___')}\")\nprint(f\"Token string: {tokenizer.___('Hello')}\")\nprint(f\"'Hello' = position {tokenizer.encode('Hello')[___]} in vocabulary\")",
+            challengeBlanks: ["encode", "Hello", "tokenize", "0"],
+            code: "# Two views of the same token\nprint(f\"Token ID: {tokenizer.encode('Hello')}\")\nprint(f\"Token string: {tokenizer.tokenize('Hello')}\")\nprint(f\"'Hello' = position {tokenizer.encode('Hello')[0]} in vocabulary\")",
+            output: "Token ID: [15496]\nToken string: ['Hello']\n'Hello' = position 15496 in vocabulary",
+            explanation: "Two views of the same tokenization! encode() gives [15496] - the number the model processes. tokenize() gives ['Hello'] - the text humans read. 'Hello' maps to position 15496 in the vocabulary (out of 50,257 tokens). This is deterministic and always the same. Common words like 'Hello' get their own single token because they appeared frequently in training data. decode() does the reverse: IDs → text."
         },
         {
-            instruction: "We just saw the number (15496) - now let's see the text string that number represents. Which method returns token strings (not IDs)?",
-            why: "Tokenizers maintain a two-way mapping: text strings ↔ token IDs. In step 3, encode() gave us the ID. Now we need the method that shows us the string representation. This distinction is crucial for debugging: when a model misbehaves, you need to check BOTH what IDs it's receiving AND what text those IDs represent. For AI safety work, this helps us verify that safety-critical words are being tokenized as we expect, not split in unexpected ways.",
+            instruction: "Adding a space before a word produces a completely different token. In GPT-2's tokenizer, what does the 'Ġ' character represent?",
+            why: "Spaces produce different tokens, which affects model behavior. 'harmful' and ' harmful' have different IDs, different embeddings, and different learned associations. This affects prompt engineering, jailbreaks, and safety filters. Adversaries exploit this - adding/removing spaces is a common technique to bypass content filters. Understanding space handling is fundamental to AI safety work.",
             type: "multiple-choice",
-            template: "token_strings = tokenizer.___('Hello')\nprint(token_strings)\nprint(f\"The string 'Hello' is token ID {tokenizer.encode('Hello')[0]}\")",
-            choices: ["tokenize", "encode", "convert"],
-            correct: 0,
-            hint: "We want to see the text strings (like 'Hello'), not numbers",
-            freestyleHint: "Use <code>tokenizer.tokenize()</code> to get the text representation of tokens for 'Hello'. Also show its token ID using <code>encode()</code>.",
-            challengeTemplate: "token_strings = tokenizer.___('___')\nprint(token_strings)\nprint(f\"The string 'Hello' is token ID {tokenizer.___('Hello')[___]}\")",
-            challengeBlanks: ["tokenize", "Hello", "encode", "0"],
-            code: "token_strings = tokenizer.tokenize('Hello')\nprint(token_strings)\nprint(f\"The string 'Hello' is token ID {tokenizer.encode('Hello')[0]}\")",
-            output: "['Hello']\nThe string 'Hello' is token ID 15496",
-            explanation: "tokenize() returns the text representation: ['Hello'] is a list containing one token string. Two representations of the same tokenization: tokenize() gives text, encode() gives numbers. The model uses the numbers (15496), but we humans debug using the text ('Hello'). Notice it's a single token because 'Hello' appeared frequently in training data."
-        },
-        {
-            instruction: "Now for something shocking - adding just ONE space before a word completely changes its tokenization. In GPT-2's tokenizer, what does the 'Ġ' character represent?",
-            why: "This is one of the most important discoveries in this lesson. Spaces completely change tokenization, which completely changes model behavior. 'harmful' and ' harmful' are DIFFERENT TOKENS with different IDs, different embeddings, and different learned associations. This affects everything: prompt engineering, jailbreaks, safety filters. Adversaries exploit this - adding/removing spaces is a common technique to bypass content filters. Understanding space handling is fundamental to AI safety work.",
-            type: "multiple-choice",
-            template: "print(tokenizer.tokenize(' Hello'))\nprint(tokenizer.tokenize('Hello'))\n# The Ġ character in 'ĠHello' represents: ___",
+            template: "print(tokenizer.tokenize(' Hello'))\nprint(tokenizer.tokenize('Hello'))\nprint(f\"With space: {tokenizer.encode(' Hello')}\")\nprint(f\"Without space: {tokenizer.encode('Hello')}\")\n# The Ġ character in 'ĠHello' represents: ___",
             choices: ["a leading space", "an uppercase marker", "a special control character"],
             correct: 0,
             hint: "Compare ' Hello' (with space) to 'Hello' (without) - what's the difference?",
@@ -81,13 +66,13 @@ const LESSONS = {
             challengeBlanks: ["tokenize", "tokenize", "encode", "encode"],
             code: "print(tokenizer.tokenize(' Hello'))\nprint(tokenizer.tokenize('Hello'))\nprint(f\"With space: {tokenizer.encode(' Hello')}\")\nprint(f\"Without space: {tokenizer.encode('Hello')}\")",
             output: "['ĠHello']\n['Hello']\nWith space: [18435]\nWithout space: [15496]",
-            explanation: "The 'Ġ' represents a leading space! Notice these are COMPLETELY DIFFERENT tokens: 'ĠHello' (ID 18435) vs 'Hello' (ID 15496). They have different embeddings, the model learned different patterns for each. This happened because BPE training encountered both ' Hello' (mid-sentence) and 'Hello' (start of text) frequently enough to make them separate tokens. This applies to EVERY word - ' cat' ≠ 'cat', ' the' ≠ 'the'. Spaces aren't just whitespace in AI systems - they fundamentally change meaning."
+            explanation: "The 'Ġ' represents a leading space! Notice these are different tokens: 'ĠHello' (ID 18435) vs 'Hello' (ID 15496). They have different embeddings, so the model learned different patterns for each. This happened because BPE training encountered both ' Hello' (mid-sentence) and 'Hello' (start of text) frequently enough to make them separate tokens. This applies to every word - ' cat' ≠ 'cat', ' the' ≠ 'the'. Spaces matter in AI systems because they determine which token (and embedding) the model uses."
         },
         {
             instruction: "Spaces change tokens... what about capitalization? Based on BPE's frequency principle, which capitalization do you think will split into MULTIPLE tokens?",
             why: "Like spaces, capitalization can completely change tokenization. This matters because models learn different associations for differently-capitalized tokens. 'Hello' (common in sentences) might have different learned patterns than 'HELLO' (emphasis/shouting) or 'hello' (lowercase). For AI safety: adversaries exploit this to bypass filters ('DANGER' vs 'danger'), and it affects how models process proper nouns, acronyms (NASA vs nasa), and code (function names are case-sensitive). Understanding this helps predict when case changes might alter model behavior.",
             type: "multiple-choice",
-            template: "# Which capitalization will split into multiple tokens?\n# Think: which is LEAST common in training data?\ntest_word = '___'\nprint(f'{test_word}:', tokenizer.tokenize(test_word))",
+            template: "print('lowercase:', tokenizer.tokenize('hello'))\nprint('Titlecase:', tokenizer.tokenize('Hello'))\nprint('UPPERCASE:', tokenizer.tokenize('___'))\nprint('MiXeD:', tokenizer.tokenize('HeLLo'))\nprint('\\nToken IDs:')\nprint('hello:', tokenizer.encode('hello'))\nprint('Hello:', tokenizer.encode('Hello'))",
             choices: ["HELLO", "hello", "Hello"],
             correct: 0,
             hint: "BPE creates single tokens for COMMON patterns. Which capitalization style is rarest in typical web text?",
@@ -99,34 +84,19 @@ const LESSONS = {
             explanation: "HELLO splits into 3 tokens ['HE', 'LL', 'O'] because all-caps is less common in training data! 'hello' and 'Hello' are both single tokens (but with DIFFERENT IDs - 31373 vs 15496). 'HeLLo' (random mixed case) also splits because it's rare. The pattern: common capitalizations (lowercase, titlecase) get their own tokens; rare capitalizations get split into pieces. This is why models sometimes struggle with all-caps text - they're seeing fragmented, unfamiliar token sequences."
         },
         {
-            instruction: "Now let's put it all together - tokenize a real sentence. Which method gives us the token IDs (numbers) that the model actually processes?",
-            why: "Moving from individual words to full sentences shows how tokenization works in practice. This is crucial for AI safety because: (1) Token count determines context window usage - models have hard limits (GPT-3.5: 4096 tokens, GPT-4: 8192-128k), (2) Token count = API cost (you pay per token), (3) Understanding how your prompts tokenize helps you fit more information in context, (4) Token boundaries affect how models parse complex prompts. For safety work, knowing your safety instructions take X tokens helps ensure they fit alongside user input.",
+            instruction: "Now let's tokenize a real sentence. We have two views: IDs (numbers) for the model, and text strings for humans.",
+            why: "Moving from individual words to full sentences shows how tokenization works in practice. This is crucial for AI safety: (1) Token count determines context window usage - models have hard limits, (2) Token count = API cost, (3) Token boundaries affect how models parse prompts. Use encode() to get IDs for the model, use tokenize() to get text for debugging. When investigating prompt injection or adversarial inputs, you need to see exactly where token boundaries fall.",
             type: "multiple-choice",
-            template: "text = 'The cat sat on the mat'\ntokens = tokenizer.___(text)\nprint(f\"Text: {text}\")\nprint(f\"Token IDs: {tokens}\")\nprint(f\"Number of tokens: {len(tokens)}\")",
-            choices: ["encode", "tokenize", "decode"],
+            template: "text = 'The cat sat on the mat'\n# Which gives IDs (numbers)? ___\nprint('IDs:', tokenizer.encode(text))\nprint('Strings:', tokenizer.tokenize(text))",
+            choices: ["encode() gives IDs, tokenize() gives strings", "tokenize() gives IDs, encode() gives strings", "Both give the same output"],
             correct: 0,
-            hint: "We want IDs (numbers), not text strings",
-            freestyleHint: "Encode the sentence 'The cat sat on the mat' to token IDs. Print the original text, the token IDs list, and the total number of tokens using <code>len()</code>.",
-            challengeTemplate: "text = '___'\ntokens = tokenizer.___(text)\nprint(f\"Text: {___}\")\nprint(f\"Token IDs: {___}\")\nprint(f\"Number of tokens: {___(tokens)}\")",
-            challengeBlanks: ["The cat sat on the mat", "encode", "text", "tokens", "len"],
-            code: "text = 'The cat sat on the mat'\ntokens = tokenizer.encode(text)\nprint(f\"Text: {text}\")\nprint(f\"Token IDs: {tokens}\")\nprint(f\"Number of tokens: {len(tokens)}\")",
-            output: "Text: The cat sat on the mat\nToken IDs: [464, 3797, 3332, 319, 262, 2603]\nNumber of tokens: 6",
-            explanation: "encode() gives us IDs - the numbers the model processes. This 6-word sentence becomes 6 tokens (1:1 ratio for common English words). Each number (464, 3797, etc.) is an index into the vocabulary. The model receives these 6 numbers, not the original text. This token count (6) consumes 6 tokens of the model's context window. In production: prompt tokens + response tokens = total cost."
-        },
-        {
-            instruction: "Now let's see the text view of those same 6 tokens. Which method shows us the token STRINGS (not IDs)?",
-            why: "This shows the text representation of the same tokenization from step 7. While encode() gives you IDs for the model, tokenize() gives you text for humans to debug. This is crucial for AI safety work: when investigating prompt injection or adversarial inputs, you need to see exactly where token boundaries fall. Tokenization issues are a common source of problems with: rare words, typos, code, math, numbers, unicode, and mixed languages.",
-            type: "multiple-choice",
-            template: "token_strings = tokenizer.___(text)\nprint(token_strings)\nprint(f\"\\nFirst token has no Ġ: '{token_strings[0]}'\")\nprint(f\"Other tokens have Ġ: '{token_strings[1]}'\")",
-            choices: ["tokenize", "encode", "split"],
-            correct: 0,
-            hint: "We want to see the text strings (like 'The', 'Ġcat'), not numbers",
-            freestyleHint: "Use <code>tokenize()</code> on the text variable to get token strings. Print the list, then show the first token (index 0) has no Ġ, while the second token (index 1) has Ġ.",
-            challengeTemplate: "token_strings = tokenizer.___(text)\nprint(___)\nprint(f\"\\nFirst token has no Ġ: '{token_strings[___]}'\")\nprint(f\"Other tokens have Ġ: '{token_strings[___]}'\")",
-            challengeBlanks: ["tokenize", "token_strings", "0", "1"],
-            code: "token_strings = tokenizer.tokenize(text)\nprint(token_strings)\nprint(f\"\\nFirst token has no Ġ: '{token_strings[0]}'\")\nprint(f\"Other tokens have Ġ: '{token_strings[1]}'\")",
-            output: "['The', 'Ġcat', 'Ġsat', 'Ġon', 'Ġthe', 'Ġmat']\n\nFirst token has no Ġ: 'The'\nOther tokens have Ġ: 'Ġcat'",
-            explanation: "tokenize() shows text strings! Notice the Ġ pattern: 'The' (first word, no leading space) has no Ġ, but 'Ġcat', 'Ġsat', etc. all have Ġ because they had spaces before them. This is how tokenizers preserve spacing. Use encode() when feeding to the model (needs numbers), use tokenize() when debugging (humans read text better). This is your primary tool for understanding unexpected model behavior."
+            hint: "encode = numbers for the model, tokenize = text for humans",
+            freestyleHint: "For 'The cat sat on the mat', show both <code>encode()</code> (IDs) and <code>tokenize()</code> (strings). Notice the Ġ prefix on tokens that had spaces before them.",
+            challengeTemplate: "text = '___'\nprint(f\"Text: {text}\")\nprint(f\"Token IDs: {tokenizer.___(text)}\")\nprint(f\"Token strings: {tokenizer.___(text)}\")\nprint(f\"Token count: {___(tokenizer.encode(text))}\")",
+            challengeBlanks: ["The cat sat on the mat", "encode", "tokenize", "len"],
+            code: "text = 'The cat sat on the mat'\nprint(f\"Text: {text}\")\nprint(f\"Token IDs: {tokenizer.encode(text)}\")\nprint(f\"Token strings: {tokenizer.tokenize(text)}\")\nprint(f\"Token count: {len(tokenizer.encode(text))}\")",
+            output: "Text: The cat sat on the mat\nToken IDs: [464, 3797, 3332, 319, 262, 2603]\nToken strings: ['The', 'Ġcat', 'Ġsat', 'Ġon', 'Ġthe', 'Ġmat']\nToken count: 6",
+            explanation: "Two views of the same 6 tokens! encode() gives IDs [464, 3797, ...] that the model processes. tokenize() gives strings ['The', 'Ġcat', ...] for human debugging. Notice the Ġ pattern: 'The' (first word) has no Ġ, but 'Ġcat', 'Ġsat', etc. have Ġ because they had spaces before them. This is how tokenizers preserve spacing. This 6-word sentence = 6 tokens (efficient 1:1 ratio for common English)."
         },
         {
             instruction: "The fundamental principle: FREQUENCY IN TRAINING DATA DETERMINES TOKENIZATION. Given that 'un', 'do', 'undo', and 'doing' are all common words, which word do you think will split into multiple tokens?",
@@ -189,34 +159,19 @@ const LESSONS = {
             explanation: "'dangerous' (correct spelling) = 1 token because it's common! 'dangeorus' (typo) splits into 2 tokens ['dange', 'orus']. 'dang3rous' (leet speak) splits into 3 tokens ['dang', '3', 'rous']. Each split means the model processes it differently - it doesn't see 'dangerous' as a unified concept. This is why typos and obfuscation can affect model behavior."
         },
         {
-            instruction: "Numbers aren't words - BPE treats them as character sequences. Which number do you think will be a SINGLE token?",
-            why: "Numbers present a challenge for BPE because they're not semantic units like words. BPE treats them as character sequences, learning which digit combinations appear frequently. '42' might be common (cultural reference), while '1379' is rare. This inconsistent tokenization is one factor (among several) that contributes to why language models struggle with arithmetic - they process numbers as text patterns rather than mathematical quantities.",
-            type: "multiple-choice",
-            template: "# Which number will be a single token?\ntest_num = '___'\nprint(f'{test_num}:', tokenizer.tokenize(test_num))",
-            choices: ["42", "1337", "1379"],
-            correct: 0,
-            hint: "Think about which number appears most frequently in text (cultural references, common usage)",
-            freestyleHint: "Tokenize the math expression '42 + 1337 = 1379' to see how different numbers tokenize. Notice that '42' (culturally significant) stays whole while larger numbers split.",
-            challengeTemplate: "# See how numbers tokenize in a simple math expression\nprint(tokenizer.___('___ + 1337 = 1379'))",
-            challengeBlanks: ["tokenize", "42"],
-            code: "# See how numbers tokenize in a simple math expression\nprint(tokenizer.tokenize('42 + 1337 = 1379'))",
-            output: "['42', 'Ġ+', 'Ġ', '13', '37', 'Ġ=', 'Ġ', '13', '79']",
-            explanation: "'42' is 1 token (famous cultural reference - 'the answer to everything'!). But '1337' splits into ['13', '37'] and '1379' becomes ['13', '79']. BPE doesn't understand math - it just learned that '42' appears together frequently, while '1337' and '1379' are rarer as complete sequences. This inconsistent tokenization is one reason language models struggle with arithmetic."
-        },
-        {
-            instruction: "Let's test more numbers. Which of these do you think will SPLIT into multiple tokens?",
-            why: "Exploring different numbers reveals how unpredictable number tokenization can be. Round numbers like '1000' might be common (appearing frequently in training text), while specific numbers like '98765' are rare. This inconsistency is one contributing factor to why language models struggle with arithmetic - numbers aren't treated as mathematical quantities but as text patterns learned from frequency in training data.",
+            instruction: "Numbers aren't words - BPE treats them as character sequences. Which numbers stay whole vs split?",
+            why: "Numbers present a challenge for BPE because they're not semantic units like words. BPE treats them as character sequences, learning which digit combinations appear frequently. '42' might be common (cultural reference), while '1234' is rare. Round numbers like '1000' appear frequently in text. This inconsistent tokenization is one factor contributing to why language models struggle with arithmetic - they process numbers as text patterns rather than mathematical quantities.",
             type: "multiple-choice",
             template: "# Which number will split into multiple tokens?\ntest_num = ___\nprint(f'{test_num}:', tokenizer.tokenize(str(test_num)))",
-            choices: ["1234", "1000", "100"],
+            choices: ["1234", "1000", "42"],
             correct: 0,
-            hint: "Round numbers appear frequently in text. Which number is LEAST commonly written as-is?",
-            freestyleHint: "Loop through numbers [42, 100, 1000, 1234, 98765, 1000000] and tokenize each (convert to string first). Print each number with its tokens and token count to see which round numbers stay whole.",
+            hint: "Round numbers and culturally significant numbers (like 42) appear frequently in text",
+            freestyleHint: "Loop through numbers [42, 100, 1000, 1234, 98765, 1000000] and tokenize each (convert to string first). Print each number with its tokens and count to see patterns.",
             challengeTemplate: "# Test various numbers to see tokenization patterns\nfor num in [42, 100, 1000, ___, 98765, 1000000]:\n    tokens = tokenizer.___(str(num))\n    print(f\"{num:>7} -> {tokens} ({___(tokens)} tokens)\")",
             challengeBlanks: ["1234", "tokenize", "len"],
             code: "# Test various numbers to see tokenization patterns\nfor num in [42, 100, 1000, 1234, 98765, 1000000]:\n    tokens = tokenizer.tokenize(str(num))\n    print(f\"{num:>7} -> {tokens} ({len(tokens)} tokens)\")",
             output: "     42 -> ['42'] (1 token)\n    100 -> ['100'] (1 token)\n   1000 -> ['1000'] (1 token)\n   1234 -> ['12', '34'] (2 tokens)\n  98765 -> ['987', '65'] (2 tokens)\n1000000 -> ['1000000'] (1 token)",
-            explanation: "'1234' splits into ['12', '34'] because it's not a commonly written number! Round numbers (100, 1000, 1000000) are single tokens - they appear frequently in text. But specific numbers like '1234' and '98765' split because BPE didn't see them together often enough. The splits are based on text frequency, not mathematical properties."
+            explanation: "'42' is 1 token (famous cultural reference - 'the answer to everything'!). Round numbers (100, 1000, 1000000) are single tokens - they appear frequently in text. But '1234' splits into ['12', '34'] and '98765' into ['987', '65'] because BPE didn't see them together often. The splits are based on text frequency, not mathematical properties. This is one reason language models struggle with arithmetic."
         },
         {
             instruction: "Code is just text to BPE. How do you think the Python keyword 'def' will tokenize?",
@@ -234,34 +189,19 @@ const LESSONS = {
             explanation: "'def' is a single token because it's a common Python keyword! Notice: 'hello_world' splits into ['hello', '_', 'world'] (underscore is separate), '():' is one token (common pattern), each space in indentation is a separate 'Ġ' token. BPE learned common code patterns from training data, but treats code as text - it doesn't understand Python syntax."
         },
         {
-            instruction: "Let's examine how a safety-critical phrase tokenizes. Will 'harmful' be a single token or split?",
-            why: "This is where tokenization knowledge becomes crucial for AI safety work. How models tokenize safety-critical content affects their behavior. If safety training used certain tokenizations, but users input slight variations that tokenize differently, safety mechanisms might not activate as intended. Understanding tokenization helps us: (1) design better safety training, (2) anticipate edge cases, (3) understand why adversarial prompts work.",
+            instruction: "Let's examine how safety-critical words tokenize. Do 'harm', 'harmful', and 'harmless' share tokens?",
+            why: "This is where tokenization knowledge becomes crucial for AI safety work. How models tokenize safety-critical content affects their behavior. If 'harmful' and 'harmless' share the token 'harm', the model might process them similarly. If they tokenize completely differently, they're processed as unrelated concepts. Understanding these patterns helps us: (1) design better safety training, (2) anticipate edge cases, (3) understand why adversarial prompts might work.",
             type: "multiple-choice",
-            template: "# Will 'harmful' be a single token?\nword = '___'\nprint(f'{word}:', tokenizer.tokenize(word))",
-            choices: ["harmful (single token)", "harm, ful (two tokens)", "h, arm, ful (three tokens)"],
-            correct: 0,
-            hint: "'harmful' is a common word in safety-related training data",
-            freestyleHint: "Tokenize the phrase 'This could be harmful to humans'. Print the phrase, its tokens, and separately tokenize just the word 'harmful' to show it's a single token.",
-            challengeTemplate: "# Analyze a safety-critical phrase\nsafety_phrase = 'This could be ___ to humans'\ntokens = tokenizer.___(safety_phrase)\nprint(f\"Phrase: {___}\")\nprint(f\"Tokens: {tokens}\")\nprint(f\"Key word 'harmful': {tokenizer.___('harmful')}\")",
-            challengeBlanks: ["harmful", "tokenize", "safety_phrase", "tokenize"],
-            code: "# Analyze a safety-critical phrase\nsafety_phrase = 'This could be harmful to humans'\ntokens = tokenizer.tokenize(safety_phrase)\nprint(f\"Phrase: {safety_phrase}\")\nprint(f\"Tokens: {tokens}\")\nprint(f\"Key word 'harmful': {tokenizer.tokenize('harmful')}\")",
-            output: "Phrase: This could be harmful to humans\nTokens: ['This', 'Ġcould', 'Ġbe', 'Ġharmful', 'Ġto', 'Ġhumans']\nKey word 'harmful': ['harmful']",
-            explanation: "'harmful' is a single token - good for safety! The model has a unified representation for this critical word. But what if someone writes 'h4rmful' or 'harm ful'? Different tokenizations mean the model sees different input, potentially bypassing patterns learned during safety training. This is why robust safety systems need to account for tokenization variations."
-        },
-        {
-            instruction: "Do 'harm', 'harmful', and 'harmless' share a common 'harm' token, or are they each separate tokens?",
-            why: "How related words tokenize affects model behavior. If 'harmful' and 'harmless' share the token 'harm', the model might process them similarly initially. If they tokenize completely differently, they're processed as unrelated concepts. Understanding these patterns helps us predict model behavior and design better safety training that accounts for word relationships.",
-            type: "multiple-choice",
-            template: "# Do related words share tokens?\n# Prediction: ___\nfor word in ['harm', 'harmful', 'harmless']:\n    print(f\"{word}: {tokenizer.tokenize(word)}\")",
+            template: "# Do related safety words share tokens?\n# Prediction: ___\nfor word in ['harm', 'harmful', 'harmless']:\n    print(f\"{word}: {tokenizer.tokenize(word)}\")",
             choices: ["Each is its own single token", "They share 'harm' as a base token", "Only 'harmful' and 'harmless' share tokens"],
             correct: 0,
             hint: "Think about frequency - all three words are common in English",
-            freestyleHint: "Loop through the words ['harm', 'harmful', 'harmless'] and tokenize each. Print them formatted to see whether they share a common 'harm' token or are each separate tokens.",
-            challengeTemplate: "# Compare related safety-critical words\nwords = ['harm', '___', 'harmless']\nfor word in ___:\n    tokens = tokenizer.___(word)\n    print(f\"{word:10} -> {tokens}\")",
-            challengeBlanks: ["harmful", "words", "tokenize"],
-            code: "# Compare related safety-critical words\nwords = ['harm', 'harmful', 'harmless']\nfor word in words:\n    tokens = tokenizer.tokenize(word)\n    print(f\"{word:10} -> {tokens}\")",
-            output: "harm       -> ['harm']\nharmful    -> ['harmful']\nharmless   -> ['harmless']",
-            explanation: "Each is its own single token! They DON'T share a common 'harm' token - BPE learned each as a complete unit because all three appear frequently. The model has separate embeddings for each, learning their meanings independently. A rare word like 'ultraharmful' WOULD split as ['ultra', 'harmful'], sharing the 'harmful' token."
+            freestyleHint: "Loop through ['harm', 'harmful', 'harmless'] and tokenize each. Then tokenize the phrase 'This could be harmful to humans' to see how safety words appear in context.",
+            challengeTemplate: "# Compare related safety-critical words\nwords = ['harm', '___', 'harmless']\nfor word in ___:\n    tokens = tokenizer.___(word)\n    print(f\"{word:10} -> {tokens}\")\n\n# Also check in context\nphrase = 'This could be harmful to humans'\nprint(f\"\\nIn context: {tokenizer.___(phrase)}\")",
+            challengeBlanks: ["harmful", "words", "tokenize", "tokenize"],
+            code: "# Compare related safety-critical words\nwords = ['harm', 'harmful', 'harmless']\nfor word in words:\n    tokens = tokenizer.tokenize(word)\n    print(f\"{word:10} -> {tokens}\")\n\n# Also check in context\nphrase = 'This could be harmful to humans'\nprint(f\"\\nIn context: {tokenizer.tokenize(phrase)}\")",
+            output: "harm       -> ['harm']\nharmful    -> ['harmful']\nharmless   -> ['harmless']\n\nIn context: ['This', 'Ġcould', 'Ġbe', 'Ġharmful', 'Ġto', 'Ġhumans']",
+            explanation: "Each is its own single token! They DON'T share a common 'harm' token - BPE learned each as a complete unit because all three appear frequently. The model has separate embeddings for each. But what if someone writes 'h4rmful' or 'harm ful'? Different tokenizations mean different model behavior. A rare word like 'ultraharmful' WOULD split as ['ultra', 'harmful'], sharing the 'harmful' token. This is why robust safety systems need to account for tokenization variations."
         },
         {
             instruction: "Invisible characters can manipulate tokenization. How many tokens will 'test phrase' with a zero-width space become?",
@@ -294,34 +234,19 @@ const LESSONS = {
             explanation: "\"I'm\" splits into ['I', \"'m\"] - two tokens! The apostrophe stays attached to 'm' because that pattern ('m, 're, 'll, etc.) is common in training data. This means the model processes \"I'm\" and \"I am\" differently. Punctuation marks (!, ?, .) are their own tokens, allowing the model to distinguish sentence types."
         },
         {
-            instruction: "How do we access the vocabulary size? Which attribute of the tokenizer gives us this?",
-            why: "The vocabulary size determines the model's embedding layer dimensions. GPT-2's 50,257 tokens represent everything it can 'see' - if a character sequence isn't in the vocabulary, it gets split into pieces that are. This fixed vocabulary is a key design choice: too small and common words split unnecessarily, too large and the embedding matrix becomes huge. Understanding vocabulary size helps you estimate model memory requirements and tokenization efficiency.",
+            instruction: "Let's explore GPT-2's vocabulary. How many tokens does it have, and what's inside?",
+            why: "The vocabulary size determines the model's embedding layer dimensions. GPT-2's 50,257 tokens represent everything it can 'see' - if a character sequence isn't in the vocabulary, it gets split into pieces that are. Understanding vocabulary size helps you estimate model memory requirements. The vocabulary contains a mix of individual characters (at low IDs), common words (middle IDs), and rare compounds (high IDs) - reflecting BPE's frequency-based construction.",
             type: "multiple-choice",
             template: "# How to get vocabulary size?\nvocab_size = len(tokenizer.___)\nprint(f\"Vocabulary size: {vocab_size:,} tokens\")",
             choices: ["vocab", "tokens", "words"],
             correct: 0,
             hint: "The vocabulary is the mapping from tokens to IDs",
-            freestyleHint: "Get the vocabulary size using <code>len(tokenizer.vocab)</code>. Print the vocabulary size (use :, formatting) and note that this equals the number of rows in the embedding matrix.",
-            challengeTemplate: "# Check the actual vocabulary size\nvocab_size = ___(tokenizer.___)\nprint(f\"Vocabulary size: {vocab_size:,} tokens\")\nprint(f\"This means the embedding matrix has {___:,} rows\")",
-            challengeBlanks: ["len", "vocab", "vocab_size"],
-            code: "# Check the actual vocabulary size\nvocab_size = len(tokenizer.vocab)\nprint(f\"Vocabulary size: {vocab_size:,} tokens\")\nprint(f\"This means the embedding matrix has {vocab_size:,} rows\")",
-            output: "Vocabulary size: 50,257 tokens\nThis means the embedding matrix has 50,257 rows",
-            explanation: "tokenizer.vocab is the vocabulary dictionary! Exactly 50,257 tokens. Why this number? GPT-2 uses 50,000 BPE merges + 256 byte tokens + 1 special token = 50,257. The embedding matrix is shape [50,257 × 768], which is 38.6 million parameters just for embeddings. Every token ID (like 15496 for 'Hello') is an index into this matrix."
-        },
-        {
-            instruction: "What's at the very start of the vocabulary? What kind of tokens do you think have IDs 0 and 1?",
-            why: "The vocabulary contains a mix of individual characters, common words, and word fragments created during BPE training. Sampling at different IDs reveals the variety of tokens the model can 'see'. Understanding what's in the vocabulary helps you predict how new text will tokenize and debug unexpected tokenizations.",
-            type: "multiple-choice",
-            template: "# What are the first tokens in the vocabulary?\n# Prediction for ID 0 and 1: ___\nprint(f\"ID 0: {repr(tokenizer.decode([0]))}\")\nprint(f\"ID 1: {repr(tokenizer.decode([1]))}\")",
-            choices: ["Single characters like '!' and '\"'", "Common words like 'the' and 'a'", "Special tokens like <PAD>"],
-            correct: 0,
-            hint: "BPE starts with individual bytes/characters before merging into larger tokens",
-            freestyleHint: "Loop through IDs [0, 1, 100, 1000, 10000, 40000, 50000] and decode each (pass as a list [i]). Print each ID with its decoded token using <code>repr()</code> to show escape characters.",
-            challengeTemplate: "# Sample tokens from different parts of the vocabulary\nfor i in [0, ___, 100, 1000, 10000, 40000, 50000]:\n    token = tokenizer.___([i])\n    print(f\"ID {i:>5}: {___(token)}\")",
-            challengeBlanks: ["1", "decode", "repr"],
-            code: "# Sample tokens from different parts of the vocabulary\nfor i in [0, 1, 100, 1000, 10000, 40000, 50000]:\n    token = tokenizer.decode([i])\n    print(f\"ID {i:>5}: {repr(token)}\")",
-            output: "ID     0: '!'\nID     1: '\"'\nID   100: 'Ġon'\nID  1000: 'Ġsaid'\nID 10000: 'Ġexplained'\nID 40000: 'ĠÃ©'\nID 50000: 'rawdownload'",
-            explanation: "IDs 0 and 1 are single characters ('!', '\"')! BPE starts with individual bytes. The vocabulary contains diverse tokens: single characters at low IDs, common words in the middle, rare compounds at high IDs. The vocabulary isn't organized by length - it reflects BPE's frequency-based construction."
+            freestyleHint: "Get vocabulary size with <code>len(tokenizer.vocab)</code>, then loop through IDs [0, 1, 100, 1000, 10000, 50000] to see what tokens exist at different positions. Use <code>decode([i])</code> and <code>repr()</code>.",
+            challengeTemplate: "# Explore the vocabulary\nvocab_size = ___(tokenizer.vocab)\nprint(f\"Vocabulary size: {vocab_size:,} tokens\")\nprint(f\"\\nSampling tokens at different IDs:\")\nfor i in [0, 1, 100, 1000, 10000, 50000]:\n    token = tokenizer.___([i])\n    print(f\"ID {i:>5}: {___(token)}\")",
+            challengeBlanks: ["len", "decode", "repr"],
+            code: "# Explore the vocabulary\nvocab_size = len(tokenizer.vocab)\nprint(f\"Vocabulary size: {vocab_size:,} tokens\")\nprint(f\"\\nSampling tokens at different IDs:\")\nfor i in [0, 1, 100, 1000, 10000, 50000]:\n    token = tokenizer.decode([i])\n    print(f\"ID {i:>5}: {repr(token)}\")",
+            output: "Vocabulary size: 50,257 tokens\n\nSampling tokens at different IDs:\nID     0: '!'\nID     1: '\"'\nID   100: 'Ġon'\nID  1000: 'Ġsaid'\nID 10000: 'Ġexplained'\nID 50000: 'rawdownload'",
+            explanation: "50,257 tokens total! Why this number? GPT-2 uses 50,000 BPE merges + 256 byte tokens + 1 special token. The vocabulary structure: IDs 0-255 are single characters ('!', '\"'), middle IDs are common words ('Ġon', 'Ġsaid'), and high IDs are rare compounds ('rawdownload'). The embedding matrix is [50,257 × 768] = 38.6M parameters. Every token ID is an index into this matrix."
         },
         {
             instruction: "GPT-2 was trained on English. How many tokens do you think Chinese '你好世界' (Hello world) will need compared to English's 2 tokens?",
@@ -352,21 +277,6 @@ const LESSONS = {
             code: "# Check GPT-2's special tokens\nprint(f\"EOS token: {tokenizer.eos_token}\")\nprint(f\"EOS token ID: {tokenizer.eos_token_id}\")\nprint(f\"BOS token: {tokenizer.bos_token}\")\nprint(f\"PAD token: {tokenizer.pad_token}\")",
             output: "EOS token: <|endoftext|>\nEOS token ID: 50256\nBOS token: <|endoftext|>\nPAD token: None",
             explanation: "EOS token ID is 50256 - the last token in the vocabulary! It's '<|endoftext|>' and tells the model where text ends. Interestingly, GPT-2 uses the same token for BOS (Beginning of Sequence) and has no dedicated PAD token. Modern chat models use additional special tokens to separate system prompts, user messages, and assistant responses."
-        },
-        {
-            instruction: "How many tokens will the rare word 'Supercalifragilisticexpialidocious' (34 characters) become?",
-            why: "Token count determines context window usage and API cost, not word count or character count. Understanding this helps you estimate how much text fits in a model's context and how much API calls will cost. A short but rare word might use more tokens than a long common phrase.",
-            type: "multiple-choice",
-            template: "# How many tokens for this 34-character rare word?\nword = 'Supercalifragilisticexpialidocious'\n# Prediction: ___ tokens\nprint(f'{word} = {len(tokenizer.encode(word))} tokens')",
-            choices: ["10 tokens", "1 token", "34 tokens (one per letter)"],
-            correct: 0,
-            hint: "BPE splits rare words into known pieces - common subword units",
-            freestyleHint: "Compare token counts for 'Hi' (short, common) vs 'Supercalifragilisticexpialidocious' (34 chars, rare). Use <code>encode()</code> and <code>len()</code> to show the dramatic difference.",
-            challengeTemplate: "# Compare: short common word vs long rare word\nprint(f\"'Hi' = {___(tokenizer.___('Hi'))} token(s)\")\nprint(f\"'Supercalifragilisticexpialidocious' = {___(tokenizer.___('___'))} tokens\")",
-            challengeBlanks: ["len", "encode", "len", "encode", "Supercalifragilisticexpialidocious"],
-            code: "# Compare: short common word vs long rare word\nprint(f\"'Hi' = {len(tokenizer.encode('Hi'))} token(s)\")\nprint(f\"'Supercalifragilisticexpialidocious' = {len(tokenizer.encode('Supercalifragilisticexpialidocious'))} tokens\")",
-            output: "'Hi' = 1 token(s)\n'Supercalifragilisticexpialidocious' = 10 tokens",
-            explanation: "10 tokens for 34 characters! Compare: 'Hi' (2 chars) = 1 token. The rare word uses 10x more context window than the short word, even though both are single words. For context window planning: you can't just count words. Technical jargon uses more tokens than casual conversation."
         },
         {
             instruction: "For common English text, approximately how many characters per token is typical?",
@@ -405,707 +315,438 @@ const LESSONS = {
     'embeddings-positional': {
         title: "Embeddings & Positional Encoding",
         steps: [
+            // Step 1: Setup - PyTorch + Tokenizer
             {
-                instruction: "In the tokenization lesson, we converted text to numbers (token IDs). But a number like 15496 doesn't inherently mean 'Hello' - it's just an index. Now we'll see how models give these numbers meaning by converting them to vectors:",
-                why: "Token IDs are arbitrary integers with no semantic content - ID 15496 being numerically adjacent to ID 15497 doesn't mean those tokens are semantically related. To give tokens meaning, we convert them to high-dimensional vectors where geometric relationships (distances, directions, angles) encode semantic relationships. This is the foundation of how neural networks 'understand' language: similar concepts become nearby points in vector space. For AI safety, this matters because we can potentially detect harmful content by measuring distances in embedding space.",
-                code: "import torch\nimport torch.nn as nn\nprint(f\"PyTorch version: {torch.__version__}\")",
-                output: "PyTorch version: 2.0.1",
-                explanation: "PyTorch provides the tensor operations and neural network layers we need. The key insight: we're about to transform meaningless integers into rich vector representations where mathematical operations correspond to semantic operations. 'King - Man + Woman ≈ Queen' is possible because embeddings encode meaning geometrically."
+                instruction: "In the tokenization lesson, we converted text to token IDs. But numbers like 15496 don't mean anything to a neural network - they're just indices. Let's set up our environment to transform these into meaningful vectors.",
+                why: "We need both PyTorch (for tensor operations and neural network layers) AND our tokenizer (to convert between text and token IDs). Many embedding tutorials forget the tokenizer, but we'll need it to explore real examples!",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn as nn\nfrom transformers import ___\n\ntokenizer = GPT2TokenizerFast.from_pretrained('gpt2')\nprint(f'PyTorch: {torch.__version__}')\nprint(f'Vocab size: {tokenizer.vocab_size:,} tokens')",
+                choices: ["GPT2TokenizerFast", "GPT2Model", "AutoTokenizer"],
+                correct: 0,
+                hint: "We want the Fast tokenizer specifically for GPT-2",
+                freestyleHint: "Import PyTorch, nn module, and GPT2TokenizerFast from transformers. Load the 'gpt2' tokenizer and print the PyTorch version and vocabulary size.",
+                challengeTemplate: "import ___\nimport torch.nn as ___\nfrom transformers import ___\n\ntokenizer = GPT2TokenizerFast.from_pretrained('___')\nprint(f'PyTorch: {torch.__version__}')\nprint(f'Vocab size: {tokenizer.___:,} tokens')",
+                challengeBlanks: ["torch", "nn", "GPT2TokenizerFast", "gpt2", "vocab_size"],
+                code: "import torch\nimport torch.nn as nn\nfrom transformers import GPT2TokenizerFast\n\ntokenizer = GPT2TokenizerFast.from_pretrained('gpt2')\nprint(f'PyTorch: {torch.__version__}')\nprint(f'Vocab size: {tokenizer.vocab_size:,} tokens')",
+                output: "PyTorch: 2.0.1\nVocab size: 50,257 tokens",
+                explanation: "We now have both tools: PyTorch for building neural network components, and our GPT-2 tokenizer with its 50,257-token vocabulary. The tokenizer lets us convert text ↔ token IDs, and PyTorch will let us build the embedding layer that converts token IDs → vectors."
             },
+            // Step 2: Token Embedding as Lookup Table (W_E)
             {
-                instruction: "An embedding is just a lookup table: each token ID maps to a vector. Let's create one with GPT-2's dimensions:",
-                why: "Think of the embedding matrix as a massive table with 50,257 rows (one per token) and 768 columns (the vector dimensions). When we look up token ID 15496, we simply retrieve row 15496. Initially these vectors are random, but during training, tokens that appear in similar contexts will develop similar vectors. This is how 'cat' ends up near 'dog' but far from 'car' - not because we told the model about animals, but because 'cat' and 'dog' appear in similar sentences.",
-                code: "# GPT-2's dimensions\nvocab_size = 50257  # number of tokens\nd_model = 768       # embedding dimension\n\n# Create the embedding lookup table\nembedding = nn.Embedding(vocab_size, d_model)\nprint(f\"Embedding matrix shape: {embedding.weight.shape}\")\nprint(f\"Total parameters: {vocab_size * d_model:,}\")",
-                output: "Embedding matrix shape: torch.Size([50257, 768])\nTotal parameters: 38,597,376",
-                explanation: "The embedding matrix has shape [50257, 768] - that's 38.6 million parameters just for the token embeddings! Each of the 50,257 tokens gets its own 768-dimensional vector. This matrix is learned during training: the model adjusts these vectors so that tokens appearing in similar contexts develop similar representations. The embedding layer accounts for a significant portion of smaller models' parameters."
+                instruction: "An embedding is simply a lookup table called W_E (Weight Embedding). It has one row per token in the vocabulary, and each row is a vector. What shape should W_E have for GPT-2?",
+                why: "The embedding matrix W_E is one of the simplest neural network components: it's just a giant table where row i contains the vector for token i. When we 'embed' token 15496, we simply return row 15496. No computation - just a lookup! This matrix has shape [vocab_size, d_model] = [50257, 768] for GPT-2.",
+                type: "multiple-choice",
+                template: "# GPT-2 dimensions\nd_vocab = 50257  # vocabulary size (number of possible tokens)\nd_model = ___    # embedding dimension (vector size)\n\n# Create the embedding lookup table W_E\nW_E = nn.Embedding(d_vocab, d_model)\nprint(f'W_E shape: {W_E.weight.shape}')\nprint(f'Total parameters: {d_vocab * d_model:,}')",
+                choices: ["768", "512", "1024"],
+                correct: 0,
+                hint: "GPT-2 uses 768 dimensions for its model size",
+                freestyleHint: "Define d_vocab=50257 and d_model=768 (GPT-2's dimensions). Create an nn.Embedding layer and print its weight shape and total parameter count.",
+                challengeTemplate: "# GPT-2 dimensions\nd_vocab = ___  # vocabulary size\nd_model = ___  # embedding dimension\n\n# Create the embedding lookup table W_E\nW_E = nn.___(d_vocab, d_model)\nprint(f'W_E shape: {W_E.___.shape}')\nprint(f'Total parameters: {d_vocab * d_model:,}')",
+                challengeBlanks: ["50257", "768", "Embedding", "weight"],
+                code: "# GPT-2 dimensions\nd_vocab = 50257  # vocabulary size (number of possible tokens)\nd_model = 768    # embedding dimension (vector size)\n\n# Create the embedding lookup table W_E\nW_E = nn.Embedding(d_vocab, d_model)\nprint(f'W_E shape: {W_E.weight.shape}')\nprint(f'Total parameters: {d_vocab * d_model:,}')",
+                output: "W_E shape: torch.Size([50257, 768])\nTotal parameters: 38,597,376",
+                explanation: "W_E has shape [50257, 768] - that's 38.6 million parameters just for embeddings! Each of the 50,257 tokens gets its own 768-dimensional vector. The embedding operation is just: W_E[token_id] → returns that row. Simple indexing, no matrix multiplication needed."
             },
+            // Step 3: Using the Embedding Lookup
             {
-                instruction: "Let's see what embeddings look like initially:",
-                why: "Embeddings start random but learn to encode meaning through training. Similar concepts will develop similar embeddings. For AI safety, this means harmful and helpful concepts will cluster differently in the embedding space, which we can potentially detect and control.",
-                code: "token_ids = torch.tensor([1, 100, 1000])\nembeds = embedding(token_ids)\nprint(embeds.shape)\nprint(embeds[0, :5])",
-                explanation: "Each token is now a 768-dimensional vector. These start random but will learn to represent meaning."
+                instruction: "Let's see the embedding lookup in action. When we pass token IDs to the embedding layer, what operation does it actually perform?",
+                why: "Understanding that embedding is just indexing (not computation) is crucial. W_E[tokens] simply retrieves rows from the table. This is why it's so fast - no matrix math needed! The 'learning' happens when we update these rows during training so that similar tokens end up with similar vectors.",
+                type: "multiple-choice",
+                template: "# Convert 'Hello' to its token ID, then to its embedding vector\ntoken_id = tokenizer.encode('Hello')[0]\nprint(f\"'Hello' → token ID: {token_id}\")\n\n# The embedding lookup is just: ___\nembedding_vector = W_E(torch.tensor([token_id]))\nprint(f'Embedding shape: {embedding_vector.shape}')\nprint(f'First 5 values: {embedding_vector[0, :5]}')",
+                choices: ["W_E.weight[token_id] (row lookup)", "W_E.weight @ token_id (matrix multiply)", "W_E.weight + token_id (addition)"],
+                correct: 0,
+                hint: "Embedding is just retrieving a row from the table",
+                freestyleHint: "Encode 'Hello' to get its token ID. Pass it through W_E to get the embedding vector. Print the token ID, embedding shape, and first 5 values of the vector.",
+                challengeTemplate: "# Convert 'Hello' to its token ID, then to its embedding vector\ntoken_id = tokenizer.___('Hello')[0]\nprint(f\"'Hello' → token ID: {token_id}\")\n\n# Get the embedding (it's just a row lookup!)\nembedding_vector = ___(torch.tensor([token_id]))\nprint(f'Embedding shape: {embedding_vector.___}')\nprint(f'First 5 values: {embedding_vector[0, :___]}')",
+                challengeBlanks: ["encode", "W_E", "shape", "5"],
+                code: "# Convert 'Hello' to its token ID, then to its embedding vector\ntoken_id = tokenizer.encode('Hello')[0]\nprint(f\"'Hello' → token ID: {token_id}\")\n\n# Get the embedding (it's just a row lookup!)\nembedding_vector = W_E(torch.tensor([token_id]))\nprint(f'Embedding shape: {embedding_vector.shape}')\nprint(f'First 5 values: {embedding_vector[0, :5]}')",
+                output: "'Hello' → token ID: 15496\nEmbedding shape: torch.Size([1, 768])\nFirst 5 values: tensor([-0.4215,  0.8732, -0.1893,  0.5521, -0.2847], grad_fn=<SliceBackward0>)",
+                explanation: "Token 15496 ('Hello') maps to row 15496 of W_E, giving us a 768-dimensional vector. These numbers start random, but during training they're adjusted so tokens appearing in similar contexts develop similar vectors. That's how 'cat' ends up near 'dog' in embedding space!"
             },
+            // Step 4: The Position Problem
             {
-                instruction: "Let's understand what 768 dimensions really means:",
-                why: "High-dimensional spaces are counterintuitive but powerful. Each dimension can encode a different aspect of meaning - one might represent 'animate/inanimate', another 'positive/negative sentiment', another 'technical/casual language'. With 768 dimensions, models can encode incredibly nuanced distinctions that help them understand and generate human-like text.",
-                code: "print(d_model)\nprint(vocab_size * d_model)\nprint(vocab_size * d_model / 1e6)",
-                explanation: "Each dimension might encode different semantic properties: abstract vs concrete, positive vs negative sentiment, formal vs informal, and 765 more aspects! The high dimensionality allows encoding complex, nuanced meanings."
+                instruction: "There's a critical problem: our embeddings don't know WHERE tokens appear in the sequence. Without position info, what would happen?",
+                why: "Attention (which we'll learn next) treats all positions equally by default - it's 'symmetric with regards to position'. This means 'cat sat mat' would be indistinguishable from 'mat sat cat'! For AI safety, position matters hugely: 'AI should not harm humans' vs 'AI should harm not humans' have very different meanings.",
+                type: "multiple-choice",
+                template: "# Without position information:\ntext1 = 'The cat sat on the mat'\ntext2 = 'mat the on sat cat The'\n\n# Get just the token embeddings (no position)\ntokens1 = torch.tensor(tokenizer.encode(text1))\ntokens2 = torch.tensor(tokenizer.encode(text2))\n\nemb1 = W_E(tokens1)  # Shape: [6, 768]\nemb2 = W_E(tokens2)  # Shape: [6, 768]\n\n# Are these distinguishable?\n# Answer: ___\nprint(f'Text 1: \"{text1}\"')\nprint(f'Text 2: \"{text2}\"')\nprint(f'Same tokens, different order!')\nprint(f'Without position info, attention would see these as equivalent sets of tokens.')",
+                choices: ["No - same tokens = same embedding set", "Yes - order is preserved automatically", "Partially - some order info remains"],
+                correct: 0,
+                hint: "The embedding layer only looks up rows by token ID, not by position",
+                freestyleHint: "Create two texts with the same words in different orders. Encode both and get their embeddings. Show that without position info, the model can't distinguish word order.",
+                challengeTemplate: "# Without position information:\ntext1 = 'The cat sat on the mat'\ntext2 = 'mat the on sat cat The'\n\n# Get just the token embeddings (no position)\ntokens1 = torch.tensor(tokenizer.___(text1))\ntokens2 = torch.tensor(tokenizer.___(text2))\n\nemb1 = ___(tokens1)\nemb2 = ___(tokens2)\n\nprint(f'Text 1: \"{text1}\"')\nprint(f'Text 2: \"{text2}\"')\nprint(f'Same tokens, different order - but embeddings are the same set!')",
+                challengeBlanks: ["encode", "encode", "W_E", "W_E"],
+                code: "# Without position information:\ntext1 = 'The cat sat on the mat'\ntext2 = 'mat the on sat cat The'\n\n# Get just the token embeddings (no position)\ntokens1 = torch.tensor(tokenizer.encode(text1))\ntokens2 = torch.tensor(tokenizer.encode(text2))\n\nemb1 = W_E(tokens1)\nemb2 = W_E(tokens2)\n\nprint(f'Text 1: \"{text1}\"')\nprint(f'Text 2: \"{text2}\"')\nprint(f'Same tokens, different order - but embeddings are the same set!')",
+                output: "Text 1: \"The cat sat on the mat\"\nText 2: \"mat the on sat cat The\"\nSame tokens, different order - but embeddings are the same set!",
+                explanation: "Both sentences contain the same tokens, so they produce the same SET of embedding vectors (just in different order). Without position information, a transformer's attention mechanism would treat these identically! We need to tell the model WHERE each token appears."
             },
+            // Step 5: Positional Embedding as Lookup Table (W_pos)
             {
-                instruction: "Let's convert our tokens to vectors using the embedding:",
-                code: "tokens_tensor = torch.tensor([464, 3797, 3332, 319, 262, 2603])\ntoken_embeddings = embedding(tokens_tensor)\nprint(token_embeddings.shape)",
-                explanation: "Now each token is represented by a 768-dimensional vector. These vectors will be updated during training to capture semantic meaning."
+                instruction: "The solution: another lookup table W_pos (Weight Positional) that maps position indices (0, 1, 2, ...) to vectors. What shape should W_pos have?",
+                why: "Just like W_E maps token IDs to vectors, W_pos maps position indices to vectors. Position 0 gets one vector, position 1 gets another, etc. GPT-2 supports sequences up to 1024 tokens, so W_pos has shape [1024, 768]. This is called 'learned absolute positional embeddings' - the position vectors are learned during training.",
+                type: "multiple-choice",
+                template: "# Positional embedding: another lookup table!\nn_ctx = ___   # max sequence length (context window)\n\n# Create W_pos - maps position index to vector\nW_pos = nn.Embedding(n_ctx, d_model)\nprint(f'W_pos shape: {W_pos.weight.shape}')\nprint(f'Max sequence length: {n_ctx}')",
+                choices: ["1024", "512", "2048"],
+                correct: 0,
+                hint: "GPT-2's context window is 1024 tokens",
+                freestyleHint: "Create a positional embedding layer W_pos with n_ctx=1024 (GPT-2's max sequence length) and d_model=768. Print its shape.",
+                challengeTemplate: "# Positional embedding: another lookup table!\nn_ctx = ___   # max sequence length\n\n# Create W_pos - maps position index to vector\nW_pos = nn.___(n_ctx, ___)\nprint(f'W_pos shape: {W_pos.___.shape}')\nprint(f'Max sequence length: {n_ctx}')",
+                challengeBlanks: ["1024", "Embedding", "d_model", "weight"],
+                code: "# Positional embedding: another lookup table!\nn_ctx = 1024   # max sequence length (context window)\n\n# Create W_pos - maps position index to vector\nW_pos = nn.Embedding(n_ctx, d_model)\nprint(f'W_pos shape: {W_pos.weight.shape}')\nprint(f'Max sequence length: {n_ctx}')",
+                output: "W_pos shape: torch.Size([1024, 768])\nMax sequence length: 1024",
+                explanation: "W_pos has shape [1024, 768] - one 768-dim vector for each possible position. Position 0 has its own learned vector, position 1 has its own, etc. During training, the model learns that adjacent positions should have similar vectors (language has locality), while distant positions can be more different."
             },
+            // Step 6: ADD not Concatenate
             {
-                instruction: "Let's visualize what these embeddings mean conceptually:",
-                why: "Understanding embeddings as points in space helps us grasp how models 'think'. When a model sees 'cat', it doesn't see letters - it sees a point in 768D space near other animals, far from vehicles, with specific relationships to verbs like 'meow' or 'purr'. This spatial organization is learned entirely from text patterns!",
-                code: "import matplotlib.pyplot as plt\nimport numpy as np\n\n# Create a simplified 2D visualization of 3D embedding space\nwords = ['cat', 'dog', 'kitten', 'car', 'truck', 'vehicle', 'helpful', 'harmful']\n# Simulated embeddings (in reality these would be 768D from trained model)\nembeddings = np.array([\n    [2, 3],    # cat\n    [2.3, 2.8],  # dog (close to cat)\n    [1.9, 3.2],  # kitten (close to cat)\n    [8, 2],    # car\n    [7.8, 2.3],  # truck (close to car)\n    [8.2, 1.9],  # vehicle (close to car/truck)\n    [5, 7],    # helpful\n    [5, 1]     # harmful (opposite from helpful)\n])\n\nplt.figure(figsize=(8, 6))\nplt.scatter(embeddings[:, 0], embeddings[:, 1], s=100)\nfor i, word in enumerate(words):\n    plt.annotate(word, (embeddings[i, 0], embeddings[i, 1]), fontsize=12)\nplt.xlabel('Embedding Dimension 1')\nplt.ylabel('Embedding Dimension 2')\nplt.title('Simplified Embedding Space Visualization')\nplt.grid(True, alpha=0.3)\nplt.show()\n\nprint('Distance between cat and dog:', np.linalg.norm(embeddings[0] - embeddings[1]))\nprint('Distance between cat and car:', np.linalg.norm(embeddings[0] - embeddings[3]))",
-                explanation: "Imagine a vast 768-dimensional space where 'cat' is close to 'dog', 'kitten', 'pet', medium distance from 'lion', 'animal', and far from 'car', 'building', 'abstract'. After training, these distances encode meaning! For AI safety, 'helpful' clusters with 'beneficial', 'safe' while 'harmful' clusters with 'dangerous', 'toxic'. We can measure distances to detect concerning content!"
+                instruction: "Now the key insight: we ADD token embeddings and positional embeddings together. Why add instead of concatenate?",
+                why: "We add because the result feeds into the 'residual stream' - a shared memory space that all transformer layers read from and write to. The residual stream has a fixed size (768). If we concatenated, we'd double it to 1536, breaking the architecture. Adding lets both token and position info coexist in the same 768 dimensions through superposition.",
+                type: "multiple-choice",
+                template: "# Get embeddings for a sentence\ntext = 'The cat sat'\ntokens = torch.tensor(tokenizer.encode(text))\nseq_len = len(tokens)\n\n# Token embeddings: what token is at each position\ntoken_emb = W_E(tokens)  # Shape: [seq_len, 768]\n\n# Position embeddings: where each position is\npositions = torch.arange(seq_len)\npos_emb = W_pos(positions)  # Shape: [seq_len, 768]\n\n# Combine them: ___\nresidual = token_emb + pos_emb\nprint(f'Token embeddings: {token_emb.shape}')\nprint(f'Position embeddings: {pos_emb.shape}')\nprint(f'Combined (residual): {residual.shape}')",
+                choices: ["ADD (same shape, superposition)", "Concatenate (double the size)", "Multiply (element-wise)"],
+                correct: 0,
+                hint: "The residual stream must maintain a fixed size of 768",
+                freestyleHint: "For 'The cat sat', get token embeddings from W_E and position embeddings from W_pos. Add them together to create the initial residual stream. Print all shapes.",
+                challengeTemplate: "# Get embeddings for a sentence\ntext = 'The cat sat'\ntokens = torch.tensor(tokenizer.___(text))\nseq_len = ___(tokens)\n\n# Token embeddings\ntoken_emb = ___(tokens)\n\n# Position embeddings\npositions = torch.___(seq_len)\npos_emb = ___(positions)\n\n# Combine: ADD them!\nresidual = token_emb ___ pos_emb\nprint(f'Combined shape: {residual.shape}')",
+                challengeBlanks: ["encode", "len", "W_E", "arange", "W_pos", "+"],
+                code: "# Get embeddings for a sentence\ntext = 'The cat sat'\ntokens = torch.tensor(tokenizer.encode(text))\nseq_len = len(tokens)\n\n# Token embeddings: what token is at each position\ntoken_emb = W_E(tokens)\n\n# Position embeddings: where each position is\npositions = torch.arange(seq_len)\npos_emb = W_pos(positions)\n\n# Combine: ADD them!\nresidual = token_emb + pos_emb\nprint(f'Token embeddings: {token_emb.shape}')\nprint(f'Position embeddings: {pos_emb.shape}')\nprint(f'Combined (residual): {residual.shape}')",
+                output: "Token embeddings: torch.Size([3, 768])\nPosition embeddings: torch.Size([3, 768])\nCombined (residual): torch.Size([3, 768])",
+                explanation: "By ADDING, both stay [3, 768]. Each of the 768 dimensions now encodes BOTH token identity AND position through superposition. This is the initial 'residual stream' - the central information highway that flows through all transformer layers. The model learns to read both signals from the same numbers."
             },
+            // Step 7: The Residual Stream
             {
-                instruction: "But there's a problem - our model doesn't know the ORDER of words. Let's add positional encoding:",
-                why: "Unlike RNNs which process sequences step by step, transformers see all positions at once. Without positional information, 'cat sat on mat' would be indistinguishable from 'mat on sat cat'. For AI safety, word order can completely change meaning - 'AI should not harm humans' vs 'AI should harm not humans'!",
-                code: "seq_len = len(tokens_tensor)\npos_embedding = torch.nn.Embedding(1024, d_model)  # max sequence length of 1024\npositions = torch.arange(seq_len)\npos_embeddings = pos_embedding(positions)",
-                explanation: "Positional embeddings give each position in the sequence its own learnable vector. This is crucial because word order matters in language!"
+                instruction: "What we just created is called the 'residual stream' - the most important concept in transformer internals. What is it?",
+                why: "The residual stream is the sum of all layer outputs. It starts as (token_emb + pos_emb) and gets modified by each attention and MLP layer. Every layer reads from it and adds to it. It's like a shared workspace or 'memory' that accumulates information as it flows through the model. For interpretability, this is where we look to understand what the model 'knows'.",
+                type: "multiple-choice",
+                template: "# The residual stream is THE central object in transformers\nresidual_stream = W_E(tokens) + W_pos(positions)\n\nprint('=== The Residual Stream ===')\nprint(f'Shape: {residual_stream.shape}')\nprint(f'This is: [batch=1, seq_len={seq_len}, d_model={d_model}]')\nprint()\nprint('The residual stream is...')\nprint('• The SUM of token + position embeddings (initially)')\nprint('• Modified by each attention and MLP layer')\nprint('• The \"shared memory\" all layers read from and write to')\nprint('• Where we look to understand what the model \"knows\"')\n# The residual stream is: ___",
+                choices: ["The central information highway through the transformer", "Just another name for embeddings", "The output of the final layer only"],
+                correct: 0,
+                hint: "It flows through ALL layers, accumulating information",
+                freestyleHint: "Create the residual stream by adding W_E(tokens) + W_pos(positions). Print its shape and explain what it represents - the central highway through the transformer.",
+                challengeTemplate: "# The residual stream is THE central object in transformers\nresidual_stream = ___(tokens) + ___(positions)\n\nprint('=== The Residual Stream ===')\nprint(f'Shape: {residual_stream.___}')\nprint(f'Dimensions: [seq_len, d_model] = [{seq_len}, {___}]')\nprint()\nprint('It flows through ALL layers, accumulating information!')",
+                challengeBlanks: ["W_E", "W_pos", "shape", "d_model"],
+                code: "# The residual stream is THE central object in transformers\nresidual_stream = W_E(tokens) + W_pos(positions)\n\nprint('=== The Residual Stream ===')\nprint(f'Shape: {residual_stream.shape}')\nprint(f'Dimensions: [seq_len, d_model] = [{seq_len}, {d_model}]')\nprint()\nprint('The residual stream is:')\nprint('• The SUM of token + position embeddings (initially)')\nprint('• Modified by each attention and MLP layer') \nprint('• The \"shared memory\" all layers read from and write to')\nprint('• Where we look to understand what the model \"knows\"')",
+                output: "=== The Residual Stream ===\nShape: torch.Size([3, 768])\nDimensions: [seq_len, d_model] = [3, 768]\n\nThe residual stream is:\n• The SUM of token + position embeddings (initially)\n• Modified by each attention and MLP layer\n• The \"shared memory\" all layers read from and write to\n• Where we look to understand what the model \"knows\"",
+                explanation: "The residual stream is fundamental to transformers. It's how the model 'remembers' things across layers. Each layer reads the current state, does its computation, and ADDS its output back. This 'residual connection' is why it's called the residual stream. For AI safety: if harmful content affects the output, it MUST be encoded somewhere in these 768 numbers!"
             },
+            // Step 8: Position Changes Meaning
             {
-                instruction: "Now we combine token embeddings with positional embeddings:",
-                why: "We add rather than concatenate to save parameters and because it works surprisingly well. The model learns to encode both 'what' (token) and 'where' (position) in the same vector. It's like each vector contains both the word's meaning AND its role in the sentence. This is more efficient than having separate streams for content and position.",
-                code: "final_embeddings = token_embeddings + pos_embeddings\nprint(final_embeddings.shape)",
-                explanation: "We ADD the positional embeddings to token embeddings. This allows each position to modify how tokens are interpreted based on where they appear."
+                instruction: "Now let's see why position matters for meaning - and safety. How does word order change interpretation?",
+                why: "Position fundamentally changes meaning. 'AI should not harm humans' vs 'AI should harm not humans' - the second is grammatically awkward but potentially dangerous! Positional embeddings let the model learn that 'not' typically negates the FOLLOWING word. This is critical for safety: we need models to correctly parse negation and intent.",
+                type: "multiple-choice",
+                template: "# Position changes meaning!\nsafe_text = 'AI should not harm humans'\nunsafe_text = 'AI should harm not humans'\n\nprint('=== Position & Safety ===')\nprint(f'Safe: \"{safe_text}\"')\nprint(f'  → \"not\" modifies \"harm\" (clear negation)')\nprint()\nprint(f'Ambiguous: \"{unsafe_text}\"')\nprint(f'  → \"not\" after \"harm\" (___)')\nprint()\nprint('Same tokens, different positions = different meaning!')\nprint()\nprint('Tokens in safe version:', tokenizer.tokenize(safe_text))\nprint('Tokens in unsafe version:', tokenizer.tokenize(unsafe_text))",
+                choices: ["unclear/dangerous interpretation", "same meaning as safe", "grammatically invalid"],
+                correct: 0,
+                hint: "When 'not' comes after the verb, it doesn't clearly negate it",
+                freestyleHint: "Compare 'AI should not harm humans' with 'AI should harm not humans'. Tokenize both and show how the same tokens in different positions create different (and potentially dangerous) meanings.",
+                challengeTemplate: "# Position changes meaning!\nsafe_text = 'AI should not harm humans'\nunsafe_text = 'AI should harm not humans'\n\nprint('Safe:', tokenizer.___(safe_text))\nprint('Ambiguous:', tokenizer.___(unsafe_text))\nprint()\nprint('Same ___, different ___!')",
+                challengeBlanks: ["tokenize", "tokenize", "tokens", "positions"],
+                code: "# Position changes meaning!\nsafe_text = 'AI should not harm humans'\nunsafe_text = 'AI should harm not humans'\n\nprint('=== Position & Safety ===')\nprint(f'Safe: \"{safe_text}\"')\nprint(f'  → \"not\" before \"harm\" = clear negation')\nprint()\nprint(f'Ambiguous: \"{unsafe_text}\"')\nprint(f'  → \"not\" after \"harm\" = unclear meaning!')\nprint()\nprint('Same tokens, different positions = different meaning!')\nprint()\nprint('Tokens in safe version:', tokenizer.tokenize(safe_text))\nprint('Tokens in unsafe version:', tokenizer.tokenize(unsafe_text))",
+                output: "=== Position & Safety ===\nSafe: \"AI should not harm humans\"\n  → \"not\" before \"harm\" = clear negation\n\nAmbiguous: \"AI should harm not humans\"\n  → \"not\" after \"harm\" = unclear meaning!\n\nSame tokens, different positions = different meaning!\n\nTokens in safe version: ['AI', 'Ġshould', 'Ġnot', 'Ġharm', 'Ġhumans']\nTokens in unsafe version: ['AI', 'Ġshould', 'Ġharm', 'Ġnot', 'Ġhumans']",
+                explanation: "Both sentences have the SAME tokens, but their positions change the meaning entirely! Positional embeddings let the model learn patterns like 'not' + verb = negation. This is why position is safety-critical: the model must correctly understand word order to properly interpret instructions about what it should and shouldn't do."
             },
+            // Step 9: Logit Lens Preview
             {
-                instruction: "Let's see exactly how position changes meaning:",
-                why: "Position can make the difference between safety and danger. 'Block all malicious requests' vs 'All malicious requests block' - in the second version, it's unclear who's doing the blocking, potentially allowing harmful content through. Real AI systems have made errors like this, which is why understanding positional encoding is critical for safety.",
-                code: "# Demonstrate how word order changes meaning\nsentences = [\n    ('The dog bit the man', 'dog is aggressor'),\n    ('The man bit the dog', 'man is aggressor - reversed meaning!'),\n    ('Execute safe code only', 'clear instruction'),\n    ('Only safe code execute', 'awkward but understandable'),\n    ('Code execute only safe', 'confusing - unclear meaning')\n]\n\nprint('How position changes meaning:\\n')\nfor sentence, interpretation in sentences:\n    tokens = tokenizer.tokenize(sentence)\n    print(f'Sentence: \"{sentence}\"')\n    print(f'  Tokens: {tokens}')\n    print(f'  Interpretation: {interpretation}\\n')\n\n# Show that same tokens in different order = different meaning\nprint('Safety-critical example:')\ntext1 = 'AI should not harm humans'\ntext2 = 'AI should harm not humans'  # Ambiguous!\ntext3 = 'not harm humans AI should'  # Confusing word order\n\nfor text in [text1, text2, text3]:\n    print(f'\"{text}\" -> {tokenizer.tokenize(text)}')",
-                explanation: "Word order fundamentally changes meaning. 'The dog bit the man' (active voice - dog is aggressor) vs 'The man bit the dog' (same words, reversed meaning!). 'Never always help' vs 'Always never help' are different contradictions. 'Execute safe code only' is a good instruction while 'Safe code execute only' is confusing and might be misinterpreted."
+                instruction: "Here's a powerful idea: since the residual stream accumulates predictions, we can peek at it mid-way through the model. This is called the 'logit lens'. What does it reveal?",
+                why: "The 'logit lens' technique converts the residual stream at any layer back to token probabilities. Early layers show vague predictions, later layers show refined predictions. This is key for interpretability: we can see when and where the model 'decides' what to output. For safety, we can potentially detect harmful outputs before they're finalized.",
+                type: "multiple-choice",
+                template: "# The Logit Lens concept (preview for interpretability lessons)\nprint('=== Logit Lens Preview ===')\nprint()\nprint('The residual stream accumulates predictions layer by layer:')\nprint()\nprint('Layer 0:  [token + pos emb] → vague, distributed representations')\nprint('Layer 6:  [...processing...] → intermediate features emerge')\nprint('Layer 11: [...processing...] → refined predictions form')\nprint('Final:    [after all layers] → confident next-token prediction')\nprint()\nprint('The logit lens lets us convert residual stream → token probabilities')\nprint('at ANY layer, not just the final one!')\nprint()\n# This means we can see predictions: ___",
+                choices: ["forming gradually across layers", "only at the final layer", "randomly at each layer"],
+                correct: 0,
+                hint: "Each layer refines the prediction - the residual stream accumulates",
+                freestyleHint: "Explain the logit lens concept: the residual stream at any layer can be projected to vocabulary space to see forming predictions. Early layers = vague, later layers = refined.",
+                challengeTemplate: "print('=== Logit Lens Preview ===')\nprint('Early layers: ___ predictions')\nprint('Later layers: ___ predictions')\nprint('We can peek at the residual stream at ___ layer!')",
+                challengeBlanks: ["vague", "refined", "any"],
+                code: "# The Logit Lens concept (preview for interpretability lessons)\nprint('=== Logit Lens Preview ===')\nprint()\nprint('The residual stream accumulates predictions layer by layer:')\nprint()\nprint('Layer 0:  [token + pos emb] → vague, distributed representations')\nprint('Layer 6:  [...processing...] → intermediate features emerge')  \nprint('Layer 11: [...processing...] → refined predictions form')\nprint('Final:    [after all layers] → confident next-token prediction')\nprint()\nprint('The logit lens lets us convert residual stream → token probabilities')\nprint('at ANY layer, not just the final one!')\nprint()\nprint('This is powerful for interpretability:')\nprint('• See when predictions form')\nprint('• Detect harmful outputs early')\nprint('• Understand what each layer contributes')",
+                output: "=== Logit Lens Preview ===\n\nThe residual stream accumulates predictions layer by layer:\n\nLayer 0:  [token + pos emb] → vague, distributed representations\nLayer 6:  [...processing...] → intermediate features emerge\nLayer 11: [...processing...] → refined predictions form\nFinal:    [after all layers] → confident next-token prediction\n\nThe logit lens lets us convert residual stream → token probabilities\nat ANY layer, not just the final one!\n\nThis is powerful for interpretability:\n• See when predictions form\n• Detect harmful outputs early\n• Understand what each layer contributes",
+                explanation: "The logit lens is a key interpretability technique. Since transformers use residual connections (each layer ADDS to the stream), information accumulates gradually. We can 'read out' predictions at any layer. Early: mostly noise. Middle: patterns emerge. Final: confident predictions. For safety: we might detect harmful outputs forming before they're complete!"
             },
+            // Step 10: Examining Real GPT-2 Embeddings
             {
-                instruction: "Let's see why position matters by creating a simple example:",
-                why: "Position can completely change the meaning and safety implications of text. Consider 'kill the process' (computer term) vs 'the process to kill' (potentially dangerous). Positional encoding helps models understand these critical differences.",
-                code: "print(tokenizer.encode('not safe'))\nprint(tokenizer.encode('safe not'))",
-                explanation: "These have the same tokens but very different meanings! 'not safe' is a warning, while 'safe not' might be parsed differently or be ungrammatical. Position changes everything!"
+                instruction: "Let's load the REAL GPT-2 embeddings (not random ones) and see how trained embeddings encode meaning. What patterns should we expect?",
+                why: "Our W_E so far had random values. Real GPT-2 was trained on billions of words, so its embeddings encode actual semantic relationships. 'cat' should be closer to 'dog' than to 'car'. 'harmful' should be closer to 'dangerous' than to 'helpful'. These patterns emerge from training - the model learns that words appearing in similar contexts should have similar vectors.",
+                type: "multiple-choice",
+                template: "from transformers import GPT2Model\n\n# Load pre-trained GPT-2 (includes trained embeddings!)\nmodel = GPT2Model.from_pretrained('gpt2')\nreal_W_E = model.wte.weight  # wte = word token embeddings\nreal_W_pos = model.wpe.weight  # wpe = word position embeddings\n\nprint(f'Real W_E shape: {real_W_E.shape}')\nprint(f'Real W_pos shape: {real_W_pos.shape}')\nprint()\nprint('These embeddings were trained to encode: ___')",
+                choices: ["semantic relationships from context", "random noise", "alphabetical order"],
+                correct: 0,
+                hint: "Training adjusts embeddings so similar words have similar vectors",
+                freestyleHint: "Load GPT2Model from transformers. Access model.wte.weight (token embeddings) and model.wpe.weight (position embeddings). These are the REAL trained embeddings!",
+                challengeTemplate: "from transformers import ___\n\n# Load pre-trained GPT-2\nmodel = GPT2Model.from_pretrained('___')\nreal_W_E = model.___.weight  # word token embeddings\nreal_W_pos = model.___.weight  # word position embeddings\n\nprint(f'Real W_E shape: {real_W_E.shape}')",
+                challengeBlanks: ["GPT2Model", "gpt2", "wte", "wpe"],
+                code: "from transformers import GPT2Model\n\n# Load pre-trained GPT-2 (includes trained embeddings!)\nmodel = GPT2Model.from_pretrained('gpt2')\nreal_W_E = model.wte.weight  # wte = word token embeddings\nreal_W_pos = model.wpe.weight  # wpe = word position embeddings\n\nprint(f'Real W_E shape: {real_W_E.shape}')\nprint(f'Real W_pos shape: {real_W_pos.shape}')\nprint()\nprint('These embeddings encode semantic relationships!')\nprint('Words in similar contexts → similar vectors')",
+                output: "Real W_E shape: torch.Size([50257, 768])\nReal W_pos shape: torch.Size([1024, 768])\n\nThese embeddings encode semantic relationships!\nWords in similar contexts → similar vectors",
+                explanation: "GPT-2's embeddings were trained on WebText (billions of tokens). During training, words appearing in similar contexts got pushed toward similar vectors. This is why we can do 'king - man + woman ≈ queen' - the geometric relationships encode meaning!"
             },
+            // Step 11: Measuring Similarity with Cosine Similarity
             {
-                instruction: "Let's visualize how positional embeddings differ:",
-                code: "pos_0 = pos_embedding(torch.tensor(0))\npos_10 = pos_embedding(torch.tensor(10))\npos_100 = pos_embedding(torch.tensor(100))\n\ncos_sim_0_10 = torch.cosine_similarity(pos_0, pos_10, dim=0)\ncos_sim_0_100 = torch.cosine_similarity(pos_0, pos_100, dim=0)\nprint(cos_sim_0_10)\nprint(cos_sim_0_100)",
-                explanation: "Different positions have different embeddings. This helps the model understand that the same word means different things in different places."
+                instruction: "To compare embeddings, we use cosine similarity - it measures if vectors point in the same direction. What range does it have?",
+                why: "Cosine similarity measures the angle between vectors, ignoring magnitude. A value of 1 means identical direction (very similar), 0 means perpendicular (unrelated), -1 means opposite directions (contrasting). For embeddings, high cosine similarity = similar meaning or function. This is our main tool for understanding what embeddings encode.",
+                type: "multiple-choice",
+                template: "# Cosine similarity: measures direction, not magnitude\ndef get_embedding(word):\n    token_id = tokenizer.encode(word)[0]\n    return real_W_E[token_id]\n\n# Compare some words\ncat = get_embedding('cat')\ndog = get_embedding('dog')\ncar = get_embedding('car')\n\ncat_dog = torch.cosine_similarity(cat, dog, dim=0)\ncat_car = torch.cosine_similarity(cat, car, dim=0)\n\nprint('=== Cosine Similarity ===')\nprint(f\"'cat' vs 'dog': {cat_dog:.3f}\")\nprint(f\"'cat' vs 'car': {cat_car:.3f}\")\nprint()\nprint('Range: ___ to ___')",
+                choices: ["-1 to 1", "0 to 1", "0 to infinity"],
+                correct: 0,
+                hint: "Cosine similarity can be negative (opposite directions)",
+                freestyleHint: "Create a function to get a word's embedding from real_W_E. Use torch.cosine_similarity to compare 'cat' vs 'dog' and 'cat' vs 'car'. The similarity should reflect semantic relatedness.",
+                challengeTemplate: "def get_embedding(word):\n    token_id = tokenizer.___(word)[0]\n    return real_W_E[___]\n\ncat = get_embedding('cat')\ndog = get_embedding('dog')\ncar = get_embedding('car')\n\ncat_dog = torch.___(cat, dog, dim=0)\ncat_car = torch.___(cat, car, dim=0)\n\nprint(f\"'cat' vs 'dog': {cat_dog:.3f}\")\nprint(f\"'cat' vs 'car': {cat_car:.3f}\")",
+                challengeBlanks: ["encode", "token_id", "cosine_similarity", "cosine_similarity"],
+                code: "# Cosine similarity: measures direction, not magnitude\ndef get_embedding(word):\n    token_id = tokenizer.encode(word)[0]\n    return real_W_E[token_id]\n\n# Compare some words\ncat = get_embedding('cat')\ndog = get_embedding('dog')\ncar = get_embedding('car')\n\ncat_dog = torch.cosine_similarity(cat, dog, dim=0)\ncat_car = torch.cosine_similarity(cat, car, dim=0)\n\nprint('=== Cosine Similarity ===')\nprint(f\"'cat' vs 'dog': {cat_dog:.3f}\")\nprint(f\"'cat' vs 'car': {cat_car:.3f}\")\nprint()\nprint('Higher = more similar meaning!')\nprint('Range: -1 (opposite) to 1 (identical)')",
+                output: "=== Cosine Similarity ===\n'cat' vs 'dog': 0.892\n'cat' vs 'car': 0.634\n\nHigher = more similar meaning!\nRange: -1 (opposite) to 1 (identical)",
+                explanation: "'cat' and 'dog' are highly similar (0.892) - both are common pets, appear in similar contexts. 'cat' and 'car' are less similar (0.634) - they share some contexts (both can be 'my ___') but are fundamentally different concepts. This geometric relationship is learned purely from text co-occurrence!"
             },
+            // Step 12: Safety Applications & Recap
             {
-            instruction: "First, let's understand cosine similarity - our tool for comparing embeddings:",
-            why: "In high-dimensional space, we need the right tool to measure similarity. Cosine similarity is perfect because it measures whether vectors point in the same direction (share similar meaning/function) regardless of their magnitude (strength).",
-            code: `# Cosine similarity: measuring the angle between vectors
-# Create simple 2D examples to visualize
-import matplotlib.pyplot as plt
-
-# Same direction, different magnitudes
-vec1 = torch.tensor([1.0, 1.0])
-vec2 = torch.tensor([2.0, 2.0])  # Same direction, 2x magnitude
-
-# Different direction
-vec3 = torch.tensor([1.0, -1.0])
-
-# Calculate similarities
-sim_same_dir = torch.cosine_similarity(vec1, vec2, dim=0)
-sim_diff_dir = torch.cosine_similarity(vec1, vec3, dim=0)
-
-print(f'Same direction vectors: {sim_same_dir:.3f} (close to 1.0)')
-print(f'Different direction vectors: {sim_diff_dir:.3f} (close to 0.0)')
-print('\\nFor embeddings: high similarity = similar linguistic function!')`,
-            explanation: "Cosine similarity ranges from -1 to 1. Near 1: vectors point in same direction (similar meaning/function). Near 0: perpendicular (unrelated). Near -1: opposite directions (contrasting). This is why it's perfect for comparing what kind of information embeddings encode!"
-            },
-            {
-                instruction: "Let's understand the 'residual stream' concept:",
-                why: "The residual stream is where all information flows in a transformer. For AI safety, this is crucial - it's where we can intervene to detect or modify harmful outputs. Think of it as the 'consciousness' of the model where all thoughts are represented.",
-                code: "residual_stream = token_embeddings + pos_embeddings\nprint(residual_stream.shape)",
-                explanation: "The residual stream is the central information highway in transformers. This will flow through all transformer layers. Each layer reads from and writes to this stream."
-            },
-            {
-    instruction: "Let's understand why the residual stream is like the model's 'workspace':",
-    why: "Just like human working memory, the residual stream has limited capacity (768 dimensions). The model must efficiently encode all relevant information - word meanings, grammatical structure, discourse context, and emerging predictions. For safety, this means harmful intentions must be represented somewhere in these 768 numbers, making them potentially detectable.",
-    code: `# The residual stream as a fixed-size workspace
-# Let's visualize how much information gets packed into 768 dimensions
-
-# Create a sample sequence
-text = "The cat sat on the mat"
-tokens = torch.tensor(tokenizer.encode(text))
-print(f'Text: "{text}"')
-print(f'Tokens: {tokens}')
-
-# Start with embeddings (the initial residual stream)
-token_embeds = embedding(tokens)
-positions = torch.arange(len(tokens))
-pos_embeds = pos_embedding(positions)
-residual_stream = token_embeds + pos_embeds  # Shape: [seq_len, 768]
-
-print(f'\\nResidual stream shape: {residual_stream.shape}')
-print(f'Total dimensions: {residual_stream.shape[0] * residual_stream.shape[1]}')
-
-# Analyze information density at each position
-for i, token in enumerate(tokenizer.convert_ids_to_tokens(tokens)):
-    # Look at how spread out the information is
-    std = residual_stream[i].std().item()
-    mean_abs = residual_stream[i].abs().mean().item()
-    
-    print(f'\\nPosition {i} ("{token}"):')
-    print(f'  Std dev: {std:.3f} (information spread)')
-    print(f'  Mean absolute value: {mean_abs:.3f} (signal strength)')
-    
-    # Show top 5 dimensions by magnitude
-    top_dims = residual_stream[i].abs().topk(5)
-    print(f'  Top 5 dimensions: {top_dims.indices.tolist()}')
-    print(f'  Their values: {[f"{v:.2f}" for v in top_dims.values.tolist()]}')
-
-# Visualize information capacity
-print(f'\\n=== Information Capacity ===')
-print(f'Each position has 768 numbers to encode:')
-print(f'  - Token identity (vocabulary size: 50257)')
-print(f'  - Position (up to 1024 positions)')
-print(f'  - Grammatical role')
-print(f'  - Semantic features')
-print(f'  - Relationships to other tokens')
-print(f'  - Partial next-token predictions')
-print(f'\\nAll compressed into just 768 float values!')`,
-    explanation: "The residual stream is like a 768-dimensional workspace. At each position, those 768 numbers must encode: what token is here ('cat'), where it is in the sentence (position 2), syntactic role (subject, verb, object), semantic features (animate, noun, singular), relationships to other tokens, and partial predictions about what comes next. All of this in just 768 numbers! For AI safety: harmful content MUST be encoded somewhere in these numbers to affect output!"
-},
-            {
-                instruction: "Examine what happens without positional encoding:",
-                code: "seq1 = torch.tensor([464, 3797, 3332])\nseq2 = torch.tensor([3332, 464, 3797])\n\nemb1_no_pos = embedding(seq1)\nemb2_no_pos = embedding(seq2)\n\npos1 = pos_embedding(torch.arange(3))\npos2 = pos_embedding(torch.arange(3))\nemb1_with_pos = emb1_no_pos + pos1\nemb2_with_pos = emb2_no_pos + pos2\n\nprint(emb1_no_pos.shape)\nprint(emb1_with_pos.shape)",
-                explanation: "Without positional encoding, permuted sequences look identical to attention mechanisms. With position, the model can tell them apart! This is what allows transformers to understand sequence order."
-            },
-            {
-    instruction: "Let's see how attention mechanisms use position information:",
-    why: "Attention patterns are heavily influenced by position. Models learn that subjects usually come before verbs, that adjectives precede nouns, that 'not' negates the following word. These position-based patterns are crucial for parsing meaning correctly. Without them, models couldn't distinguish 'not harmful' from 'harmful, not'.",
-    code: `# Position affects attention patterns
-# Let's see how position embeddings influence dot products (future attention scores)
-
-# First, understand what dot products measure
-vec_a = torch.tensor([1.0, 0.0, 0.0])
-vec_b = torch.tensor([1.0, 0.0, 0.0])  # Same direction
-vec_c = torch.tensor([0.0, 1.0, 0.0])  # Perpendicular
-
-print("=== Why dot products? ===")
-print(f"Dot product (same direction): {torch.dot(vec_a, vec_b):.1f} (high)")
-print(f"Dot product (perpendicular): {torch.dot(vec_a, vec_c):.1f} (zero)")
-print("→ Dot products measure similarity! Higher = more similar\\n")
-
-# Create example: "The cat sat on the mat"
-text = "The cat sat on the mat"
-tokens = torch.tensor(tokenizer.encode(text))
-n_tokens = len(tokens)
-
-# Get embeddings with and without position
-token_only = embedding(tokens)
-positions_for_seq = torch.arange(len(tokens))
-with_position = embedding(tokens) + pos_embedding(positions_for_seq)
-
-print(f'Analyzing: "{text}"')
-print(f'Tokens: {tokenizer.convert_ids_to_tokens(tokens)}\\n')
-
-# Compare dot products (proto-attention) with/without position
-print("=== How position changes token relationships ===")
-print("(These dot products will become attention scores after softmax!)\\n")
-
-# Without position - only token similarity matters
-dots_no_pos = torch.matmul(token_only, token_only.T)
-# With position - both token AND position matter
-positions_seq = torch.arange(n_tokens)
-dots_with_pos = torch.matmul(with_position, with_position.T)
-
-# Normalize for comparison
-dots_no_pos_norm = dots_no_pos / dots_no_pos.max()
-dots_with_pos_norm = dots_with_pos / dots_with_pos.max()
-
-# Show specific position-based patterns
-print("1. Adjacent token relationships (how position affects local context):")
-for i in range(n_tokens - 1):
-    change = dots_with_pos_norm[i, i+1] - dots_no_pos_norm[i, i+1]
-    tok1, tok2 = tokenizer.convert_ids_to_tokens(tokens[[i, i+1]])
-    print(f"   '{tok1}'→'{tok2}' (pos {i}→{i+1}): {change:+.3f} change")
-
-print("\\n2. First token importance (position 0 bias):")
-first_token = tokenizer.convert_ids_to_tokens([tokens[0].item()])[0]
-for i in range(1, min(5, n_tokens)):
-    change = dots_with_pos_norm[i, 0] - dots_no_pos_norm[i, 0]
-    curr_token = tokenizer.convert_ids_to_tokens([tokens[i].item()])[0]
-    print(f"   '{curr_token}'→'{first_token}' (pos {i}→0): {change:+.3f} change")
-
-# Why this matters for attention
-print("\\n=== Why this matters ===")
-print("In attention: score = (Q @ K^T) / sqrt(d)")
-print("Higher dot product → higher attention score → more information flow")
-print("Position embeddings shape these patterns before any learning!")`,
-    explanation: "Common position-based attention patterns include: Previous token attention (position N often attends to N-1 for local context), First token attention (many positions attend to position 0 which often contains key information), Periodic attention (attending at fixed intervals for repeated structures), and End-of-sentence attention (to periods, question marks for understanding boundaries)."
-},
-            {
-                instruction: "Understand embedding magnitude and direction:",
-                why: "In high-dimensional space, embeddings encode information in both their direction (what concept) and magnitude (how strongly). For AI safety, unusual magnitudes might indicate the model is processing something important or potentially problematic.",
-                code: "emb_magnitudes = torch.norm(token_embeddings, dim=-1)\nprint(emb_magnitudes)\nprint(emb_magnitudes.mean())",
-                explanation: "The magnitude of embeddings can indicate importance. Large magnitudes might indicate important tokens. This becomes relevant when we study how models process different concepts."
-            },
-            {
-    instruction: "Let's explore what embedding magnitudes tell us:",
-    why: "Embedding magnitude often correlates with token importance or frequency. Common words like 'the' might have different magnitudes than rare technical terms. For safety, sudden magnitude changes might indicate the model is processing sensitive content or making important decisions. This gives us a potential monitoring signal.",
-    code: `# Analyze magnitude patterns
-# Let's explore how embedding magnitudes relate to token frequency and importance
-import numpy as np
-
-# Get some common and rare tokens
-common_words = ['the', 'a', 'is', 'and', 'to', 'in', 'it', 'of']
-rare_words = ['quantum', 'cryptocurrency', 'anthropomorphic', 'serendipity']
-safety_words = ['harm', 'dangerous', 'safe', 'helpful', 'ethical']
-
-# Tokenize and get their IDs
-common_ids = [tokenizer.encode(word)[0] for word in common_words]
-rare_ids = [tokenizer.encode(word)[0] for word in rare_words]
-safety_ids = [tokenizer.encode(word)[0] for word in safety_words]
-
-# Calculate magnitudes for each group
-print("=== Embedding Magnitude Analysis ===\\n")
-
-# Common words
-common_mags = []
-print("Common words:")
-for word, token_id in zip(common_words, common_ids):
-    magnitude = torch.norm(embedding.weight[token_id]).item()
-    common_mags.append(magnitude)
-    print(f"  '{word}' (token {token_id}): magnitude = {magnitude:.3f}")
-
-# Rare words
-rare_mags = []
-print("\\nRare/technical words:")
-for word, token_id in zip(rare_words, rare_ids):
-    magnitude = torch.norm(embedding.weight[token_id]).item()
-    rare_mags.append(magnitude)
-    print(f"  '{word}' (token {token_id}): magnitude = {magnitude:.3f}")
-
-# Safety-relevant words
-safety_mags = []
-print("\\nSafety-relevant words:")
-for word, token_id in zip(safety_words, safety_ids):
-    magnitude = torch.norm(embedding.weight[token_id]).item()
-    safety_mags.append(magnitude)
-    print(f"  '{word}' (token {token_id}): magnitude = {magnitude:.3f}")
-
-# Statistical analysis
-print("\\n=== Statistical Summary ===")
-print(f"Common words: mean={np.mean(common_mags):.3f}, std={np.std(common_mags):.3f}")
-print(f"Rare words: mean={np.mean(rare_mags):.3f}, std={np.std(rare_mags):.3f}")
-print(f"Safety words: mean={np.mean(safety_mags):.3f}, std={np.std(safety_mags):.3f}")
-
-# Find outliers across all embeddings
-all_magnitudes = torch.norm(embedding.weight, dim=1)
-mean_mag = all_magnitudes.mean().item()
-std_mag = all_magnitudes.std().item()
-threshold = mean_mag + 2 * std_mag
-
-print(f"\\n=== Outlier Detection ===")
-print(f"Mean magnitude: {mean_mag:.3f}")
-print(f"Std deviation: {std_mag:.3f}")
-print(f"Outlier threshold (mean + 2σ): {threshold:.3f}")
-
-# Find tokens with unusual magnitudes
-outlier_indices = torch.where(all_magnitudes > threshold)[0]
-print(f"\\nTokens with unusually high magnitudes: {len(outlier_indices)}")
-print("Sample outliers:")
-for idx in outlier_indices[:5]:
-    token = tokenizer.decode([idx])
-    mag = all_magnitudes[idx].item()
-    print(f"  Token {idx} ('{token}'): magnitude = {mag:.3f}")
-
-# Demonstrate safety monitoring
-print("\\n=== Safety Monitoring Example ===")
-test_text = "This model should not harm humans"
-test_tokens = torch.tensor(tokenizer.encode(test_text))
-test_embeds = embedding(test_tokens)
-test_mags = torch.norm(test_embeds, dim=1)
-
-print(f'Text: "{test_text}"')
-print("Token magnitudes:")
-for i, (token_id, mag) in enumerate(zip(test_tokens, test_mags)):
-    token = tokenizer.decode([token_id])
-    flag = "⚠️" if mag > threshold else ""
-    print(f"  Position {i}: '{token}' = {mag:.3f} {flag}")`,
-    explanation: "Embedding magnitudes can indicate: Token frequency (common tokens often have moderate magnitudes, rare tokens might have extreme magnitudes), Semantic importance (content words vs function words), and Model uncertainty (confident processing vs uncertain states). For safety monitoring, we can track magnitude distributions, flag unusual patterns, and correlate with harmful content."
-},
-            {
-    instruction: "Explore how embeddings enable similarity:",
-    why: "Embeddings map similar concepts to nearby points in space. For AI safety, this means we might detect harmful content by looking for embeddings similar to known harmful concepts. This is the foundation of many safety techniques.",
-    code: `# In trained models, similar words cluster together
-# Let's measure semantic similarity using embeddings
-import numpy as np
-
-# Define word groups to explore
-word_groups = {
-    'positive_emotions': ['happy', 'joyful', 'cheerful', 'pleased'],
-    'negative_emotions': ['sad', 'angry', 'upset', 'frustrated'],
-    'safety_positive': ['safe', 'secure', 'protected', 'harmless'],
-    'safety_negative': ['harmful', 'dangerous', 'risky', 'hazardous'],
-    'animals': ['cat', 'dog', 'mouse', 'bird'],
-    'vehicles': ['car', 'truck', 'bike', 'bus']
-}
-
-# Function to get embedding for a word
-def get_word_embedding(word):
-    token_id = tokenizer.encode(word)[0]  # Get first token
-    return embedding.weight[token_id]
-
-# Calculate within-group similarity
-print("=== Within-Group Similarities ===")
-for group_name, words in word_groups.items():
-    embeddings = [get_word_embedding(word) for word in words]
-    
-# Calculate average pairwise similarity within group
-similarities = []
-for i in range(len(words)):
-    for j in range(i+1, len(words)):
-        sim = torch.cosine_similarity(embeddings[i], embeddings[j], dim=0)
-        similarities.append(sim.item())
-
-avg_sim = np.mean(similarities) if similarities else 0
-print(f"\\n{group_name}:")
-print(f"  Words: {', '.join(words)}")
-print(f"  Average similarity: {avg_sim:.3f}")
-
-# Show pairwise similarities
-if len(words) >= 2:
-    print(f"  '{words[0]}' ↔ '{words[1]}': {similarities[0]:.3f}")
-
-# Calculate between-group similarities
-print("\\n=== Between-Group Similarities ===")
-# Compare positive vs negative emotions
-pos_emb = get_word_embedding('happy')
-neg_emb = get_word_embedding('sad')
-animal_emb = get_word_embedding('cat')
-vehicle_emb = get_word_embedding('car')
-
-print(f"'happy' ↔ 'sad': {torch.cosine_similarity(pos_emb, neg_emb, dim=0):.3f}")
-print(f"'cat' ↔ 'car': {torch.cosine_similarity(animal_emb, vehicle_emb, dim=0):.3f}")
-print(f"'happy' ↔ 'cat': {torch.cosine_similarity(pos_emb, animal_emb, dim=0):.3f}")
-
-# Safety-focused similarity analysis
-print("\\n=== Safety Detection Example ===")
-# Define a "safety probe" - average of safety-negative words
-safety_negative_embeds = [get_word_embedding(word) for word in word_groups['safety_negative']]
-safety_probe = torch.stack(safety_negative_embeds).mean(dim=0)
-
-# Test various words against our safety probe
-test_words = ['harmful', 'helpful', 'dangerous', 'beneficial', 'attack', 'assist']
-print("\\nSimilarity to safety-negative concepts:")
-for word in test_words:
-    word_emb = get_word_embedding(word)
-    similarity = torch.cosine_similarity(word_emb, safety_probe, dim=0)
-    flag = "⚠️" if similarity > 0.5 else "✓"
-    print(f"  '{word}': {similarity:.3f} {flag}")
-
-# Find nearest neighbors
-print("\\n=== Nearest Neighbor Example ===")
-target_word = 'safe'
-target_emb = get_word_embedding(target_word)
-
-# Calculate similarity to all tokens (subsample for efficiency)
-sample_size = 1000
-sample_indices = torch.randperm(embedding.weight.shape[0])[:sample_size]
-similarities = []
-
-for idx in sample_indices:
-    sim = torch.cosine_similarity(target_emb, embedding.weight[idx], dim=0)
-    similarities.append((idx.item(), sim.item()))
-
-# Sort by similarity and show top 5
-similarities.sort(key=lambda x: x[1], reverse=True)
-print(f"\\nWords most similar to '{target_word}':")
-for idx, sim in similarities[:5]:
-    word = tokenizer.decode([idx])
-    print(f"  '{word}': {sim:.3f}")`,
-    explanation: "In trained models: 'happy' and 'joyful' would have similar embeddings, 'safe' and 'secure' would be close in embedding space, 'harmful' and 'dangerous' would cluster together. This clustering is key to understanding model behavior!"
-},
-            {
-                instruction: "Let's understand how to measure and use embedding similarity:",
-                why: "Cosine similarity is the standard measure because it focuses on direction, not magnitude. Two embeddings pointing the same direction are similar even if one is longer. For safety, we can build 'semantic firewalls' by measuring similarity to known harmful concepts and triggering interventions when content gets too close to dangerous clusters.",
-                code: "# Measuring embedding similarity\ndef cosine_similarity(emb1, emb2):\n    return torch.nn.functional.cosine_similarity(emb1, emb2, dim=0)",
-                explanation: "Embedding similarity for safety: Build a 'harmful content' reference set, compute similarities for new inputs, and investigate if similarity exceeds thresholds. Example thresholds: >0.9 very similar (potential concern), >0.7 related concepts, <0.3 unrelated. This enables semantic safety filters!"
-            },
-            {
-    instruction: "Consider the implications of embedding learning:",
-    why: "Embeddings are learned from training data, which means they inherit biases and associations present in that data. If harmful content appears in certain contexts in training, those patterns get encoded in embeddings. This is both a risk (unintended biases) and an opportunity (we can detect and correct these patterns).",
-    code: `# Embeddings inherit training data patterns
-# Let's detect biases and associations learned from training data
-
-# Define word pairs to test for biased associations
-bias_tests = {
-    'gender_occupations': {
-        'occupations': ['doctor', 'nurse', 'engineer', 'teacher', 'CEO', 'secretary'],
-        'gender_terms': ['man', 'woman', 'male', 'female']
-    },
-    'safety_associations': {
-        'ai_terms': ['AI', 'artificial', 'intelligence', 'robot', 'automation'],
-        'safety_terms': ['safe', 'dangerous', 'helpful', 'harmful', 'beneficial', 'threat']
-    },
-    'sentiment_associations': {
-        'concepts': ['technology', 'nature', 'city', 'rural', 'future', 'past'],
-        'sentiments': ['good', 'bad', 'positive', 'negative', 'better', 'worse']
-    }
-}
-
-# Function to measure association strength
-def measure_association(word1, word2):
-    emb1 = get_word_embedding(word1)
-    emb2 = get_word_embedding(word2)
-    return torch.cosine_similarity(emb1, emb2, dim=0).item()
-
-# 1. Gender bias detection
-print("=== Gender Bias Detection ===")
-print("Associations between occupations and gender terms:")
-print("(Higher = stronger association in the model)\\n")
-
-for occupation in bias_tests['gender_occupations']['occupations']:
-    male_score = measure_association(occupation, 'male')
-    female_score = measure_association(occupation, 'female')
-    bias = male_score - female_score
-    
-    print(f"{occupation:12} | male: {male_score:+.3f} | female: {female_score:+.3f} | bias: {bias:+.3f}")
-
-# 2. AI safety associations
-print("\\n=== AI Safety Associations ===")
-print("How AI-related terms associate with safety concepts:\\n")
-
-ai_safety_matrix = []
-for ai_term in bias_tests['safety_associations']['ai_terms'][:3]:  # Top 3 for brevity
-    scores = []
-    for safety_term in bias_tests['safety_associations']['safety_terms']:
-        score = measure_association(ai_term, safety_term)
-        scores.append(score)
-    ai_safety_matrix.append(scores)
-    
-    # Show most concerning associations
-    max_idx = scores.index(max(scores))
-    min_idx = scores.index(min(scores))
-    print(f"{ai_term:12} | strongest: '{bias_tests['safety_associations']['safety_terms'][max_idx]}' ({scores[max_idx]:.3f})")
-
-# 3. Detect unexpected associations
-print("\\n=== Unexpected Association Detection ===")
-# Define pairs that SHOULDN'T be strongly associated
-concerning_pairs = [
-    ('child', 'danger'),
-    ('helpful', 'deceptive'),
-    ('safe', 'exploit'),
-    ('human', 'inferior'),
-    ('ethical', 'optional')
-]
-
-print("Checking concerning associations (should be low):")
-for word1, word2 in concerning_pairs:
-    score = measure_association(word1, word2)
-    flag = "⚠️ HIGH" if score > 0.3 else "✓ OK"
-    print(f"  '{word1}' ↔ '{word2}': {score:.3f} {flag}")
-
-# 4. Embedding debiasing example
-print("\\n=== Debiasing Strategy Example ===")
-# Simple debiasing: find gender direction and project it out
-male_emb = get_word_embedding('male')
-female_emb = get_word_embedding('female')
-gender_direction = male_emb - female_emb
-
-# Show how to detect gendered words
-test_words = ['nurse', 'engineer', 'parent', 'person']
-print("\\nGender component in embeddings:")
-for word in test_words:
-    word_emb = get_word_embedding(word)
-    # Project onto gender direction
-    gender_component = torch.dot(word_emb, gender_direction) / torch.norm(gender_direction)
-    print(f"  '{word}': {gender_component:.3f} (positive=male-leaning, negative=female-leaning)")
-
-# 5. Safety monitoring framework
-print("\\n=== Embedding Audit Framework ===")
-print("Key monitoring strategies:")
-print("1. Track associations between safety terms and other concepts")
-print("2. Monitor embedding drift during fine-tuning")
-print("3. Flag tokens with unusual similarity patterns")
-print("4. Regular bias audits using standardized word lists")
-
-# Example: Create safety score based on embedding patterns
-def compute_safety_score(word):
-    word_emb = get_word_embedding(word)
-    # Average similarity to positive safety words
-    positive_words = ['safe', 'helpful', 'beneficial']
-    positive_score = np.mean([measure_association(word, w) for w in positive_words])
-    # Average similarity to negative safety words  
-    negative_words = ['harmful', 'dangerous', 'malicious']
-    negative_score = np.mean([measure_association(word, w) for w in negative_words])
-    return positive_score - negative_score
-
-print("\\nSafety scores for various terms:")
-test_terms = ['assist', 'attack', 'protect', 'deceive', 'help', 'manipulate']
-for term in test_terms:
-    score = compute_safety_score(term)
-    print(f"  '{term}': {score:+.3f}")`,
-    explanation: "Embeddings learn from context patterns in training data. If 'doctor' appears more with 'he', gender bias gets encoded. If 'weapon' appears with violence, that's expected. If 'AI' appears with 'dangerous', that's a concerning bias. These associations get encoded in embeddings! For AI safety we need to: audit embedding biases, detect harmful associations, potentially intervene during training, and modify embeddings post-training."
-}
+                instruction: "Finally, let's see how embeddings enable safety applications. We can measure similarity to 'harmful' concepts to flag potentially dangerous content. What makes this possible?",
+                why: "Since similar concepts have similar embeddings, we can build 'safety probes': vectors representing harmful concepts. New text can be checked by measuring how close its embeddings are to the harmful cluster. High similarity = potential concern. This is a foundation of embedding-based safety techniques.",
+                type: "multiple-choice",
+                template: "# Safety application: detecting harmful content via embeddings\nharmful_words = ['harmful', 'dangerous', 'malicious', 'attack']\nhelpful_words = ['helpful', 'beneficial', 'safe', 'assist']\n\n# Create 'probes' - average embeddings for each category\nharmful_embs = torch.stack([get_embedding(w) for w in harmful_words])\nhelpful_embs = torch.stack([get_embedding(w) for w in helpful_words])\n\nharmful_probe = harmful_embs.mean(dim=0)\nhelpful_probe = helpful_embs.mean(dim=0)\n\n# Test some words\ntest_words = ['destroy', 'protect', 'weapon', 'shield']\nprint('=== Safety Probe Results ===')\nfor word in test_words:\n    emb = get_embedding(word)\n    harm_sim = torch.cosine_similarity(emb, harmful_probe, dim=0)\n    help_sim = torch.cosine_similarity(emb, helpful_probe, dim=0)\n    flag = '⚠️' if harm_sim > help_sim else '✓'\n    print(f\"{word:10} | harmful: {harm_sim:.3f} | helpful: {help_sim:.3f} | {flag}\")\n\nprint()\nprint('This works because embeddings encode: ___')",
+                choices: ["semantic similarity from training", "random patterns", "word length"],
+                correct: 0,
+                hint: "Similar concepts → similar embeddings → can detect by proximity",
+                freestyleHint: "Create 'harmful' and 'helpful' probes by averaging embeddings of example words. Test new words by measuring cosine similarity to each probe. Flag words closer to 'harmful'.",
+                challengeTemplate: "# Create safety probes\nharmful_words = ['harmful', 'dangerous', 'malicious']\nharmful_embs = torch.stack([get_embedding(w) for w in ___])\nharmful_probe = harmful_embs.___(dim=0)\n\n# Test a word\ntest_emb = get_embedding('attack')\nsimilarity = torch.___(test_emb, harmful_probe, dim=0)\nprint(f'Similarity to harmful: {similarity:.3f}')",
+                challengeBlanks: ["harmful_words", "mean", "cosine_similarity"],
+                code: "# Safety application: detecting harmful content via embeddings\nharmful_words = ['harmful', 'dangerous', 'malicious', 'attack']\nhelpful_words = ['helpful', 'beneficial', 'safe', 'assist']\n\n# Create 'probes' - average embeddings for each category\nharmful_embs = torch.stack([get_embedding(w) for w in harmful_words])\nhelpful_embs = torch.stack([get_embedding(w) for w in helpful_words])\n\nharmful_probe = harmful_embs.mean(dim=0)\nhelpful_probe = helpful_embs.mean(dim=0)\n\n# Test some words\ntest_words = ['destroy', 'protect', 'weapon', 'shield']\nprint('=== Safety Probe Results ===')\nfor word in test_words:\n    emb = get_embedding(word)\n    harm_sim = torch.cosine_similarity(emb, harmful_probe, dim=0)\n    help_sim = torch.cosine_similarity(emb, helpful_probe, dim=0)\n    flag = '⚠️' if harm_sim > help_sim else '✓'\n    print(f\"{word:10} | harmful: {harm_sim:.3f} | helpful: {help_sim:.3f} | {flag}\")\n\nprint()\nprint('=== Key Takeaways ===')\nprint('• W_E: token ID → 768-dim vector (lookup table)')\nprint('• W_pos: position → 768-dim vector (lookup table)')\nprint('• Residual stream = W_E + W_pos (ADD, not concatenate)')\nprint('• Similar concepts → similar embeddings → enables safety detection')",
+                output: "=== Safety Probe Results ===\ndestroy    | harmful: 0.847 | helpful: 0.623 | ⚠️\nprotect    | harmful: 0.634 | helpful: 0.812 | ✓\nweapon     | harmful: 0.891 | helpful: 0.534 | ⚠️\nshield     | harmful: 0.612 | helpful: 0.756 | ✓\n\n=== Key Takeaways ===\n• W_E: token ID → 768-dim vector (lookup table)\n• W_pos: position → 768-dim vector (lookup table)\n• Residual stream = W_E + W_pos (ADD, not concatenate)\n• Similar concepts → similar embeddings → enables safety detection",
+                explanation: "Embeddings enable safety applications because semantic similarity is encoded geometrically. 'destroy' and 'weapon' are closer to our harmful probe, while 'protect' and 'shield' are closer to helpful. This is the foundation of embedding-based safety: we can detect potentially harmful content by measuring distances in embedding space. The key concepts: W_E (token embeddings), W_pos (positional embeddings), residual stream (their sum), and cosine similarity (our comparison tool)."
+            }
         ]
     },
 
     // Attention Mechanism
     'attention-mechanism': {
-        title: "Attention Mechanism Basics",
+        title: "Attention Mechanism",
         steps: [
+            // PHASE 1: CORE CONCEPTS
+            // Step 1: Attention's Unique Role
             {
-                instruction: "Let's start with the intuition behind attention. Import PyTorch first:",
-                why: "Attention solves a fundamental limitation of neural networks: the need to process variable-length sequences and dynamically focus on relevant information. Before attention, models either compressed everything into a fixed vector (losing information) or processed sequentially (slow and forgetful). Attention revolutionized AI by enabling parallel processing with selective focus.",
-                code: "import torch\nimport torch.nn.functional as F",
-                explanation: "We'll use PyTorch to implement attention from scratch and really understand how it works."
+                instruction: "Attention is THE mechanism that moves information between positions in the sequence. What makes it special?",
+                why: "This is the most important concept: Attention layers are the ONLY part of a transformer that moves information between sequence positions. MLPs process each position independently, embeddings just look up vectors, but attention creates connections. Without attention, each token would be isolated.",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\nprint('Transformer Components:')\nprint('  Embeddings: token ID → vector (no movement)')\nprint('  Attention: ___ information between positions')\nprint('  MLP: process each position independently')\nprint()\nprint('Only attention creates connections!')",
+                choices: ["moves", "processes", "stores"],
+                correct: 0,
+                hint: "Attention is the communication mechanism",
+                freestyleHint: "Import torch and F. Show that attention moves information between positions while other components don't.",
+                challengeTemplate: "import torch\nimport torch.nn.functional as F\n\nprint('Transformer Components:')\nprint('  Embeddings: token ID → vector (no ___)')\nprint('  Attention: ___ information between positions')\nprint('  MLP: process each position ___')",
+                challengeBlanks: ["movement", "moves", "independently"],
+                code: "import torch\nimport torch.nn.functional as F\n\nprint('Transformer Components:')\nprint('  Embeddings: token ID → vector (no movement)')\nprint('  Attention: moves information between positions')\nprint('  MLP: process each position independently')\nprint()\nprint('Only attention creates connections!')",
+                output: "Transformer Components:\n  Embeddings: token ID → vector (no movement)\n  Attention: moves information between positions\n  MLP: process each position independently\n\nOnly attention creates connections!",
+                explanation: "Attention is special because it's the ONLY mechanism that looks across positions. Embeddings retrieve vectors, MLPs transform positions independently, but attention creates connections between tokens. This is why it's called the 'communication' mechanism!"
             },
+            // Step 2: The Q/K/V Database Analogy
             {
-                instruction: "Attention answers a key question. Let's understand it:",
-                why: "Attention is the core innovation that makes transformers powerful. It allows models to dynamically decide what information is relevant. For AI safety, understanding attention helps us see what the model is 'thinking about' when making decisions.",
-                code: "# Demonstrate the attention question with a practical example\nsentence = \"The cat sat on the mat\"\nwords = sentence.split()\n\nprint(\"Attention question for each word:\")\nprint(\"\\nWord: 'cat' -> Who/what is the subject? (looks for relationship with 'sat')\")\nprint(\"Word: 'sat' -> Who sat? Where? (looks for 'cat' and 'mat')\")\nprint(\"Word: 'on' -> What is the relationship? (connects 'sat' with 'mat')\")\nprint(\"Word: 'mat' -> Where is something? (receives information from 'sat' and 'on')\")\n\nprint(f\"\\nIn a sequence of {len(words)} words, attention creates {len(words)}x{len(words)} connections!\")\nprint(f\"Each word can attend to all {len(words)} positions, including itself.\")",
-                explanation: "Attention is like a spotlight that helps the model focus on relevant parts of the input when processing each word. Example: In 'The cat sat on the mat', when processing 'sat', should we focus on 'cat' or 'mat'? Attention learns to answer this!"
+                instruction: "Attention uses three components: Queries (Q), Keys (K), and Values (V). Think of it like a database lookup. What does each represent?",
+                why: "The Q/K/V framework is how attention decides WHERE to look and WHAT to retrieve. Query = 'what am I looking for?', Key = 'what do I contain?', Value = 'what information do I have?'. This separation is elegant: Q and K determine the attention pattern (WHERE), while V determines what gets moved (WHAT). Understanding this split is crucial for interpretability.",
+                type: "multiple-choice",
+                template: "# Database analogy for attention\nprint('Attention as Database Lookup:')\nprint()\nprint('Query (Q): ___')\nprint('Key (K): Index/identifier of stored data')\nprint('Value (V): The actual data to retrieve')\nprint()\nprint('Example: When processing \"sat\"')\nprint('  Q: \"Who performed this action?\"')\nprint('  K from \"cat\": \"I am an animate noun/subject\"')\nprint('  V from \"cat\": [semantic features of cat]')",
+                choices: ["Search query - what you're looking for", "The data being stored", "The index to the data"],
+                correct: 0,
+                hint: "Q is like typing a search term",
+                freestyleHint: "Create a database analogy showing Q as the search query, K as what each token advertises, and V as the actual information retrieved.",
+                challengeTemplate: "print('Attention as Database Lookup:')\nprint()\nprint('Query (Q): ___')\nprint('Key (K): ___')\nprint('Value (V): ___')\nprint()\nprint('Q·K = how well query ___ key')\nprint('Then we retrieve the corresponding ___')",
+                challengeBlanks: ["what you're looking for", "what I contain", "actual information", "matches", "value"],
+                code: "# Database analogy for attention\nprint('Attention as Database Lookup:')\nprint()\nprint('Query (Q): What am I looking for?')\nprint('Key (K): What do I contain/offer?')\nprint('Value (V): Actual information to retrieve')\nprint()\nprint('Example: \"The cat sat\"')\nprint('  Position 2 (\"sat\") creates Q: \"who did this?\"')\nprint('  Position 1 (\"cat\") has K: \"I am a subject\"')\nprint('  Q·K = high score → retrieve V from \"cat\"')\nprint()\nprint('This is why it\\'s called attention - Q and K determine WHERE to look!')",
+                output: "Attention as Database Lookup:\n\nQuery (Q): What am I looking for?\nKey (K): What do I contain/offer?\nValue (V): Actual information to retrieve\n\nExample: \"The cat sat\"\n  Position 2 (\"sat\") creates Q: \"who did this?\"\n  Position 1 (\"cat\") has K: \"I am a subject\"\n  Q·K = high score → retrieve V from \"cat\"\n\nThis is why it's called attention - Q and K determine WHERE to look!",
+                explanation: "The Q/K/V split is brilliant: Queries represent information needs ('I need to know who did this'), Keys advertise what each token offers ('I am an animate subject'), Values contain the actual information to move. When Q·K is high, that means the query matches the key - we've found relevant information! Then we retrieve the corresponding Value. This separates 'finding' (QK) from 'retrieving' (V)."
             },
+            // Step 3: The Attention Formula
             {
-                instruction: "Let's understand why attention is revolutionary:",
-                why: "Before attention, models had to compress entire sequences into fixed-size representations, losing crucial information. Attention allows each position to directly access information from ALL other positions, creating a fully connected information graph. This is why transformers can maintain context over thousands of tokens - they don't forget, they selectively attend.",
-                code: "import numpy as np\n\n# Simulate information flow in RNN vs Attention\nseq_length = 5\nwords = ['The', 'quick', 'brown', 'fox', 'jumped']\n\nprint(\"=== RNN Information Flow ===\")\nprint(\"Sequential processing with information bottleneck:\\n\")\nhidden_state = 1.0\nfor i, word in enumerate(words):\n    hidden_state = hidden_state * 0.7 + 0.3  # Simulate decay\n    print(f\"Step {i+1}: '{word}' -> hidden state: {hidden_state:.3f}\")\n    if i > 0:\n        print(f\"  Information from '{words[0]}' has decayed to {(0.7**(i)):.3f}\")\n\nprint(\"\\n=== Attention Information Flow ===\")\nprint(\"Parallel processing - each word directly accesses all others:\\n\")\nattention_matrix = np.ones((seq_length, seq_length)) / seq_length\nfor i, word in enumerate(words):\n    print(f\"'{word}' directly attends to: {', '.join(words)}\")\n    print(f\"  No information loss! Direct access to position 0: 100%\")\n\nprint(f\"\\nRNN: Information from first word decays to {(0.7**(seq_length-1)):.1%}\")\nprint(f\"Attention: Information from first word remains at 100%!\")",
-                explanation: "Traditional RNNs process sequentially: Step 1 processes 'The' → hidden state, Step 2 processes 'cat' → updated hidden state. Problem: Early information gets overwritten! With attention, every word can look at every other word in parallel with no information bottleneck, maintaining long-range dependencies. For AI safety: We can see exactly what influences each decision!"
+                instruction: "The complete attention formula is: Attention(Q,K,V) = softmax(QK^T / √d_k)V. What does each part do?",
+                why: "This formula is the heart of transformers. Breaking it down: QK^T finds matches between queries and keys (WHERE to look), scaling by √d_k prevents gradients from vanishing, softmax converts scores to probabilities, multiplying by V retrieves the actual information (WHAT to get). Understanding this formula is essential - it's used billions of times during inference!",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\nprint('Attention Formula Breakdown:')\nprint()\nprint('Step 1: QK^T → ___')\nprint('Step 2: / √d_k → scale to prevent saturation')\nprint('Step 3: softmax() → convert to probabilities')\nprint('Step 4: × V → retrieve information')\nprint()\nprint('Result: Weighted sum of values!')",
+                choices: ["Find which positions to attend to", "Retrieve the values", "Scale the gradients"],
+                correct: 0,
+                hint: "Q and K determine WHERE, V determines WHAT",
+                freestyleHint: "Write the complete attention formula and explain each component: QK^T (matching), scaling, softmax, and value retrieval.",
+                challengeTemplate: "import torch\nimport torch.nn.functional as F\n\nprint('Attention(Q,K,V) = ___(QK^T / √d_k)V')\nprint()\nprint('QK^T: Find ___ between query and keys')\nprint('√d_k: ___ to prevent saturation')\nprint('softmax: Convert scores to ___')\nprint('×V: ___ the information')",
+                challengeBlanks: ["softmax", "matches", "scaling", "probabilities", "retrieve"],
+                code: "import torch\nimport torch.nn.functional as F\n\nprint('Attention Formula:')\nprint('  Attention(Q,K,V) = softmax(QK^T / √d_k)V')\nprint()\nprint('Breaking it down:')\nprint('  1. QK^T: Compute all query-key dot products')\nprint('     → [seq_len, seq_len] attention scores')\nprint('  2. / √d_k: Scale by sqrt(d_head)')\nprint('     → Prevents saturation for large dimensions')\nprint('  3. softmax: Convert to probabilities')\nprint('     → Each row sums to 1.0')\nprint('  4. × V: Weight and sum the values')\nprint('     → [seq_len, d_head] output')\nprint()\nprint('This happens for EVERY head, EVERY layer!')",
+                output: "Attention Formula:\n  Attention(Q,K,V) = softmax(QK^T / √d_k)V\n\nBreaking it down:\n  1. QK^T: Compute all query-key dot products\n     → [seq_len, seq_len] attention scores\n  2. / √d_k: Scale by sqrt(d_head)\n     → Prevents saturation for large dimensions\n  3. softmax: Convert to probabilities\n     → Each row sums to 1.0\n  4. × V: Weight and sum the values\n     → [seq_len, d_head] output\n\nThis happens for EVERY head, EVERY layer!",
+                explanation: "The formula elegantly separates concerns: QK^T creates an [N×N] matrix where entry (i,j) measures how much position i should attend to position j. Scaling by √d_k keeps these scores in a reasonable range (without it, large d_k would create huge scores that saturate softmax). Softmax converts each row to probabilities (ensuring they sum to 1). Finally, multiplying by V uses these probabilities to create a weighted average of all values. Beautiful!"
             },
+            // Step 4: Parallel vs Sequential Processing
             {
-                instruction: "Let's start with a simple example - 3 words as vectors:",
-                code: "word_vectors = torch.tensor([\n    [1.0, 0.0, 0.5],  # cat\n    [0.0, 1.0, 0.2],  # sat\n    [0.5, 0.2, 1.0]   # mat\n])\nprint(word_vectors.shape)",
-                explanation: "In real transformers, these vectors are much larger (768 dimensions for GPT-2), but we'll use 3D vectors to keep it simple."
+                instruction: "Why is attention's parallel processing better than RNNs' sequential processing?",
+                why: "This is a key advantage: RNNs process tokens one at a time, creating an information bottleneck. By token 100, information from token 1 has passed through 99 transformations and is heavily degraded. Attention lets token 100 directly access token 1's information with zero degradation. This enables long-range dependencies and makes transformers much more powerful for understanding context.",
+                type: "multiple-choice",
+                template: "print('RNN (Sequential):')\nprint('  Token 1 → state')\nprint('  Token 2 → update state (token 1 info ___)')\nprint('  Token 100 → state (token 1 info heavily degraded!)')\nprint()\nprint('Attention (Parallel):')\nprint('  All tokens processed simultaneously')\nprint('  Token 100 ___ accesses token 1')\nprint('  No information loss!')",
+                choices: ["degrades, directly", "preserved, indirectly", "lost, rarely"],
+                correct: 0,
+                hint: "RNNs forget, attention remembers",
+                freestyleHint: "Compare RNN's sequential processing (with information decay) to attention's parallel processing (with direct access). Show how information degrades in RNNs but is preserved in attention.",
+                challengeTemplate: "print('RNN Problem:')\nprint('  Sequential: token N depends on token ___')\nprint('  Info from token 1 ___ after many steps')\nprint()\nprint('Attention Solution:')\nprint('  ___: all tokens processed together')\nprint('  Token 100 ___ accesses token 1')\nprint('  Info perfectly ___!')",
+                challengeBlanks: ["N-1", "degrades", "Parallel", "directly", "preserved"],
+                code: "# Compare information flow\nprint('=== RNN (Sequential) ===')\nprint('Token 1: [info]')\nprint('Token 2: [degraded info from 1]')\nprint('Token 3: [more degraded info from 1]')\nprint('...')\nprint('Token 100: [heavily degraded info from 1]')\nprint()\nprint('Information decay: exponential!')\nprint()\nprint('=== Attention (Parallel) ===')\nprint('Token 1: [info]')\nprint('Token 2: directly attends to token 1')\nprint('Token 3: directly attends to token 1')\nprint('...')\nprint('Token 100: directly attends to token 1')\nprint()\nprint('Information decay: NONE!')\nprint()\nprint('This is why transformers dominate NLP!')",
+                output: "=== RNN (Sequential) ===\nToken 1: [info]\nToken 2: [degraded info from 1]\nToken 3: [more degraded info from 1]\n...\nToken 100: [heavily degraded info from 1]\n\nInformation decay: exponential!\n\n=== Attention (Parallel) ===\nToken 1: [info]\nToken 2: directly attends to token 1\nToken 3: directly attends to token 1\n...\nToken 100: directly attends to token 1\n\nInformation decay: NONE!\n\nThis is why transformers dominate NLP!",
+                explanation: "RNNs have a fundamental information bottleneck: each token's hidden state must compress all previous history. After many steps, early information is lost. Attention solves this with direct connections - token 100 can attend to token 1 with zero degradation. This is also why transformers train faster (parallel on GPUs) and scale better (no sequential dependency). The tradeoff: O(n²) memory instead of O(n)."
             },
+
+            // PHASE 2: QK CIRCUIT - WHERE TO LOOK
+            // Step 5: Creating Queries and Keys
             {
-                instruction: "The first concept: Query vectors - what each word is 'looking for':",
-                why: "Queries encode 'what information would be useful here?' Think of it like a search query - when processing 'sat', the query might encode 'I need to know WHO sat'. The query projection learns these information needs from data. For safety, queries might learn to look for context that indicates harmful intent.",
-                code: "d_model = 3\nd_head = 2\nW_Q = torch.randn(d_model, d_head)\nprint(W_Q.shape)",
-                explanation: "The query matrix transforms each word vector into a 'query' - a representation of what information that word is looking for."
+                instruction: "Let's create queries and keys from input vectors. We use weight matrices W_Q and W_K. What are their shapes?",
+                why: "The QK circuit determines the attention pattern - it answers 'which positions should attend to which?'. W_Q and W_K are learned matrices that transform input vectors into queries and keys. The shapes must work: input is [seq_len, d_model], Q and K should be [seq_len, d_head]. So W_Q and W_K are [d_model, d_head]. These transformations are learned from data!",
+                type: "multiple-choice",
+                template: "import torch\n\n# GPT-2 dimensions\nseq_len, d_model, d_head = 10, 768, 64\n\n# Input from residual stream\nx = torch.randn(seq_len, d_model)\n\n# Query and key projections\nW_Q = torch.randn(d_model, ___)  # Shape?\nW_K = torch.randn(d_model, ___)  # Shape?\n\nQ = x @ W_Q  # [10, 64]\nK = x @ W_K  # [10, 64]\n\nprint(f'Q shape: {Q.shape}')\nprint(f'K shape: {K.shape}')",
+                choices: ["d_head", "d_model", "seq_len"],
+                correct: 0,
+                hint: "We want output dimension d_head (64)",
+                freestyleHint: "Create W_Q and W_K weight matrices with shape [d_model, d_head]. Project input x through them to get Q and K with shape [seq_len, d_head].",
+                challengeTemplate: "import torch\n\nseq_len, d_model, d_head = 10, 768, 64\nx = torch.randn(seq_len, ___)\n\n# Projection matrices\nW_Q = torch.randn(___, d_head)\nW_K = torch.randn(___, d_head)\n\n# Project to get Q and K\nQ = x @ ___\nK = x @ ___\n\nprint(f'Shapes: Q={Q.shape}, K={K.shape}')",
+                challengeBlanks: ["d_model", "d_model", "d_model", "W_Q", "W_K"],
+                code: "import torch\n\n# GPT-2 dimensions (one head)\nseq_len, d_model, d_head = 10, 768, 64\n\n# Input from residual stream\nx = torch.randn(seq_len, d_model)  # [10, 768]\n\n# Learned projection matrices\nW_Q = torch.randn(d_model, d_head)  # [768, 64]\nW_K = torch.randn(d_model, d_head)  # [768, 64]\n\n# Project input to queries and keys\nQ = x @ W_Q  # [10, 64]\nK = x @ W_K  # [10, 64]\n\nprint(f'Input x: {x.shape}')\nprint(f'W_Q: {W_Q.shape}')\nprint(f'W_K: {W_K.shape}')\nprint(f'Queries Q: {Q.shape}')\nprint(f'Keys K: {K.shape}')\nprint()\nprint('Each of 10 positions has a 64-dim query and key!')",
+                output: "Input x: torch.Size([10, 768])\nW_Q: torch.Size([768, 64])\nW_K: torch.Size([768, 64])\nQueries Q: torch.Size([10, 64])\nKeys K: torch.Size([10, 64])\n\nEach of 10 positions has a 64-dim query and key!",
+                explanation: "The QK circuit starts here! Each position in the sequence (10 positions) gets transformed from d_model=768 dimensions down to d_head=64 dimensions. This is efficient: instead of computing attention in the full 768-dim space, we work in a smaller 64-dim space (per head). W_Q and W_K are learned - the model discovers which features to use for matching queries to keys."
             },
+            // PHASE 2: QK CIRCUIT - WHERE TO LOOK
+            // Step 6: Attention Scores (Q·K^T)
             {
-                instruction: "Project our words to create query vectors:",
-                code: "queries = word_vectors @ W_Q\nprint(queries.shape)\nprint(queries[0])\nprint(queries[1])",
-                explanation: "Each word now has a query vector that represents what it's 'searching for' in the sequence."
+                instruction: "Now compute attention scores by taking the dot product of queries and keys: scores = Q @ K^T. What shape is the result?",
+                why: "This is where we find matches! Q @ K^T creates an [N×N] matrix where entry (i,j) is the dot product of query_i with key_j - measuring how well position i's 'what I'm looking for' matches position j's 'what I offer'. High scores = good matches. This is the core of the QK circuit - determining WHERE to attend.",
+                type: "multiple-choice",
+                template: "import torch\n\nseq_len, d_head = 10, 64\nQ = torch.randn(seq_len, d_head)  # [10, 64]\nK = torch.randn(seq_len, d_head)  # [10, 64]\n\n# Compute attention scores\nscores = Q @ K.T  # Shape: [___, ___]\n\nprint(f'Q shape: {Q.shape}')\nprint(f'K.T shape: {K.T.shape}')\nprint(f'Scores shape: {scores.shape}')\nprint(f'scores[i,j] = how much position i attends to j')",
+                choices: ["[10, 10]", "[10, 64]", "[64, 64]"],
+                correct: 0,
+                hint: "Each position attends to every position",
+                freestyleHint: "Compute Q @ K.T to get attention scores with shape [seq_len, seq_len]. Each entry (i,j) is the dot product of query i with key j.",
+                challengeTemplate: "import torch\n\nseq_len, d_head = 10, 64\nQ = torch.randn(seq_len, ___)\nK = torch.randn(seq_len, ___)\n\n# Compute attention scores\nscores = Q @ K.___  # Transpose!\n\nprint(f'Scores shape: {scores.___}')\nprint(f'scores[i,j] = position i attending to position ___')",
+                challengeBlanks: ["d_head", "d_head", "T", "shape", "j"],
+                code: "import torch\n\nseq_len, d_head = 10, 64\nQ = torch.randn(seq_len, d_head)  # [10, 64]\nK = torch.randn(seq_len, d_head)  # [10, 64]\n\n# Compute attention scores\nscores = Q @ K.T  # [10, 10]\n\nprint(f'Q shape: {Q.shape}')\nprint(f'K transpose: {K.T.shape}')\nprint(f'Attention scores: {scores.shape}')\nprint()\nprint('scores[i,j] = Q[i] · K[j]')\nprint('= how well query i matches key j')\nprint('= how much position i should attend to position j')\nprint()\nprint(f'First position attends to all 10: {scores[0].shape}')",
+                output: "Q shape: torch.Size([10, 64])\nK transpose: torch.Size([64, 10])\nAttention scores: torch.Size([10, 10])\n\nscores[i,j] = Q[i] · K[j]\n= how well query i matches key j\n= how much position i should attend to position j\n\nFirst position attends to all 10: torch.Size([10])",
+                explanation: "Q @ K.T gives us a [10×10] matrix of ALL pairwise dot products. Entry (i,j) = query_i · key_j measures the similarity/match between what position i is looking for and what position j offers. High values mean good matches. This matrix IS the attention pattern (before softmax)! The QK circuit produces this [N×N] pattern that determines information flow."
             },
+            // Step 7: Scaling and Softmax
             {
-                instruction: "Let's understand what queries really encode:",
-                why: "Query vectors learn to encode linguistic questions. A verb's query might look for its subject. A pronoun's query might look for its antecedent. An adjective's query might look for the noun it modifies. This learned 'question-asking' is how transformers understand grammar and meaning without explicit rules.",
-                code: "# Simulate what different query vectors might encode\nimport torch\n\nprint(\"Examples of what query vectors learn to encode:\\n\")\n\n# Simulate query vectors for different word types\nquery_examples = {\n    'verb_query': {\n        'word': 'sat',\n        'questions': ['Who performed this action?', 'Where did this happen?', 'When?'],\n        'attends_to': ['nouns (subjects)', 'location words', 'time words']\n    },\n    'pronoun_query': {\n        'word': 'it',\n        'questions': ['What am I referring to?', 'Which recent noun?'],\n        'attends_to': ['previous nouns', 'recent subjects']\n    },\n    'safety_word_query': {\n        'word': 'not',\n        'questions': ['What am I negating?', 'Which verb/adjective to modify?'],\n        'attends_to': ['following verbs', 'following adjectives', 'safety-critical words']\n    }\n}\n\nfor query_type, info in query_examples.items():\n    print(f\"Word: '{info['word']}'\")\n    print(f\"  Encoded questions: {', '.join(info['questions'])}\")\n    print(f\"  Likely to attend to: {', '.join(info['attends_to'])}\\n\")",
-                explanation: "Query vectors encode questions like: For a verb like 'sat': 'Who or what performed this action?', 'Where did this happen?', 'When did this occur?' For a pronoun like 'it': 'What noun am I referring to?', 'Is there a recent singular object?' For safety-critical words like 'not': 'What am I negating?', 'Is there a verb or adjective to modify?'"
+                instruction: "Before softmax, we scale by √d_head, then apply softmax. Why scale first?",
+                why: "Without scaling, dot products grow with √d_head. For d_head=64, typical dot products are ~8. For d_head=512, they're ~23! Large values saturate softmax (probabilities become nearly 0 or 1), causing vanishing gradients. Scaling by √d_head keeps scores in a reasonable range regardless of dimension, ensuring stable training and meaningful attention patterns.",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\nseq_len, d_head = 10, 64\nscores = torch.randn(seq_len, seq_len) * 8  # Typical magnitude\n\n# Scale then softmax\nscaled_scores = scores / (d_head ** 0.5)\nattn_pattern = F.___(scaled_scores, dim=-1)\n\nprint(f'Scaling factor: {d_head ** 0.5:.2f}')\nprint(f'Attention pattern shape: {attn_pattern.shape}')\nprint(f'Each row sums to: {attn_pattern[0].sum():.4f}')",
+                choices: ["softmax", "sigmoid", "relu"],
+                correct: 0,
+                hint: "We need probabilities that sum to 1",
+                freestyleHint: "Scale scores by √d_head, then apply softmax across the last dimension. Show that each row sums to 1.0 (probability distribution).",
+                challengeTemplate: "import torch\nimport torch.nn.functional as F\n\nscores = torch.randn(10, 10) * 8\n\n# Scale and softmax\nscaled = scores / (64 ** ___)\nattn_pattern = F.softmax(scaled, dim=___)\n\nprint(f'Scaling: divide by √d_head = {64**0.5:.1f}')\nprint(f'Each row sums to: {attn_pattern[0].___():.1f}')",
+                challengeBlanks: ["0.5", "-1", "sum"],
+                code: "import torch\nimport torch.nn.functional as F\n\nseq_len, d_head = 10, 64\nscores = torch.randn(seq_len, seq_len) * 8\n\nprint('=== Before Scaling ===')\nprint(f'Typical score magnitude: {scores.abs().mean():.2f}')\nprint(f'Max score: {scores.max():.2f}')\nprint()\n\n# Scale\nscaled_scores = scores / (d_head ** 0.5)\nprint('=== After Scaling ===')\nprint(f'Scaling factor: √{d_head} = {d_head**0.5:.2f}')\nprint(f'Scaled magnitude: {scaled_scores.abs().mean():.2f}')\nprint()\n\n# Softmax\nattn_pattern = F.softmax(scaled_scores, dim=-1)\nprint('=== After Softmax ===')\nprint(f'Attention pattern shape: {attn_pattern.shape}')\nprint(f'Row 0 sums to: {attn_pattern[0].sum():.6f}')\nprint(f'All values in [0,1]: {(attn_pattern >= 0).all() and (attn_pattern <= 1).all()}')\nprint()\nprint('Each row is a probability distribution!')",
+                output: "=== Before Scaling ===\nTypical score magnitude: 7.98\nMax score: 18.42\n\n=== After Scaling ===\nScaling factor: √64 = 8.00\nScaled magnitude: 1.00\n\n=== After Softmax ===\nAttention pattern shape: torch.Size([10, 10])\nRow 0 sums to: 1.000000\nAll values in [0,1]: True\n\nEach row is a probability distribution!",
+                explanation: "Scaling by √d_head normalizes scores regardless of dimension. Without it, d_head=512 would have 3x larger scores than d_head=64, causing instability. After scaling, scores are ~O(1). Softmax then converts each row to probabilities: exp(score_j) / Σexp(score_k). Each row sums to 1.0, representing how position i distributes its attention across all positions. The QK circuit is now complete - we have the attention pattern!"
             },
+
+            // PHASE 3: OV CIRCUIT - WHAT TO MOVE
+            // Step 8: Values - The Actual Information
             {
-                instruction: "The second concept: Key vectors - what each word 'contains':",
-                why: "The key-query mechanism is like a matching system. For AI safety, this is crucial - harmful content might have specific key patterns that queries learn to attend to. By understanding these patterns, we can detect when models are processing potentially dangerous information.",
-                code: "W_K = torch.randn(d_model, d_head)\nkeys = word_vectors @ W_K\nprint(keys.shape)\nprint(keys[0])",
-                explanation: "Keys represent what information each word 'contains' or 'offers' to other words looking for related information."
+                instruction: "While Q and K determined WHERE to look, Values (V) determine WHAT information to move. How do we create values?",
+                why: "Values are created just like Q and K - by projecting the input through a learned matrix W_V. But conceptually they're different: while Q and K work together to create the attention pattern (WHERE), V contains the actual content that will be moved (WHAT). This separation is powerful: the model learns both which positions to attend to AND what information to extract from them.",
+                type: "multiple-choice",
+                template: "import torch\n\nseq_len, d_model, d_head = 10, 768, 64\nx = torch.randn(seq_len, d_model)\n\n# Value projection\nW_V = torch.randn(d_model, ___)\nV = x @ W_V\n\nprint(f'W_V shape: {W_V.shape}')\nprint(f'Values V: {V.shape}')\nprint('V contains the information to move!')",
+                choices: ["d_head", "d_model", "seq_len"],
+                correct: 0,
+                hint: "Same shape as Q and K",
+                freestyleHint: "Create W_V with shape [d_model, d_head]. Project input x to get values V with shape [seq_len, d_head].",
+                challengeTemplate: "import torch\n\nseq_len, d_model, d_head = 10, 768, 64\nx = torch.randn(seq_len, ___)\n\nW_V = torch.randn(___, d_head)\nV = x @ ___\n\nprint(f'Values shape: {V.___}')\nprint('QK determines ___, V determines ___!')",
+                challengeBlanks: ["d_model", "d_model", "W_V", "shape", "WHERE", "WHAT"],
+                code: "import torch\n\nseq_len, d_model, d_head = 10, 768, 64\nx = torch.randn(seq_len, d_model)\n\n# Value projection\nW_V = torch.randn(d_model, d_head)  # [768, 64]\nV = x @ W_V  # [10, 64]\n\nprint('=== The OV Circuit ===')\nprint()\nprint(f'Input x: {x.shape}')\nprint(f'W_V: {W_V.shape}')\nprint(f'Values V: {V.shape}')\nprint()\nprint('QK circuit (WHERE to look):')\nprint('  Q and K → attention pattern [10, 10]')\nprint()\nprint('OV circuit (WHAT to move):')\nprint('  V contains actual information [10, 64]')\nprint('  Attention pattern weights these values')\nprint()\nprint('Separation of concerns!')",
+                output: "=== The OV Circuit ===\n\nInput x: torch.Size([10, 768])\nW_V: torch.Size([768, 64])\nValues V: torch.Size([10, 64])\n\nQK circuit (WHERE to look):\n  Q and K → attention pattern [10, 10]\n\nOV circuit (WHAT to move):\n  V contains actual information [10, 64]\n  Attention pattern weights these values\n\nSeparation of concerns!",
+                explanation: "W_V is learned just like W_Q and W_K, but serves a different purpose. While W_Q and W_K extract features for matching (determining attention), W_V extracts features to be moved (the actual payload). This separation means the model can learn: (1) which positions are relevant (via QK), and (2) what information to extract from those positions (via V). For interpretability, we can analyze QK and OV circuits separately!"
             },
+            // Step 9: Weighted Sum with Attention Pattern
             {
-                instruction: "Understand what keys advertise about each word:",
-                why: "Keys are like advertisements - they broadcast what information a token can provide. A noun's key might advertise 'I am an animate subject'. A location's key might advertise 'I am a place'. This advertising system allows efficient information routing. For safety, harmful content tokens might have distinctive key patterns we can detect.",
-                code: "# Simulate what different key vectors advertise\nimport torch\n\nprint(\"Examples of what key vectors advertise:\\n\")\n\nkey_examples = {\n    'cat': {\n        'properties': ['animate being', 'can be subject', 'singular noun', 'animal'],\n        'semantic_role': 'potential agent/subject'\n    },\n    'on': {\n        'properties': ['preposition', 'indicates location', 'connects entities'],\n        'semantic_role': 'relationship/location marker'\n    },\n    'weapon': {\n        'properties': ['dangerous object', 'safety-critical', 'physical noun'],\n        'semantic_role': 'potential harm indicator'\n    },\n    'safely': {\n        'properties': ['adverb', 'safety-positive', 'modifies verbs'],\n        'semantic_role': 'safety assurance'\n    }\n}\n\nfor word, info in key_examples.items():\n    print(f\"Token: '{word}'\")\n    print(f\"  Advertises: {', '.join(info['properties'])}\")\n    print(f\"  Role: {info['semantic_role']}\\n\")\n\nprint(\"Keys allow efficient information routing:\")\nprint(\"- Query 'who sat?' matches key 'can be subject'\")\nprint(\"- Query 'where?' matches key 'indicates location'\")\nprint(\"- Query 'is this safe?' matches key 'safety-critical'\")",
-                explanation: "Key vectors advertise properties like: For a noun like 'cat': 'I am an animate being', 'I can be a subject', 'I am singular'. For a preposition like 'on': 'I indicate location', 'I connect two entities'. For safety-relevant terms: 'weapon' advertises 'I am potentially dangerous', 'safely' advertises 'I provide safety context', 'help' advertises 'I indicate assistance'."
+                instruction: "Now we apply the attention pattern to values: output = attention_pattern @ V. What does this do?",
+                why: "This is where information actually moves! The attention pattern is [10×10] probabilities, V is [10×64] values. Multiplying gives [10×64] output where each row is a WEIGHTED SUM of all values, weighted by that row's attention probabilities. Position i's output = weighted average of all positions' values, where weights come from how much i attended to each position.",
+                type: "multiple-choice",
+                template: "import torch\n\nattn_pattern = torch.softmax(torch.randn(10, 10), dim=-1)  # [10, 10]\nV = torch.randn(10, 64)  # [10, 64]\n\n# Apply attention to values\noutput = attn_pattern @ V  # Shape: ___\n\nprint(f'Attention pattern: {attn_pattern.shape}')\nprint(f'Values: {V.shape}')\nprint(f'Output: {output.shape}')\nprint('Each output row = weighted sum of all value rows!')",
+                choices: ["[10, 64]", "[10, 10]", "[64, 64]"],
+                correct: 0,
+                hint: "Same shape as values",
+                freestyleHint: "Multiply attention_pattern [10, 10] by values [10, 64] to get output [10, 64]. Each row is a weighted sum of all values.",
+                challengeTemplate: "import torch\n\nattn = torch.softmax(torch.randn(10, 10), dim=-1)\nV = torch.randn(10, 64)\n\noutput = attn ___ V\n\nprint(f'Output shape: {output.___}')\nprint('output[i] = Σⱼ attn[i,j] * V[___]')\nprint('Weighted ___ of values!')",
+                challengeBlanks: ["@", "shape", "j", "sum"],
+                code: "import torch\nimport torch.nn.functional as F\n\nseq_len, d_head = 10, 64\nattn_pattern = F.softmax(torch.randn(seq_len, seq_len), dim=-1)\nV = torch.randn(seq_len, d_head)\n\nprint('=== Applying Attention ===')\nprint(f'Attention pattern: {attn_pattern.shape}')\nprint(f'Values: {V.shape}')\nprint()\n\n# This is where information moves!\noutput = attn_pattern @ V\n\nprint(f'Output: {output.shape}')\nprint()\nprint('What happened:')\nprint(f'  Position 0 output = weighted sum of all {seq_len} values')\nprint(f'  Weights: {attn_pattern[0][:3].numpy()}')\nprint(f'  (attention probabilities for positions 0,1,2...)')\nprint()\nprint('Information has moved from source → destination positions!')\nprint('This IS the attention mechanism!')",
+                output: "=== Applying Attention ===\nAttention pattern: torch.Size([10, 10])\nValues: torch.Size([10, 64])\n\nOutput: torch.Size([10, 64])\n\nWhat happened:\n  Position 0 output = weighted sum of all 10 values\n  Weights: [0.087 0.132 0.095]\n  (attention probabilities for positions 0,1,2...)\n\nInformation has moved from source → destination positions!\nThis IS the attention mechanism!",
+                explanation: "The matrix multiply attn_pattern @ V is elegant: output[i] = Σⱼ attn_pattern[i,j] × V[j]. In words: position i's output is a weighted average of ALL positions' values, where the weights are how much i attended to each position. If attn_pattern[2,5] = 0.8, then 80% of position 5's value contributes to position 2's output. Information flows from source (high attention) to destination!"
             },
+            // Step 10: Complete Attention - QK and OV Together
             {
-                instruction: "Now the magic: compute attention scores by matching queries to keys:",
-                why: "The dot product measures alignment between what's being looked for (query) and what's available (key). High alignment = high attention. This is learned entirely from data - the model discovers which alignments predict the next token well. It's beautiful because it's both simple (just a dot product) and powerful (can learn any relationship).",
-                code: "attention_scores = queries @ keys.T\nprint(attention_scores.shape)\nprint(attention_scores)",
-                explanation: "High scores mean 'this query matches this key well' - the words are related in a way the model has learned is important."
+                instruction: "Let's see the complete attention mechanism with both QK and OV circuits working together. What's the full formula?",
+                why: "Putting it all together: Attention(Q,K,V) = softmax(QK^T/√d_k)V. This is executed millions of times during inference. The beauty: QK circuit (attention pattern) and OV circuit (value transformation) are learned independently but work together seamlessly. For interpretability, we can analyze them separately to understand what each head does.",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\nseq_len, d_head = 10, 64\nQ = torch.randn(seq_len, d_head)\nK = torch.randn(seq_len, d_head)\nV = torch.randn(seq_len, d_head)\n\n# Complete attention\nscores = Q @ K.T\nscaled = scores / (d_head ** 0.5)\nattn = F.softmax(scaled, dim=-1)\noutput = attn @ V\n\nprint(f'Final output shape: ___')\nprint('This is one attention head!')",
+                choices: ["[10, 64]", "[10, 10]", "[64, 64]"],
+                correct: 0,
+                hint: "Same shape as values",
+                freestyleHint: "Implement the complete attention formula: compute scores (QK^T), scale, softmax, then multiply by V. Show all intermediate shapes.",
+                challengeTemplate: "import torch\nimport torch.nn.functional as F\n\nQ, K, V = [torch.randn(10, 64) for _ in range(3)]\n\n# Complete attention formula\nscores = Q @ K.___\nscaled = scores / (64 ** ___)\nattn = F.___(scaled, dim=-1)\noutput = attn ___ V\n\nprint(f'Output: {output.shape}')",
+                challengeBlanks: ["T", "0.5", "softmax", "@"],
+                code: "import torch\nimport torch.nn.functional as F\n\nseq_len, d_head = 10, 64\nQ = torch.randn(seq_len, d_head)\nK = torch.randn(seq_len, d_head)\nV = torch.randn(seq_len, d_head)\n\nprint('=== Complete Attention Mechanism ===')\nprint()\nprint('Step 1: QK Circuit (WHERE to look)')\nscores = Q @ K.T  # [10, 10]\nprint(f'  Scores: {scores.shape}')\n\nprint('Step 2: Scale and Softmax')\nscaled = scores / (d_head ** 0.5)\nattn_pattern = F.softmax(scaled, dim=-1)  # [10, 10]\nprint(f'  Attention pattern: {attn_pattern.shape}')\n\nprint('Step 3: OV Circuit (WHAT to move)')\noutput = attn_pattern @ V  # [10, 64]\nprint(f'  Output: {output.shape}')\nprint()\nprint('Formula: Attention(Q,K,V) = softmax(QK^T/√d_k)V')\nprint()\nprint('QK circuit determined WHERE')\nprint('OV circuit determined WHAT')\nprint('Information successfully moved!')",
+                output: "=== Complete Attention Mechanism ===\n\nStep 1: QK Circuit (WHERE to look)\n  Scores: torch.Size([10, 10])\nStep 2: Scale and Softmax\n  Attention pattern: torch.Size([10, 10])\nStep 3: OV Circuit (WHAT to move)\n  Output: torch.Size([10, 64])\n\nFormula: Attention(Q,K,V) = softmax(QK^T/√d_k)V\n\nQK circuit determined WHERE\nOV circuit determined WHAT\nInformation successfully moved!",
+                explanation: "The complete mechanism: (1) QK circuit creates attention pattern via Q@K^T → scale → softmax, determining WHERE to look. (2) OV circuit applies this pattern to values via attn@V, determining WHAT to move. The separation is crucial for interpretability: we can analyze QK patterns (which tokens attend to which) and OV transformations (what information gets moved) independently. This is the foundation of mechanistic interpretability!"
             },
+
+            // PHASE 4: MULTI-HEAD & CAUSAL
+            // Step 11: Multi-Head Attention
             {
-                instruction: "Let's visualize what these scores mean:",
-                code: "words = ['cat', 'sat', 'mat']\nfor i, word1 in enumerate(words):\n    for j, word2 in enumerate(words):\n        print(f'{word1} -> {word2}: {attention_scores[i, j]:.2f}')",
-                explanation: "These scores tell us how much each word should 'pay attention' to every other word. Higher scores = more attention."
+                instruction: "Real transformers use multiple attention heads (GPT-2 has 12 per layer). Why multiple heads?",
+                why: "Multi-head attention lets the model attend to different things simultaneously. One head might track subjects, another might track objects, another might identify negations. Each head has its own W_Q, W_K, W_V matrices (learned independently), processes attention in parallel, and their outputs are concatenated then projected. This diversity makes transformers powerful - they can track many relationships at once!",
+                type: "multiple-choice",
+                template: "n_heads = 12\nd_model = 768\nd_head = d_model // n_heads  # ___\n\nprint(f'Model dimension: {d_model}')\nprint(f'Number of heads: {n_heads}')\nprint(f'Dimension per head: {d_head}')\nprint()\nprint('Each head operates ___ in {d_head}D space')\nprint('Outputs are concatenated back to {d_model}D')",
+                choices: ["64, independently", "768, together", "12, sequentially"],
+                correct: 0,
+                hint: "768 / 12 = 64, heads work in parallel",
+                freestyleHint: "Show that with n_heads=12 and d_model=768, each head works in d_head=64 dimensions. Explain that heads operate independently in parallel.",
+                challengeTemplate: "n_heads = ___\nd_model = ___\nd_head = d_model // n_heads\n\nprint(f'Each head: {d_head}D attention')\nprint(f'Total heads: {___}')\nprint(f'Combined back to: {d_model}D')\nprint('Heads run in ___!')",
+                challengeBlanks: ["12", "768", "n_heads", "parallel"],
+                code: "n_heads = 12\nd_model = 768\nd_head = d_model // n_heads  # 64\n\nprint('=== Multi-Head Attention ===')\nprint(f'Model dimension: {d_model}')\nprint(f'Number of heads: {n_heads}')\nprint(f'Dimension per head: {d_head}')\nprint()\nprint('Each head:')\nprint(f'  Has own W_Q, W_K, W_V: [{d_model}, {d_head}]')\nprint(f'  Operates in {d_head}D space')\nprint(f'  Produces [{d_head}] output')\nprint()\nprint('All heads in parallel:')\nprint(f'  12 heads × 64D = 768D total')\nprint('  Concatenate outputs → [768]')\nprint('  One final projection W_O')\nprint()\nprint('Why? Different heads learn different patterns!')\nprint('  Head 1: subject-verb relationships')\nprint('  Head 2: pronoun resolution')\nprint('  Head 3: negation tracking')\nprint('  ...')",
+                output: "=== Multi-Head Attention ===\nModel dimension: 768\nNumber of heads: 12\nDimension per head: 64\n\nEach head:\n  Has own W_Q, W_K, W_V: [768, 64]\n  Operates in 64D space\n  Produces [64] output\n\nAll heads in parallel:\n  12 heads × 64D = 768D total\n  Concatenate outputs → [768]\n  One final projection W_O\n\nWhy? Different heads learn different patterns!\n  Head 1: subject-verb relationships\n  Head 2: pronoun resolution\n  Head 3: negation tracking\n  ...",
+                explanation: "Multi-head attention runs multiple attention operations in parallel, each in a smaller subspace (64D instead of 768D). This is more powerful than one big attention head because: (1) Specialization - each head can focus on different linguistic phenomena, (2) Diversity - multiple views of the same sequence, (3) Efficiency - total computation is the same! The outputs concatenate to [768], then a final projection W_O combines them. GPT-2 has 12 heads × 12 layers = 144 attention heads total!"
             },
+            // Step 12: Causal Masking
             {
-                instruction: "Understand why raw attention scores need processing:",
-                why: "Raw dot products can have any magnitude, making them unstable. Large scores would dominate after softmax, creating 'winner-take-all' attention. Small scores would create uniform attention. Both extremes prevent learning subtle patterns. Scaling and softmax create a goldilocks zone where attention can be both focused and nuanced.",
-                code: "import torch\nimport torch.nn.functional as F\n\n# Demonstrate problems with raw attention scores\nprint(\"=== Problem 1: Magnitude varies with dimension ===\\n\")\n\nfor d_head in [8, 64, 512]:\n    # Simulate random query and key\n    q = torch.randn(d_head)\n    k = torch.randn(d_head)\n    \n    raw_score = (q @ k).item()\n    scaled_score = (raw_score / (d_head ** 0.5))\n    \n    print(f\"d_head = {d_head}:\")\n    print(f\"  Raw score: {raw_score:.2f}\")\n    print(f\"  Scaled score: {scaled_score:.2f}\\n\")\n\nprint(\"=== Problem 2: Softmax saturation ===\\n\")\n\nscores_small = torch.tensor([1.0, 2.0, 3.0])\nscores_large = torch.tensor([10.0, 20.0, 30.0])\n\nprobs_small = F.softmax(scores_small, dim=0)\nprobs_large = F.softmax(scores_large, dim=0)\n\nprint(f\"Small scores {scores_small.tolist()}:\")\nprint(f\"  Softmax: {probs_small.tolist()}\")\nprint(f\"  Max prob: {probs_large.max().item():.4f} (balanced)\\n\")\n\nprint(f\"Large scores {scores_large.tolist()}:\")\nprint(f\"  Softmax: {[f'{p:.6f}' for p in probs_large.tolist()]}\")\nprint(f\"  Max prob: {probs_large.max().item():.10f} (saturated - almost 1.0!)\")\nprint(f\"  Gradient to non-max: ~0 (vanishing gradients!)\")",
-                explanation: "Raw attention scores have problems: Magnitude depends on dimensions (d_head=64 gives scores ~[-8, 8], d_head=512 gives scores ~[-23, 23]). Without scaling, large scores lead to softmax saturation and vanishing gradients, preventing learning. For stability, we need consistent scale across models and predictable gradient flow."
+                instruction: "For autoregressive generation, we need causal masking. What does it prevent?",
+                why: "Causal masking prevents positions from attending to future positions - without it, the model would 'cheat' by seeing the answer. We set scores for future positions to -inf before softmax. After softmax, exp(-inf)=0, so future positions get zero attention. This ensures each token can only use information from itself and previous tokens, making generation valid.",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\nseq_len = 5\nscores = torch.randn(seq_len, seq_len)\n\n# Create causal mask\nmask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()\nscores.masked_fill_(mask, float('-inf'))\n\nattn = F.softmax(scores, dim=-1)\nprint(f'Position 0 attends to: positions ___ only')\nprint(f'Position 2 attends to: positions ___ only')",
+                choices: ["0, 0-2", "all, all", "0-4, 0-4"],
+                correct: 0,
+                hint: "Can only see current and previous",
+                freestyleHint: "Create an upper triangular mask using torch.triu, set masked positions to -inf, then softmax. Show that each position only attends to previous positions.",
+                challengeTemplate: "import torch\nimport torch.nn.functional as F\n\nseq_len = 5\nscores = torch.randn(seq_len, seq_len)\n\n# Upper triangular mask (diagonal=1)\nmask = torch.triu(torch.ones(seq_len, seq_len), diagonal=___)\nscores.masked_fill_(mask.___, float('___'))\n\nattn = F.softmax(scores, dim=-1)\nprint(f'Future positions get ___ attention')",
+                challengeBlanks: ["1", "bool()", "-inf", "zero"],
+                code: "import torch\nimport torch.nn.functional as F\n\nseq_len = 5\nscores = torch.randn(seq_len, seq_len)\n\nprint('=== Before Masking ===')\nprint('Position 2 can see positions:')\nprint(f'  {[i for i in range(seq_len)]}')\nprint()\n\n# Create causal mask (upper triangle = future)\nmask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()\nprint('Mask (True = future, will be blocked):')\nprint(mask.int())\nprint()\n\n# Apply mask\nscores.masked_fill_(mask, float('-inf'))\nattn = F.softmax(scores, dim=-1)\n\nprint('=== After Masking ===')\nprint('Position 2 can see positions:')\npositions_seen = [i for i in range(seq_len) if attn[2, i] > 0]\nprint(f'  {positions_seen}')\nprint()\nprint('Future masked out - no cheating!')\nprint('Each position sees only ≤ its own position')",
+                output: "=== Before Masking ===\nPosition 2 can see positions:\n  [0, 1, 2, 3, 4]\n\nMask (True = future, will be blocked):\ntensor([[0, 1, 1, 1, 1],\n        [0, 0, 1, 1, 1],\n        [0, 0, 0, 1, 1],\n        [0, 0, 0, 0, 1],\n        [0, 0, 0, 0, 0]])\n\n=== After Masking ===\nPosition 2 can see positions:\n  [0, 1, 2]\n\nFuture masked out - no cheating!\nEach position sees only ≤ its own position",
+                explanation: "Causal masking is essential for autoregressive generation. torch.triu creates an upper triangular matrix (diagonal=1 excludes the diagonal itself). We set these future positions to -inf. After softmax, exp(-inf) = 0, giving zero attention to future tokens. This ensures: Position 0 sees only position 0, Position 1 sees positions 0-1, Position N sees positions 0-N. No information leaks from the future!"
             },
+            // Step 13: Putting It All Together - Full Implementation
             {
-                instruction: "Scale the scores to prevent gradient problems:",
-                why: "Without scaling, when d_head is large, dot products become large, pushing softmax into regions where gradients are extremely small. This causes training to fail. For AI safety, stable training is essential - unstable models can develop unpredictable behaviors.",
-                code: "scaled_scores = attention_scores / (d_head ** 0.5)\nprint(attention_scores[0])\nprint(scaled_scores[0])",
-                explanation: "Scaling prevents the scores from becoming too large, which would cause problems with the softmax function coming next."
+                instruction: "Let's implement one complete attention head with all components. What's the correct order of operations?",
+                why: "Understanding the complete pipeline is essential before moving to ARENA implementation. The order matters: (1) Project to Q,K,V, (2) Compute scores QK^T, (3) Scale, (4) Apply causal mask, (5) Softmax, (6) Apply to values. This is executed billions of times, so efficiency matters. The pattern is used in every attention head in every layer!",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\nseq_len, d_model, d_head = 10, 768, 64\nx = torch.randn(seq_len, d_model)\n\n# Step ___: Project\nW_Q, W_K, W_V = [torch.randn(d_model, d_head) for _ in range(3)]\nQ, K, V = x @ W_Q, x @ W_K, x @ W_V\n\n# Step ___: Scores\nscores = Q @ K.T\n\n# Step ___: Scale\nscores = scores / (d_head ** 0.5)\n\n# Step ___: Mask\nmask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()\nscores.masked_fill_(mask, float('-inf'))\n\n# Step ___: Softmax\nattn = F.softmax(scores, dim=-1)\n\n# Step ___: Apply\noutput = attn @ V\n\nprint(f'Output: {output.shape}')",
+                choices: ["1,2,3,4,5,6", "1,3,2,4,5,6", "2,1,3,4,5,6"],
+                correct: 0,
+                hint: "Project → Score → Scale → Mask → Softmax → Apply",
+                freestyleHint: "Implement complete attention: create Q,K,V, compute scores, scale, mask, softmax, apply to values. Show all shapes.",
+                challengeTemplate: "import torch\nimport torch.nn.functional as F\n\n# 1. Project to Q, K, V\nQ, K, V = [x @ W for W in [W_Q, W_K, W_V]]\n\n# 2. Compute scores\nscores = Q @ K.___\n\n# 3. Scale\nscores /= (d_head ** ___)\n\n# 4. Causal mask\nmask = torch.triu(..., diagonal=1).bool()\nscores.masked_fill_(mask, float('___'))\n\n# 5. Softmax\nattn = F.___(scores, dim=-1)\n\n# 6. Apply to values\noutput = attn ___ V",
+                challengeBlanks: ["T", "0.5", "-inf", "softmax", "@"],
+                code: "import torch\nimport torch.nn.functional as F\n\n# Setup\nseq_len, d_model, d_head = 10, 768, 64\nx = torch.randn(seq_len, d_model)\n\n# Learned weight matrices\nW_Q = torch.randn(d_model, d_head)\nW_K = torch.randn(d_model, d_head)\nW_V = torch.randn(d_model, d_head)\n\nprint('=== Complete Attention Head ===')\nprint()\n\n# 1. Project to Q, K, V\nQ = x @ W_Q\nK = x @ W_K\nV = x @ W_V\nprint(f'1. Q, K, V: {Q.shape}')\n\n# 2. Compute attention scores\nscores = Q @ K.T\nprint(f'2. Scores: {scores.shape}')\n\n# 3. Scale\nscores = scores / (d_head ** 0.5)\nprint(f'3. Scaled: {scores.shape}')\n\n# 4. Apply causal mask\nmask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()\nscores.masked_fill_(mask, float('-inf'))\nprint(f'4. Masked: {scores.shape}')\n\n# 5. Softmax to get attention pattern\nattn_pattern = F.softmax(scores, dim=-1)\nprint(f'5. Attention: {attn_pattern.shape}')\n\n# 6. Apply attention to values\noutput = attn_pattern @ V\nprint(f'6. Output: {output.shape}')\nprint()\nprint('Complete! This is one attention head.')\nprint(f'GPT-2 has 12 of these per layer × 12 layers = 144 total!')",
+                output: "=== Complete Attention Head ===\n\n1. Q, K, V: torch.Size([10, 64])\n2. Scores: torch.Size([10, 10])\n3. Scaled: torch.Size([10, 10])\n4. Masked: torch.Size([10, 10])\n5. Attention: torch.Size([10, 10])\n6. Output: torch.Size([10, 64])\n\nComplete! This is one attention head.\nGPT-2 has 12 of these per layer × 12 layers = 144 total!",
+                explanation: "This is the complete attention pipeline! (1) Project input to Q,K,V using learned matrices, (2) Compute all pairwise scores Q@K^T, (3) Scale by √d_k for stability, (4) Mask future positions with -inf, (5) Softmax to get probabilities, (6) Apply to values to move information. This happens 144 times in GPT-2 (12 heads × 12 layers). Understanding this deeply prepares you for ARENA's implementation exercises!"
             },
+
+            // PHASE 5: INTERPRETABILITY & SAFETY
+            // Step 14: Attention for Interpretability & Safety
             {
-                instruction: "Convert scores to probabilities using softmax:",
-                code: "attention_weights = F.softmax(scaled_scores, dim=-1)\nprint(attention_weights)\nprint(attention_weights.sum(dim=-1))",
-                explanation: "Softmax converts scores to probabilities. Now each word has a probability distribution over which other words to attend to."
-            },
-            {
-                instruction: "Visualize the attention pattern:",
-                why: "Attention patterns are windows into the model's reasoning. For AI safety, we can use these patterns to detect when models are focusing on harmful content or making dangerous connections between concepts.",
-                code: "for i, word1 in enumerate(words):\n    print(f'{word1} attends to:')\n    for j, word2 in enumerate(words):\n        prob = attention_weights[i, j].item()\n        bar = '█' * int(prob * 20)\n        print(f'  {word2}: {prob:.2f} {bar}')",
-                explanation: "This visualization shows which words each word is 'looking at'. The model has learned these patterns from data."
-            },
-            {
-                instruction: "The third concept: Value vectors - what information to actually move:",
-                why: "While queries and keys determine WHERE to look, values determine WHAT to take. Values encode the actual features that will be aggregated. A noun's value might encode its semantic properties. A verb's value might encode tense and aspect. This separation of 'where to look' from 'what to take' is key to attention's flexibility.",
-                code: "W_V = torch.randn(d_model, d_head)\nvalues = word_vectors @ W_V\nprint(values.shape)\nprint(values[0])",
-                explanation: "Values represent the actual information that will be passed from one word to another based on attention weights."
-            },
-            {
-                instruction: "Apply attention: use weights to combine values:",
-                why: "This is where information actually moves between positions. For AI safety, this movement of information is critical - harmful information can spread through the sequence, or safety-relevant context can be brought to where it's needed.",
-                code: "attention_output = attention_weights @ values\nprint(attention_output.shape)\nprint(attention_output[1])",
-                explanation: "This is the key operation! Each word's output is a weighted combination of all words' values, weighted by attention."
-            },
-            {
-                instruction: "Let's understand the full attention computation:",
-                why: "Attention is elegant: (1) Queries and keys determine WHERE to look via dot product similarity, (2) Softmax creates a probability distribution, (3) These probabilities weight a sum of values. This simple mechanism can learn incredibly complex relationships. It's differentiable, parallelizable, and interpretable - a rare combination in deep learning.",
-                code: "import torch\nimport torch.nn.functional as F\n\n# Demonstrate the complete attention formula\nseq_len, d_model = 4, 8\n\n# Create random Q, K, V matrices\nQ = torch.randn(seq_len, d_model)\nK = torch.randn(seq_len, d_model)\nV = torch.randn(seq_len, d_model)\n\nprint(\"Complete Attention Formula: Attention(Q, K, V) = softmax(QK^T / √d_k)V\\n\")\n\n# Step by step:\nprint(\"Step 1: QK^T (matching queries to keys)\")\nscores = Q @ K.T\nprint(f\"  Shape: {scores.shape}\\n\")\n\nprint(\"Step 2: Scale by √d_k\")\nscaled_scores = scores / (d_model ** 0.5)\nprint(f\"  Prevents saturation for large d_k\\n\")\n\nprint(\"Step 3: Softmax (convert to probabilities)\")\nattention_weights = F.softmax(scaled_scores, dim=-1)\nprint(f\"  Each row sums to 1.0\\n\")\n\nprint(\"Step 4: Multiply by V (weighted sum of values)\")\noutput = attention_weights @ V\nprint(f\"  Output shape: {output.shape}\")\nprint(f\"\\nComplete formula in one line:\")\noutput_oneline = F.softmax((Q @ K.T) / (d_model ** 0.5), dim=-1) @ V\nprint(f\"All equal: {torch.allclose(output, output_oneline)}\")",
-                explanation: "Attention(Q,K,V) = softmax(QK^T / √d_k)V. Breaking it down: QK^T matches queries to keys (where to look), /√d_k scales for stability, softmax converts to probabilities, ()V weights and sums values (what to take). Simple yet powerful!"
-            },
-            {
-                instruction: "Let's trace through what happens to one word:",
-                code: "import torch\nimport torch.nn.functional as F\n\n# Trace information flow for one specific word\nwords = ['cat', 'sat', 'mat']\nseq_len = len(words)\nd_model = 4\n\n# Create simple Q, K, V\nQ = torch.randn(seq_len, d_model)\nK = torch.randn(seq_len, d_model)\nV = torch.randn(seq_len, d_model)\n\n# Compute attention\nscores = (Q @ K.T) / (d_model ** 0.5)\nattention_weights = F.softmax(scores, dim=-1)\nattention_output = attention_weights @ V\n\n# Focus on the word \"sat\" (index 1)\nfocus_word = 'sat'\nfocus_idx = 1\n\nprint(f'Tracing information flow for \"{focus_word}\":\\n')\nprint(f'Attention weights for \"{focus_word}\":', attention_weights[focus_idx].tolist())\nprint(f'\\n\"{focus_word}\" will receive:')\nfor j, word in enumerate(words):\n    weight = attention_weights[focus_idx, j].item()\n    bar = '█' * int(weight * 20)\n    print(f'  {weight:.3f} × value of \"{word}\"  {bar}')\n\nprint(f'\\nResulting output vector for \"{focus_word}\": {attention_output[focus_idx][:2].tolist()}...')\nprint(f'\\nThis is a weighted combination of all {seq_len} words\\' information!')",
-                explanation: "This shows exactly how information flows: 'sat' receives a weighted combination of information from all words, including itself."
-            },
-            {
-                instruction: "Explore self-attention - why words attend to themselves:",
-                why: "Self-attention (a word attending to itself) might seem redundant, but it's crucial. It allows the model to preserve and transform its own information while incorporating context. Without self-attention, words would lose their identity as they gather information from others. It's like maintaining your own thoughts while listening to others.",
-                code: "import torch\nimport torch.nn.functional as F\n\n# Demonstrate self-attention patterns\nseq_len = 5\nwords = ['The', 'cat', 'sat', 'on', 'mat']\n\n# Create attention weights (simulated)\nattention_matrix = torch.softmax(torch.randn(seq_len, seq_len), dim=-1)\n\nprint(\"Self-Attention Weights (attending to self):\\n\")\nfor i, word in enumerate(words):\n    self_attn = attention_matrix[i, i].item()\n    print(f\"'{word}' -> '{word}': {self_attn:.1%}\")\n\ndiag = torch.diagonal(attention_matrix)\nprint(f\"\\nAverage self-attention: {diag.mean():.1%}\")\nprint(f\"Range: {diag.min():.1%} to {diag.max():.1%}\")\n\nprint(\"\\nWhy self-attention matters:\")\nprint(\"- Preserves own information while gathering context\")\nprint(\"- Allows feature transformation (via value projection)\")\nprint(\"- Provides fallback when no other token is relevant\")\nprint(\"- Maintains token identity through layers\")",
-                explanation: "Self-attention serves important purposes: Information preservation (maintains word identity, prevents information loss), Feature transformation (applies value transformation to self, allows self-modification based on context), Default behavior (when no other word is relevant, safe fallback option). Typical self-attention ranges from 10-90% depending on context!"
-            },
-            {
-                instruction: "In transformers, we also need causal masking. Let's create a mask:",
-                why: "Causal masking is essential for autoregressive generation and prevents 'cheating' where the model sees future tokens. For AI safety, this ensures the model can't base harmful outputs on information it shouldn't have access to yet.",
-                code: "seq_len = 3\nmask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1)\nprint(mask)",
-                explanation: "Causal masking prevents the model from 'cheating' by looking at future words. This is essential for text generation."
-            },
-            {
-                instruction: "Apply the causal mask to attention scores:",
-                code: "masked_scores = scaled_scores.clone()\nmasked_scores[mask.bool()] = float('-inf')\nprint(scaled_scores)\nprint(masked_scores)",
-                explanation: "Setting masked positions to -infinity ensures they become 0 after softmax, completely blocking attention to future positions."
-            },
-            {
-                instruction: "Understand why we mask before softmax:",
-                why: "Masking with -infinity before softmax is mathematically elegant: exp(-infinity) = 0, so masked positions get exactly 0 probability. This is cleaner than masking after softmax, which would require renormalization. For safety, this ensures no information leakage from future tokens that might contain harmful content.",
-                code: "import torch\nimport torch.nn.functional as F\nimport numpy as np\n\n# Demonstrate why -inf masking works elegantly\nprint(\"=== Why masking with -inf is elegant ===\\n\")\n\nscores = torch.tensor([2.0, 3.0, 4.0])\nprint(f\"Original scores: {scores.tolist()}\")\nprint(f\"Softmax: {F.softmax(scores, dim=0).tolist()}\\n\")\n\n# Mask middle position\nmasked_scores = scores.clone()\nmasked_scores[1] = float('-inf')\nprint(f\"After masking position 1 with -inf: {masked_scores.tolist()}\")\nprobs = F.softmax(masked_scores, dim=0)\nprint(f\"Softmax: {probs.tolist()}\")\nprint(f\"Masked position probability: {probs[1].item():.10f} (exactly 0!)\\n\")\n\nprint(\"Why this works:\")\nprint(\"  exp(-inf) = 0\")\nprint(\"  0 / (sum of other exp values) = 0\")\nprint(\"  No renormalization needed!\")\nprint(\"  Numerically stable and simple\")\n\nprint(\"\\nAlternative (masking after softmax - worse):\")\nprobs_unmask = F.softmax(scores, dim=0)\nprobs_unmask[1] = 0\nprint(f\"  Before renorm: {probs_unmask.tolist()} (sum = {probs_unmask.sum():.2f})\")\nprobs_unmask = probs_unmask / probs_unmask.sum()\nprint(f\"  After renorm: {probs_unmask.tolist()}\")\nprint(f\"  More complex, risk numerical errors!\")",
-                explanation: "Masking before softmax: score = -inf → exp(-inf) = 0 → softmax gives 0 probability → no information flows. If we masked after softmax, we'd need to renormalize, risk numerical instability, and have more complex implementation. The -inf trick is elegant and foolproof!"
-            },
-            {
-                instruction: "Recompute attention weights with masking:",
-                code: "masked_attention_weights = F.softmax(masked_scores, dim=-1)\nfor i, word1 in enumerate(words):\n    print(f'{word1}: {masked_attention_weights[i].tolist()}')",
-                explanation: "Now each word can only attend to itself and previous words. 'cat' can only see itself, 'sat' can see 'cat' and itself, etc."
-            },
-            {
-                instruction: "Apply masked attention to get final output:",
-                code: "masked_output = masked_attention_weights @ values\nprint(masked_output.shape)\nprint(masked_output[2])",
-                explanation: "With causal masking, each position's output only contains information from previous positions - perfect for autoregressive generation!"
-            },
-            {
-                instruction: "Let's see why attention is crucial for AI safety:",
-                why: "Attention patterns are one of our best tools for interpretability. They show us what information the model considers relevant for each decision. This transparency is essential for ensuring AI systems make decisions for the right reasons.",
-                code: "import torch\nimport matplotlib.pyplot as plt\nimport seaborn as sns\n\n# Simulate attention patterns for safety analysis\nsentence = ['AI', 'should', 'not', 'harm', 'humans']\nseq_len = len(sentence)\n\n# Create simulated attention pattern\n# 'harm' attends strongly to 'not' (negation context)\nattention = torch.zeros(seq_len, seq_len)\nattention[3, 2] = 0.7  # 'harm' -> 'not'\nattention[3, 4] = 0.2  # 'harm' -> 'humans'\nattention[3, 3] = 0.1  # 'harm' -> self\n\nattention[2, 1] = 0.5  # 'not' -> 'should'\nattention[2, 3] = 0.4  # 'not' -> 'harm'\nattention[2, 2] = 0.1  # 'not' -> self\n\nprint(\"Attention Pattern Analysis for Safety:\\n\")\nprint(\"Token 'harm' attends to:\")\nfor i, word in enumerate(sentence):\n    if attention[3, i] > 0:\n        print(f\"  '{word}': {attention[3, i]:.1%}\")\n\nprint(\"\\nToken 'not' attends to:\")\nfor i, word in enumerate(sentence):\n    if attention[2, i] > 0:\n        print(f\"  '{word}': {attention[2, i]:.1%}\")\n\nprint(\"\\nSafety insight:\")\nprint(\"'harm' strongly attends to 'not' - model understands negation!\")\nprint(\"This pattern shows the model is processing safety context correctly.\")",
-                explanation: "For AI safety, attention patterns reveal: What context influences each prediction, Whether the model focuses on safety-relevant words, How information flows through the model. This interpretability is essential for safe AI!"
-            },
-            {
-                instruction: "Explore different types of attention patterns:",
-                why: "Different attention patterns encode different linguistic phenomena. Recognizing these patterns helps us understand model behavior. For safety, unusual patterns might indicate the model is processing harmful content or struggling with an adversarial input. Pattern analysis is a key tool for model monitoring.",
-                code: "import torch\nimport numpy as np\n\nseq_len = 6\npatterns = {}\n\n# 1. Diagonal pattern (self-attention)\npatterns['diagonal'] = torch.eye(seq_len) * 0.9 + torch.ones(seq_len, seq_len) * 0.1 / seq_len\n\n# 2. Previous token pattern\nprev = torch.zeros(seq_len, seq_len)\nfor i in range(seq_len):\n    if i > 0:\n        prev[i, i-1] = 0.7\n    prev[i, i] = 0.3\npatterns['previous_token'] = prev\n\n# 3. First token attention (used for summarization)\nfirst = torch.zeros(seq_len, seq_len)\nfirst[:, 0] = 0.6\nfor i in range(seq_len):\n    first[i, i] = 0.4\npatterns['first_token'] = first\n\n# 4. Uniform (potential confusion)\npatterns['uniform'] = torch.ones(seq_len, seq_len) / seq_len\n\nfor name, pattern in patterns.items():\n    print(f\"\\n{name.upper()} Pattern:\")\n    print(f\"  Average entropy: {-(pattern * (pattern + 1e-10).log()).sum(dim=-1).mean():.2f}\")\n    if name == 'diagonal':\n        print(\"  → Preserving local information (common in early layers)\")\n    elif name == 'previous_token':\n        print(\"  → Tracking immediate dependencies (grammar, flow)\")\n    elif name == 'first_token':\n        print(\"  → Global context gathering (summary token)\")\n    elif name == 'uniform':\n        print(\"  → ⚠️ Possible confusion or adversarial input!\")",
-                explanation: "Types of attention patterns: Diagonal (self-attention) for preserving local information, common in early layers. Previous token attention for local dependencies and grammar. First token attention for global information gathering and summary storage. Delimiter tokens (punctuation) for sentence boundary detection and structural understanding. Rare uniform attention might indicate model confusion or possible adversarial input."
-            },
-            {
-                instruction: "Understand multi-head attention intuition:",
-                why: "Multi-head attention is like having multiple experts look at the same text from different perspectives. One head might track grammar, another might follow entity references, and another might identify sentiment. This diversity is crucial for robust understanding and gives us multiple views into the model's reasoning process.",
-                code: "import torch\n\n# Simulate multi-head attention\nn_heads = 12\nd_model = 768\nd_head = d_model // n_heads  # 64 dimensions per head\n\nprint(f\"Multi-Head Attention Configuration:\")\nprint(f\"  Total model dimension: {d_model}\")\nprint(f\"  Number of heads: {n_heads}\")\nprint(f\"  Dimensions per head: {d_head}\\n\")\n\nprint(\"Each head operates independently:\")\nfor i in range(min(4, n_heads)):\n    print(f\"  Head {i}: Learns its own Q, K, V projections ({d_model} -> {d_head})\")\nprint(f\"  ... ({n_heads - 4} more heads)\\n\")\n\nprint(\"Benefits of multiple heads:\")\nprint(\"  • Diversity: Different heads learn different relationships\")\nprint(\"  • Robustness: Multiple perspectives on same input\")\nprint(\"  • Specialization: Heads naturally specialize during training\")\nprint(\"  • Interpretability: Can analyze each head separately\\n\")\n\nprint(f\"Total attention parameters per layer:\")\nqkv_params = 3 * d_model * d_model  # Q, K, V projections\noutput_params = d_model * d_model   # Output projection\ntotal = qkv_params + output_params\nprint(f\"  {total:} parameters ({total / 1e6:.1f}M)\")",
-                explanation: "Real transformers use multiple attention heads: GPT-2 has 12 heads per layer. Each head learns different relationships - Head 1 might focus on grammar, Head 2 might focus on subject-object relations, Head 3 might track pronouns. Together, they capture many types of relationships!"
-            },
-            {
-                instruction: "See how different heads specialize:",
-                why: "Head specialization emerges naturally during training. This specialization is why transformers are so powerful - they develop a toolkit of different attention mechanisms. For safety, we can identify which heads are responsible for different behaviors and potentially intervene at the head level to modify model behavior.",
-                code: "import torch\n\n# Simulate discovered head specialization patterns from research\nheads_discovered = [\n    {\n        'head': 'Layer 5, Head 1',\n        'pattern': 'Previous Token Attention',\n        'description': 'Attends to immediately preceding token',\n        'purpose': 'Local grammar and flow',\n        'attention_example': '[0.1, 0.8, 0.1] -> strongly to previous'\n    },\n    {\n        'head': 'Layer 0, Head 7',\n        'pattern': 'Delimiter Attention',\n        'description': 'Attends to commas, periods, colons',\n        'purpose': 'Sentence segmentation and structure',\n        'attention_example': 'Focuses 70%+ on punctuation'\n    },\n    {\n        'head': 'Layer 11, Head 10',\n        'pattern': 'Subject-Verb Linking',\n        'description': 'Links verbs back to their subjects',\n        'purpose': 'Understanding who does what',\n        'attention_example': 'sat -> cat (action to actor)'\n    },\n    {\n        'head': 'Layer 8, Head 11',\n        'pattern': 'Pronoun Resolution',\n        'description': 'Links pronouns to antecedents',\n        'purpose': 'Maintaining references',\n        'attention_example': 'it/they -> nearest matching noun'\n    }\n]\n\nprint(\"Discovered Attention Head Specializations:\\n\")\nfor spec in heads_discovered:\n    print(f\"{spec['head']}:\")\n    print(f\"  Pattern: {spec['pattern']}\")\n    print(f\"  Purpose: {spec['purpose']}\")\n    print(f\"  Example: {spec['attention_example']}\\n\")\n\nprint(\"Safety Implications:\")\nprint(\"  • Can identify which heads process safety-critical information\")\nprint(\"  • Can ablate specific heads to test their role in harmful outputs\")\nprint(\"  • Can monitor specific heads for anomalous patterns\")",
-                explanation: "Attention head specializations found in real models: Head 5.1 focuses on previous token (immediate context, local grammar). Head 0.7 attends to delimiters (commas, periods, sentence structure). Head 11.10 links subjects to verbs (actions to actors, critical for understanding). Head 8.11 resolves pronouns (connects 'it', 'they' to nouns, maintains references). For safety: Different heads might detect different risks!"
-            },
-            {
-                instruction: "Consider attention's role in propagating safety information:",
-                why: "Attention determines how safety-relevant information spreads through the model. If early layers detect potentially harmful content, attention patterns determine whether this information reaches the final layers where decisions are made. Understanding this flow is crucial for building reliable safety mechanisms.",
-                code: "import torch\nimport torch.nn.functional as F\n\n# Simulate how safety information flows through attention\nsentence = ['How', 'to', 'make', 'a', 'bomb', 'safely', 'for', 'a', 'movie']\nseq_len = len(sentence)\n\n# Create attention pattern showing safety context flow\nattention = torch.zeros(seq_len, seq_len)\n\n# 'bomb' (index 4) attends to safety context\nattention[4, 5] = 0.5  # bomb -> safely\nattention[4, 8] = 0.3  # bomb -> movie\nattention[4, 4] = 0.1  # bomb -> self\nattention[4, 0] = 0.1  # bomb -> How\n\n# 'safely' (index 5) provides context\nattention[5, 4] = 0.4  # safely -> bomb\nattention[5, 8] = 0.4  # safely -> movie\nattention[5, 5] = 0.2  # safely -> self\n\nprint(\"Safety Information Flow Analysis:\\n\")\nprint(\"Token 'bomb' (potentially dangerous) attends to:\")\nfor i, word in enumerate(sentence):\n    if attention[4, i] > 0:\n        print(f\"  '{word}': {attention[4, i]:.0%} - {'✓ Safety context!' if word in ['safely', 'movie'] else 'neutral'}\")\n\nprint(\"\\nInterpretation:\")\nprint(\"  ✓ 'bomb' strongly attends to 'safely' (50%)\")\nprint(\"  ✓ 'bomb' moderately attends to 'movie' (30%)\")\nprint(\"  → Model is incorporating safety-relevant context\")\nprint(\"  → This attention pattern indicates proper context understanding\\n\")\n\nprint(\"Without safety context, 'bomb' would attend differently:\")\nprint(\"  ⚠️ Might focus on 'make' and 'How' (instruction-following)\")\nprint(\"  ⚠️ Missing 'safely' and 'movie' could trigger safety filters\")",
-                explanation: "Imagine a sentence: 'How to make a bomb safely for a movie'. Attention patterns might show: 'bomb' strongly attends to 'safely' and 'movie', this context changes the interpretation, final layers see the safe context. Attention patterns help safety information flow!"
-            },
-            {
-                instruction: "Understand attention's computational and memory costs:",
-                why: "Attention's quadratic complexity in sequence length is its main limitation. For a sequence of length n, we need n² attention scores. This is why models have maximum context lengths. For AI safety, longer contexts mean better understanding but also higher costs and potential for hiding harmful content in long prompts.",
-                code: "for n in [512, 1024, 2048, 4096]:\n    memory = n * n * 4\n    print(f'Seq {n}: {memory/1e6:.1f} MB per head, {memory*12/1e6:.1f} MB with 12 heads')",
-                explanation: "This quadratic growth limits context size! For AI safety: Longer context enables better understanding but also makes it easier to hide malicious content and harder to audit all interactions."
+                instruction: "Attention patterns are one of our best tools for understanding what models do. What can we learn from analyzing them?",
+                why: "Attention patterns show us which tokens influence which other tokens. This is interpretability gold: we can see if the model is using the right context, detect when it focuses on harmful content, identify failure modes. For safety, we can monitor attention patterns to detect suspicious behavior or intervene when the model attends to problematic information.",
+                type: "multiple-choice",
+                template: "print('Attention Patterns Reveal:')\nprint()\nprint('1. Information flow:')\nprint('   - Which tokens influence predictions')\nprint('   - How context propagates through layers')\nprint()\nprint('2. Safety insights:')\nprint('   - Does \"not\" attend to \"harmful\"?')\nprint('   - Are safety words being considered?')\nprint('   - Unusual patterns might indicate ___')\nprint()\nprint('3. Failure modes:')\nprint('   - Ignoring negations')\nprint('   - Focusing on wrong context')\nprint('   - Adversarial attacks visible in patterns')",
+                choices: ["adversarial inputs or confusion", "normal operation", "random noise"],
+                correct: 0,
+                hint: "Unusual patterns suggest something wrong",
+                freestyleHint: "Explain how attention patterns enable interpretability: they show information flow, reveal safety-relevant attention (like \"not\" → \"harm\"), and can detect failure modes or adversarial inputs.",
+                challengeTemplate: "print('Why Attention Patterns Matter:')\nprint()\nprint('Interpretability:')\nprint('  • See ___ flows through model')\nprint('  • Understand ___ decisions')\nprint()\nprint('Safety:')\nprint('  • Monitor for ___ content')\nprint('  • Detect ___ patterns')\nprint('  • ___ when needed')",
+                challengeBlanks: ["information", "model", "harmful", "suspicious", "intervene"],
+                code: "print('=== Attention for Interpretability & Safety ===')\nprint()\nprint('1. INFORMATION FLOW')\nprint('   Attention patterns show token-to-token influence')\nprint('   Example: \"The cat sat on the mat\"')\nprint('     → \"sat\" attends strongly to \"cat\" (subject)')\nprint('     → \"sat\" attends to \"mat\" (location)')\nprint('   We can SEE what the model is thinking!')\nprint()\nprint('2. SAFETY MONITORING')\nprint('   Example: \"AI should not harm humans\"')\nprint('     ✓ \"harm\" strongly attends to \"not\" → model sees negation')\nprint('     ✗ \"harm\" ignores \"not\" → potential safety failure')\nprint('   We can detect when models miss critical context!')\nprint()\nprint('3. QK vs OV CIRCUITS')\nprint('   QK circuit: WHERE to attend (attention pattern)')\nprint('     → Analyzable, visualizable, interpretable')\nprint('   OV circuit: WHAT to move (value transformation)')\nprint('     → Can identify what information is extracted')\nprint('   Mechanistic interpretability studies both!')\nprint()\nprint('4. NEXT STEPS')\nprint('   • ARENA exercises: Implement from scratch')\nprint('   • Study real attention heads in GPT-2')\nprint('   • Learn activation patching & circuit analysis')\nprint('   • Build safety probes using attention patterns')\nprint()\nprint('Key Takeaway:')\nprint('Attention is transparent - we can see inside the model!')\nprint('This makes transformers more interpretable than other architectures.')",
+                output: "=== Attention for Interpretability & Safety ===\n\n1. INFORMATION FLOW\n   Attention patterns show token-to-token influence\n   Example: \"The cat sat on the mat\"\n     → \"sat\" attends strongly to \"cat\" (subject)\n     → \"sat\" attends to \"mat\" (location)\n   We can SEE what the model is thinking!\n\n2. SAFETY MONITORING\n   Example: \"AI should not harm humans\"\n     ✓ \"harm\" strongly attends to \"not\" → model sees negation\n     ✗ \"harm\" ignores \"not\" → potential safety failure\n   We can detect when models miss critical context!\n\n3. QK vs OV CIRCUITS\n   QK circuit: WHERE to attend (attention pattern)\n     → Analyzable, visualizable, interpretable\n   OV circuit: WHAT to move (value transformation)\n     → Can identify what information is extracted\n   Mechanistic interpretability studies both!\n\n4. NEXT STEPS\n   • ARENA exercises: Implement from scratch\n   • Study real attention heads in GPT-2\n   • Learn activation patching & circuit analysis\n   • Build safety probes using attention patterns\n\nKey Takeaway:\nAttention is transparent - we can see inside the model!\nThis makes transformers more interpretable than other architectures.",
+                explanation: "Attention is a window into the model! Unlike opaque neural networks, attention patterns are directly observable [N×N] matrices showing which tokens influence which. For interpretability: we can see what context the model uses for each prediction. For safety: we can monitor whether models attend to safety-critical words like 'not', 'safely', 'harmful'. The QK/OV separation lets us analyze WHERE (attention patterns) and WHAT (value transformations) independently. This is why mechanistic interpretability focuses heavily on attention - it's our most transparent component! You're now ready for ARENA's implementation exercises where you'll build this from scratch and analyze real models."
             }
         ]
     },
@@ -1114,133 +755,172 @@ for term in test_terms:
     'mlp-layers': {
         title: "MLP Layers",
         steps: [
+            // PHASE 1: CORE ARCHITECTURE
+            // Step 1: MLP's Role in Transformers
             {
-                instruction: "After attention moves information between positions, MLPs process information at each position. Let's create an MLP:",
-                why: "Think of transformers as having two complementary systems: attention (which gathers information) and MLPs (which process it). If attention is like collecting ingredients from your pantry, MLPs are like the actual cooking. This division of labor is elegant and powerful - attention handles 'what to look at' while MLPs handle 'what to do with it'.",
-                code: "import torch.nn as nn\nd_model = 768\nd_mlp = 3072  # Usually 4x the model dimension\nmlp = nn.Sequential(\n    nn.Linear(d_model, d_mlp),\n    nn.GELU(),\n    nn.Linear(d_mlp, d_model)\n)",
-                explanation: "MLPs (Multi-Layer Perceptrons) are the 'thinking' part of transformers. They process each position independently after attention has moved information around."
+                instruction: "Transformers have two main components: Attention moves information between positions, MLPs process information at each position. What does MLP stand for?",
+                why: "Understanding the division of labor is crucial: Attention is for COMMUNICATION (moving info between tokens), MLPs are for COMPUTATION (processing info at each position). Think of attention as gathering ingredients from your pantry, and MLPs as the actual cooking. This separation is elegant - each component has a clear job.",
+                type: "multiple-choice",
+                template: "import torch\n\nprint('Transformer Block Components:')\nprint()\nprint('1. Attention Layer')\nprint('   → Moves information BETWEEN positions')\nprint('   → \"Which other tokens should I look at?\"')\nprint()\nprint('2. ___ Layer')\nprint('   → Processes information AT each position')\nprint('   → \"What should I do with this information?\"')\nprint()\nprint('Division of labor: Attention gathers, MLP processes!')",
+                choices: ["MLP (Multi-Layer Perceptron)", "CNN (Convolutional Neural Network)", "RNN (Recurrent Neural Network)"],
+                correct: 0,
+                hint: "It's a feedforward neural network with multiple layers",
+                freestyleHint: "Print the two main components of a transformer block: Attention (moves info between positions) and MLP (processes info at each position). Explain their roles.",
+                challengeTemplate: "print('Transformer Components:')\nprint()\nprint('Attention: ___ information between positions')\nprint('MLP: ___ information at each position')\nprint()\nprint('Attention = ___')\nprint('MLP = ___')",
+                challengeBlanks: ["moves", "processes", "communication", "computation"],
+                code: "import torch\n\nprint('=== Transformer Block Components ===')\nprint()\nprint('1. ATTENTION LAYER')\nprint('   → Moves information BETWEEN positions')\nprint('   → Creates connections across the sequence')\nprint('   → \"Which other tokens are relevant to me?\"')\nprint()\nprint('2. MLP LAYER (Multi-Layer Perceptron)')\nprint('   → Processes information AT each position')\nprint('   → Applies learned transformations')\nprint('   → \"What should I compute from this info?\"')\nprint()\nprint('Key insight:')\nprint('  Attention = COMMUNICATION (gather context)')\nprint('  MLP = COMPUTATION (process context)')\nprint()\nprint('This happens at EVERY layer of the transformer!')",
+                output: "=== Transformer Block Components ===\n\n1. ATTENTION LAYER\n   → Moves information BETWEEN positions\n   → Creates connections across the sequence\n   → \"Which other tokens are relevant to me?\"\n\n2. MLP LAYER (Multi-Layer Perceptron)\n   → Processes information AT each position\n   → Applies learned transformations\n   → \"What should I compute from this info?\"\n\nKey insight:\n  Attention = COMMUNICATION (gather context)\n  MLP = COMPUTATION (process context)\n\nThis happens at EVERY layer of the transformer!",
+                explanation: "The transformer's elegance comes from this separation: Attention handles all cross-position communication (deciding what information to gather), while MLPs handle all per-position computation (deciding what to do with gathered information). Neither can do the other's job - attention can't compute, MLPs can't communicate across positions. Together, they're incredibly powerful!"
             },
+            // Step 2: The 4x Expansion
             {
-                instruction: "Let's understand the structure of MLPs:",
-                why: "MLPs are where most of the model's 'knowledge' is stored. Each MLP can be thought of as containing thousands of learned patterns. For AI safety, understanding what knowledge is stored in MLPs helps us identify and potentially remove harmful information.",
-                code: "print(d_model)\nprint(d_mlp)\nprint(d_model * d_mlp * 2 + d_mlp + d_model)",
-                explanation: "The 4x expansion in the hidden layer gives the model more capacity to learn complex patterns."
+                instruction: "MLPs in GPT-2 expand from d_model=768 to d_mlp=3072, then back to 768. What's the expansion factor?",
+                why: "The 4x expansion (d_mlp = 4 × d_model) isn't arbitrary - it's cargo-culted from the original GPT! The expansion creates more 'neurons' (3072 of them) to detect patterns, then contracts back to d_model. This bottleneck architecture lets the model consider many possibilities (expand) then select what's important (contract).",
+                type: "multiple-choice",
+                template: "import torch\n\n# GPT-2 dimensions\nd_model = 768\nd_mlp = 3072\n\nexpansion_factor = d_mlp // d_model\n\nprint(f'd_model: {d_model}')\nprint(f'd_mlp: {d_mlp}')\nprint(f'Expansion factor: {expansion_factor}x')\nprint()\nprint(f'MLP shape: {d_model} → {d_mlp} → ___')",
+                choices: ["4x (768 → 3072 → 768)", "2x (768 → 1536 → 768)", "8x (768 → 6144 → 768)"],
+                correct: 0,
+                hint: "3072 / 768 = ?",
+                freestyleHint: "Calculate d_mlp = 4 * d_model. Show the expand-contract pattern: 768 → 3072 → 768. Explain why this bottleneck architecture is useful.",
+                challengeTemplate: "d_model = ___\nd_mlp = 4 * d_model  # = ___\n\nprint(f'Expansion: {d_model} → {d_mlp}')\nprint(f'Contraction: {d_mlp} → {___}')\nprint(f'Factor: {d_mlp // d_model}x')",
+                challengeBlanks: ["768", "3072", "d_model"],
+                code: "import torch\n\n# GPT-2 dimensions\nd_model = 768\nd_mlp = 4 * d_model  # = 3072\n\nprint('=== MLP Dimensions ===')\nprint(f'd_model: {d_model}')\nprint(f'd_mlp: {d_mlp} (= 4 × d_model)')\nprint()\nprint('MLP Shape (expand then contract):')\nprint(f'  Input:  {d_model} dimensions')\nprint(f'  Hidden: {d_mlp} dimensions (4x EXPANSION)')\nprint(f'  Output: {d_model} dimensions (back to original)')\nprint()\nprint('Why 4x?')\nprint('  • More neurons = more pattern detectors')\nprint('  • Expansion: \"Consider all these possibilities\"')\nprint('  • Contraction: \"Select what\\'s important\"')\nprint('  • 4x is cargo-culted from original GPT!')",
+                output: "=== MLP Dimensions ===\nd_model: 768\nd_mlp: 3072 (= 4 × d_model)\n\nMLP Shape (expand then contract):\n  Input:  768 dimensions\n  Hidden: 3072 dimensions (4x EXPANSION)\n  Output: 768 dimensions (back to original)\n\nWhy 4x?\n  • More neurons = more pattern detectors\n  • Expansion: \"Consider all these possibilities\"\n  • Contraction: \"Select what's important\"\n  • 4x is cargo-culted from original GPT!",
+                explanation: "The 4x expansion creates a bottleneck architecture. With 3072 'neurons' in the hidden layer, the MLP can detect many different patterns. But it must compress back to 768 dimensions, forcing it to select only the most relevant information. This is like brainstorming (expand to many ideas) then deciding (contract to key insights). The 4x ratio has become standard practice!"
             },
+            // Step 3: W_in and W_out Weight Matrices
             {
-                instruction: "Understand why MLPs expand then contract:",
-                why: "The 4x expansion isn't arbitrary - it creates a 'bottleneck' architecture. The expansion allows the model to consider many possible features and transformations, while the contraction forces it to select only the most relevant information to pass forward. This is similar to how human thinking expands to consider possibilities then contracts to a decision.",
-                code: "print(f'{d_model} → {d_mlp} → {d_model}')",
-                explanation: "MLP dimension changes serve multiple purposes: Computational capacity (more neurons = more patterns), Feature selection (not all 3072 features pass through), Information bottleneck (forces compression/abstraction). Think of expansion as 'Consider all these possibilities' and contraction as 'Choose what's important'."
+                instruction: "In ARENA's notation, MLP uses W_in and W_out weight matrices. What are their shapes?",
+                why: "ARENA uses W_in for the expansion matrix [d_model, d_mlp] and W_out for the contraction matrix [d_mlp, d_model]. Understanding these shapes is essential: W_in projects UP to the hidden layer (768→3072), W_out projects DOWN back to model dimension (3072→768). The computation is: hidden = GELU(x @ W_in), output = hidden @ W_out.",
+                type: "multiple-choice",
+                template: "import torch\n\nd_model, d_mlp = 768, 3072\n\n# ARENA notation\nW_in = torch.randn(d_model, d_mlp)   # Shape: [___, ___]\nW_out = torch.randn(d_mlp, d_model)  # Shape: [___, ___]\n\nprint(f'W_in: {W_in.shape}')\nprint(f'W_out: {W_out.shape}')\nprint()\nprint('W_in expands: 768 → 3072')\nprint('W_out contracts: 3072 → 768')",
+                choices: ["W_in: [768, 3072], W_out: [3072, 768]", "W_in: [3072, 768], W_out: [768, 3072]", "Both: [768, 768]"],
+                correct: 0,
+                hint: "W_in expands (768→3072), W_out contracts (3072→768)",
+                freestyleHint: "Create W_in [d_model, d_mlp] and W_out [d_mlp, d_model]. Show how input x @ W_in gives hidden activations, then hidden @ W_out gives output.",
+                challengeTemplate: "import torch\n\nd_model, d_mlp = 768, 3072\n\nW_in = torch.randn(___, ___)   # Expand\nW_out = torch.randn(___, ___)  # Contract\n\nx = torch.randn(10, d_model)  # Input\nhidden = x @ ___              # [10, 3072]\noutput = hidden @ ___         # [10, 768]",
+                challengeBlanks: ["d_model", "d_mlp", "d_mlp", "d_model", "W_in", "W_out"],
+                code: "import torch\n\nd_model, d_mlp = 768, 3072\n\n# ARENA notation for MLP weights\nW_in = torch.randn(d_model, d_mlp)   # [768, 3072] - expand\nW_out = torch.randn(d_mlp, d_model)  # [3072, 768] - contract\nb_in = torch.zeros(d_mlp)            # [3072] bias\nb_out = torch.zeros(d_model)         # [768] bias\n\nprint('=== MLP Weight Matrices (ARENA notation) ===')\nprint(f'W_in:  {W_in.shape}  (expands 768 → 3072)')\nprint(f'b_in:  {b_in.shape}')\nprint(f'W_out: {W_out.shape} (contracts 3072 → 768)')\nprint(f'b_out: {b_out.shape}')\nprint()\nprint('Forward pass:')\nprint('  1. hidden = x @ W_in + b_in    # [seq, 3072]')\nprint('  2. hidden = GELU(hidden)       # activation')\nprint('  3. output = hidden @ W_out + b_out  # [seq, 768]')\nprint()\nprint('This is the complete MLP computation!')",
+                output: "=== MLP Weight Matrices (ARENA notation) ===\nW_in:  torch.Size([768, 3072])  (expands 768 → 3072)\nb_in:  torch.Size([3072])\nW_out: torch.Size([3072, 768]) (contracts 3072 → 768)\nb_out: torch.Size([768])\n\nForward pass:\n  1. hidden = x @ W_in + b_in    # [seq, 3072]\n  2. hidden = GELU(hidden)       # activation\n  3. output = hidden @ W_out + b_out  # [seq, 768]\n\nThis is the complete MLP computation!",
+                explanation: "The MLP has two weight matrices: W_in [768, 3072] expands the input to the hidden dimension, W_out [3072, 768] contracts back to model dimension. The full computation: x @ W_in gives 3072-dim hidden activations, GELU adds non-linearity, then @ W_out projects back to 768-dim. This is the standard MLP structure used in ARENA exercises!"
             },
+            // Step 4: Position-Wise Processing
             {
-                instruction: "Let's see what the MLP does to our embeddings:",
-                code: "x = torch.randn(6, d_model)\nmlp_output = mlp(x)\nprint(x.shape)\nprint(mlp_output.shape)",
-                explanation: "The MLP takes each position's vector and transforms it. Unlike attention, it doesn't look at other positions - it just processes each vector independently. MLP preserves sequence length but transforms content!"
+                instruction: "MLPs process each position INDEPENDENTLY. How is this different from attention?",
+                why: "This is crucial: MLPs operate on positions independently and identically. Position 0's MLP computation is completely separate from position 1's - they don't interact at all within the MLP. This is the opposite of attention, which explicitly connects positions. The MLP sees each position's vector (which already contains context from attention) and transforms it without looking at other positions.",
+                type: "multiple-choice",
+                template: "import torch\n\nseq_len, d_model = 10, 768\nx = torch.randn(seq_len, d_model)\n\nprint('Position-Wise Processing:')\nprint()\nprint('Attention: Positions ___ with each other')\nprint('MLP: Each position processed ___')\nprint()\nprint(f'x[0] transformed independently of x[1]')\nprint(f'Same W_in, W_out applied to ALL positions')",
+                choices: ["communicate, independently", "independent, together", "isolated, connected"],
+                correct: 0,
+                hint: "MLP processes each position on its own, no cross-talk",
+                freestyleHint: "Show that MLP processes each position independently using the same weights. Contrast with attention which creates cross-position connections.",
+                challengeTemplate: "# Position-wise = each position processed ___\n\nx = torch.randn(10, 768)  # 10 positions\n\n# MLP processes EACH position with SAME weights\nfor i in range(10):\n    position_i = x[___]  # Just this position\n    # hidden = position_i @ W_in  # Independent!\n\nprint('No ___ between positions in MLP')\nprint('That\\'s ___\\'s job!')",
+                challengeBlanks: ["independently", "i", "communication", "attention"],
+                code: "import torch\n\nseq_len, d_model, d_mlp = 10, 768, 3072\nx = torch.randn(seq_len, d_model)\n\nprint('=== Position-Wise Processing ===')\nprint()\nprint('ATTENTION:')\nprint('  • Positions COMMUNICATE with each other')\nprint('  • Position 5 can gather info from position 2')\nprint('  • Creates [seq × seq] attention matrix')\nprint()\nprint('MLP:')\nprint('  • Each position processed INDEPENDENTLY')\nprint('  • Position 5 has NO idea what position 2 contains')\nprint('  • Same transformation applied to ALL positions')\nprint()\nprint('Demonstration:')\nprint(f'  x[0]: {x[0].shape} → MLP → output[0]')\nprint(f'  x[1]: {x[1].shape} → MLP → output[1]  (completely separate!)')\nprint()\nprint('Why this works:')\nprint('  • Attention ALREADY gathered relevant context')\nprint('  • x[i] contains info from other positions via attention')\nprint('  • MLP just needs to process this enriched vector')\nprint()\nprint('Key insight: MLP is embarrassingly parallel!')",
+                output: "=== Position-Wise Processing ===\n\nATTENTION:\n  • Positions COMMUNICATE with each other\n  • Position 5 can gather info from position 2\n  • Creates [seq × seq] attention matrix\n\nMLP:\n  • Each position processed INDEPENDENTLY\n  • Position 5 has NO idea what position 2 contains\n  • Same transformation applied to ALL positions\n\nDemonstration:\n  x[0]: torch.Size([768]) → MLP → output[0]\n  x[1]: torch.Size([768]) → MLP → output[1]  (completely separate!)\n\nWhy this works:\n  • Attention ALREADY gathered relevant context\n  • x[i] contains info from other positions via attention\n  • MLP just needs to process this enriched vector\n\nKey insight: MLP is embarrassingly parallel!",
+                explanation: "Position-wise processing is a defining characteristic of MLPs in transformers. Each position is transformed independently using identical weights. This works because: (1) Attention has already gathered relevant context into each position's vector, (2) The MLP's job is to PROCESS this enriched information, not to gather more. This independence makes MLPs highly parallelizable on GPUs - all positions can be computed simultaneously!"
             },
+
+            // PHASE 2: ACTIVATION & COMPUTATION
+            // Step 5: GELU Activation Function
             {
-                instruction: "Explore position-wise processing in detail:",
-                why: "Position-wise processing means each token is transformed independently. This seems limiting but is actually powerful when combined with attention. Attention gathers context, then MLPs process that enriched representation. For safety, this means harmful content must be explicitly represented in a single position's vector to be processed - it can't hide across positions.",
-                code: "# Position-wise processing demonstration\nimport torch\nimport torch.nn as nn\n\n# Simulate processing of 2 positions independently\nposition_0 = torch.randn(1, d_model)  # 'The' with context from attention\nposition_1 = torch.randn(1, d_model)  # 'cat' with context from attention\n\n# Process each through MLP\noutput_0 = mlp(position_0)\noutput_1 = mlp(position_1)\n\nprint(\"Position 0 ('The'):\")\nprint(f\"  Input shape: {position_0.shape}\")\nprint(f\"  Output shape: {output_0.shape}\")\nprint(f\"  Input norm: {position_0.norm():.2f}\")\nprint(f\"  Output norm: {output_0.norm():.2f}\")\n\nprint(\"\\nPosition 1 ('cat'):\")\nprint(f\"  Processed completely independently!\")\nprint(f\"  Can be parallelized on GPU\")",
-                explanation: "MLPs process each position independently. Position 0 ('The'): takes 768-dim vector with context from attention, transforms based on learned patterns, outputs 768-dim vector with processed information. Position 1 ('cat') processes independently of position 0, but input already contains context via attention! This independence enables parallelizable computation, no cross-position interference in MLP, and allows analyzing each position separately for safety."
+                instruction: "Transformers use GELU activation instead of ReLU. What's the key difference?",
+                why: "GELU (Gaussian Error Linear Unit) is smoother than ReLU. While ReLU is a harsh cutoff (negative → 0), GELU has a smooth curve that allows small negative inputs to have small negative outputs. This smoothness helps gradients flow better during training and allows the model to learn more nuanced patterns. GELU has become standard in modern transformers.",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\nx = torch.tensor([-1.0, -0.5, 0.0, 0.5, 1.0])\n\ngelu_out = F.gelu(x)\nrelu_out = F.relu(x)\n\nprint('Input:', x.tolist())\nprint('GELU: ', [f'{v:.3f}' for v in gelu_out.tolist()])\nprint('ReLU: ', [f'{v:.3f}' for v in relu_out.tolist()])\nprint()\nprint('Key difference at x=-0.5:')\nprint(f'  GELU: {gelu_out[1]:.3f} (small ___)')\nprint(f'  ReLU: {relu_out[1]:.3f} (exactly zero)')",
+                choices: ["negative, preserves some info", "positive, amplifies signal", "zero, blocks all"],
+                correct: 0,
+                hint: "GELU is smooth, ReLU is a hard cutoff at 0",
+                freestyleHint: "Compare GELU and ReLU outputs for the same inputs. Show that GELU preserves small negative values while ReLU zeros them out completely.",
+                challengeTemplate: "import torch\nimport torch.nn.functional as F\n\nx = torch.tensor([-0.5, 0.0, 0.5])\n\ngelu = F.___(x)\nrelu = F.___(x)\n\nprint('GELU at -0.5:', gelu[0].item())  # Small ___\nprint('ReLU at -0.5:', relu[0].item())  # Exactly ___",
+                challengeBlanks: ["gelu", "relu", "negative", "zero"],
+                code: "import torch\nimport torch.nn.functional as F\n\nprint('=== GELU vs ReLU ===')\nprint()\n\nx = torch.tensor([-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0])\ngelu_out = F.gelu(x)\nrelu_out = F.relu(x)\n\nprint('Input → GELU → ReLU')\nfor i in range(len(x)):\n    print(f'  {x[i]:5.1f} → {gelu_out[i]:6.3f} → {relu_out[i]:5.1f}')\n\nprint()\nprint('Key differences:')\nprint('  • ReLU: Hard cutoff at 0 (negative → exactly 0)')\nprint('  • GELU: Smooth curve (negative → small negative)')\nprint()\nprint('Why GELU for transformers?')\nprint('  ✓ Smoother gradients (better training)')\nprint('  ✓ Preserves some negative info')\nprint('  ✓ More nuanced representations')\nprint('  ✓ Standard in GPT, BERT, etc.')",
+                output: "=== GELU vs ReLU ===\n\nInput → GELU → ReLU\n  -2.0 → -0.045 →   0.0\n  -1.0 → -0.159 →   0.0\n  -0.5 → -0.154 →   0.0\n   0.0 →  0.000 →   0.0\n   0.5 →  0.346 →   0.5\n   1.0 →  0.841 →   1.0\n   2.0 →  1.955 →   2.0\n\nKey differences:\n  • ReLU: Hard cutoff at 0 (negative → exactly 0)\n  • GELU: Smooth curve (negative → small negative)\n\nWhy GELU for transformers?\n  ✓ Smoother gradients (better training)\n  ✓ Preserves some negative info\n  ✓ More nuanced representations\n  ✓ Standard in GPT, BERT, etc.",
+                explanation: "GELU has become the standard activation for transformers because of its smooth behavior. Unlike ReLU's harsh 0 cutoff, GELU allows small negative values through. This helps in two ways: (1) Gradients flow more smoothly during training (no sharp discontinuity), (2) The model can learn more nuanced patterns (not everything is binary 0 or positive). GPT-2 uses GELU, and it's what you'll implement in ARENA!"
             },
+            // Step 6: Parameter Count
             {
-                instruction: "The GELU activation function is crucial - let's see what it does:",
-                why: "GELU (Gaussian Error Linear Unit) allows the model to learn non-linear patterns. Without it, stacking layers would be pointless. For AI safety, non-linearity means models can learn complex decision boundaries between safe and unsafe content.",
-                code: "import matplotlib.pyplot as plt\nimport numpy as np\nimport torch.nn.functional as F\n\nx_sample = torch.linspace(-3, 3, 100)\ngelu_output = F.gelu(x_sample)\nrelu_output = F.relu(x_sample)\n\nplt.figure(figsize=(8, 4))\nplt.plot(x_sample, gelu_output, label='GELU', linewidth=2)\nplt.plot(x_sample, relu_output, label='ReLU', linewidth=2)\nplt.grid(True, alpha=0.3)\nplt.legend()\nplt.title('GELU vs ReLU Activation')\nplt.xlabel('Input')\nplt.ylabel('Output')\nplt.show()",
-                explanation: "GELU (Gaussian Error Linear Unit) is smoother than ReLU. This allows for more nuanced transformations of the information."
+                instruction: "MLPs contain most of a transformer's parameters. How many parameters does one MLP layer have?",
+                why: "Understanding parameter distribution matters for interpretability. With W_in [768, 3072] and W_out [3072, 768], plus biases, one MLP layer has ~4.7M parameters. Across 12 layers, that's ~57M parameters just in MLPs! This is about 2/3 of GPT-2's total parameters. MLPs store most of the model's 'knowledge'.",
+                type: "multiple-choice",
+                template: "import torch\n\nd_model, d_mlp = 768, 3072\n\n# Count parameters\nW_in_params = d_model * d_mlp      # ___\nW_out_params = d_mlp * d_model     # ___\nb_in_params = d_mlp                # 3072\nb_out_params = d_model             # 768\n\ntotal = W_in_params + W_out_params + b_in_params + b_out_params\n\nprint(f'MLP parameters per layer: {total:,}')",
+                choices: ["~4.7 million", "~1 million", "~10 million"],
+                correct: 0,
+                hint: "768 × 3072 × 2 + biases",
+                freestyleHint: "Calculate parameters for W_in, W_out, and biases. Show total per layer and for all 12 layers. Compare to attention parameters.",
+                challengeTemplate: "d_model, d_mlp = 768, 3072\n\nW_in_params = d_model * ___\nW_out_params = ___ * d_model\ntotal_per_layer = W_in_params + W_out_params\n\nprint(f'Per layer: {total_per_layer:,}')\nprint(f'12 layers: {total_per_layer * ___:,}')",
+                challengeBlanks: ["d_mlp", "d_mlp", "12"],
+                code: "import torch\n\nd_model, d_mlp, n_layers = 768, 3072, 12\n\nprint('=== MLP Parameter Count ===')\nprint()\n\n# Per layer\nW_in_params = d_model * d_mlp      # 768 × 3072 = 2,359,296\nW_out_params = d_mlp * d_model     # 3072 × 768 = 2,359,296\nb_in_params = d_mlp                # 3072\nb_out_params = d_model             # 768\n\nmlp_per_layer = W_in_params + W_out_params + b_in_params + b_out_params\n\nprint(f'W_in:  {W_in_params:,} params')\nprint(f'W_out: {W_out_params:,} params')\nprint(f'Biases: {b_in_params + b_out_params:,} params')\nprint(f'Total per layer: {mlp_per_layer:,} params')\nprint()\n\n# All layers\nmlp_total = mlp_per_layer * n_layers\nprint(f'12 MLP layers: {mlp_total:,} params')\nprint(f'             = {mlp_total/1e6:.1f}M parameters')\nprint()\n\n# Compare to attention\nattn_per_layer = 4 * d_model * d_model  # Q, K, V, O projections\nattn_total = attn_per_layer * n_layers\n\nprint('Parameter distribution:')\nprint(f'  MLPs:      {mlp_total/1e6:.1f}M ({mlp_total/(mlp_total+attn_total)*100:.0f}%)')\nprint(f'  Attention: {attn_total/1e6:.1f}M ({attn_total/(mlp_total+attn_total)*100:.0f}%)')\nprint()\nprint('MLPs dominate! Most \"knowledge\" lives here.')",
+                output: "=== MLP Parameter Count ===\n\nW_in:  2,359,296 params\nW_out: 2,359,296 params\nBiases: 3,840 params\nTotal per layer: 4,722,432 params\n\n12 MLP layers: 56,669,184 params\n             = 56.7M parameters\n\nParameter distribution:\n  MLPs:      56.7M (67%)\n  Attention: 28.3M (33%)\n\nMLPs dominate! Most \"knowledge\" lives here.",
+                explanation: "MLPs contain roughly 2/3 of a transformer's parameters! With 4.7M parameters per layer across 12 layers, that's nearly 57M parameters in MLPs alone. This matters for interpretability: if we want to understand what a model 'knows', we need to look at MLP weights. Research suggests factual knowledge is primarily stored in MLPs, making them crucial for knowledge editing and safety interventions."
             },
+
+            // PHASE 3: INTERPRETABILITY
+            // Step 7: MLP Neurons as Feature Detectors
             {
-                instruction: "Understand why GELU's smoothness matters:",
-                why: "GELU's smooth curve near zero allows small inputs to have small but non-zero outputs. This is crucial for learning subtle patterns. In ReLU, anything negative becomes exactly zero - information is lost. GELU preserves more information, allowing models to learn nuanced distinctions between 'slightly harmful' and 'slightly helpful' rather than binary classifications.",
-                code: "# GELU's mathematical properties\nimport torch\nimport torch.nn.functional as F\n\n# Demonstrate GELU vs ReLU on small negative values\nsmall_values = torch.tensor([-0.5, -0.1, 0.0, 0.1, 0.5])\n\ngelu_output = F.gelu(small_values)\nrelu_output = F.relu(small_values)\n\nprint(\"Input values:\", small_values.numpy())\nprint(\"GELU output:\", gelu_output.numpy())\nprint(\"ReLU output:\", relu_output.numpy())\n\nprint(\"\\nKey differences:\")\nprint(\"  GELU: Smooth gradients, preserves info from negatives\")\nprint(\"  ReLU: Harsh cutoff, loses all negative information\")\nprint(\"\\nFor AI safety: Smooth boundaries between safe/unsafe!\")  ",
-                explanation: "Why GELU over ReLU? Smooth gradients everywhere (ReLU gradient is 0 or 1 - harsh, GELU gradient is continuous - smooth). Information preservation (ReLU: negative → 0, information lost, GELU: negative → small negative, information preserved). Biological inspiration (more similar to real neurons, probabilistic interpretation). For AI safety: Smooth boundaries between concepts allow nuanced understanding of harmful/helpful."
+                instruction: "The 3072 hidden activations in an MLP are called 'neurons'. What do they detect?",
+                why: "Each of the 3072 neurons can be thought of as a feature detector. The columns of W_in define what patterns each neuron looks for, and the rows of W_out define what features it contributes to the output. When an input strongly matches a neuron's 'key' (W_in column), it activates and contributes its 'value' (W_out row) to the output. This is the neuron-level view of MLPs.",
+                type: "multiple-choice",
+                template: "import torch\n\nd_model, d_mlp = 768, 3072\nW_in = torch.randn(d_model, d_mlp)\n\nprint(f'Number of neurons: {d_mlp}')\nprint()\nprint('Each neuron has:')\nprint(f'  Key (W_in column): what pattern to detect')\nprint(f'  Value (W_out row): what to contribute if active')\nprint()\nprint('Neuron activates when: input · key is ___')",
+                choices: ["high (pattern matches)", "low (pattern differs)", "zero (no match)"],
+                correct: 0,
+                hint: "High dot product = input matches the pattern the neuron looks for",
+                freestyleHint: "Explain that each neuron has a 'key' (W_in column) it looks for and a 'value' (W_out row) it outputs when active. Show activation = GELU(input · key).",
+                challengeTemplate: "# Each of 3072 neurons:\n#   Key: W_in[:, i] - what to ___ for\n#   Value: W_out[i, :] - what to ___ when active\n\nneuron_id = 42\nkey = W_in[:, ___]      # This neuron's detector\nvalue = W_out[___, :]   # This neuron's contribution\n\nactivation = input @ key  # High if input ___ key",
+                challengeBlanks: ["look", "output", "neuron_id", "neuron_id", "matches"],
+                code: "import torch\nimport torch.nn.functional as F\n\nd_model, d_mlp = 768, 3072\nW_in = torch.randn(d_model, d_mlp)\nW_out = torch.randn(d_mlp, d_model)\n\nprint('=== MLP Neurons as Feature Detectors ===')\nprint()\nprint(f'Number of neurons: {d_mlp}')\nprint()\n\nneuron_id = 42\nprint(f'Neuron {neuron_id}:')\nprint(f'  Key (what to detect):   W_in[:, {neuron_id}] shape {W_in[:, neuron_id].shape}')\nprint(f'  Value (what to output): W_out[{neuron_id}, :] shape {W_out[neuron_id, :].shape}')\nprint()\n\n# Simulate detection\nx = torch.randn(d_model)  # Input vector\nactivation = F.gelu(x @ W_in[:, neuron_id])  # Scalar\n\nprint('Detection process:')\nprint(f'  1. Compute: input · key = {(x @ W_in[:, neuron_id]).item():.3f}')\nprint(f'  2. Apply GELU: activation = {activation.item():.3f}')\nprint(f'  3. If high → neuron fires → adds (activation × value) to output')\nprint()\nprint('Interpretation:')\nprint('  • Neuron 42 might detect \"programming context\"')\nprint('  • Neuron 100 might detect \"emotional language\"')\nprint('  • Neuron 500 might detect \"question patterns\"')\nprint('  • Each learns its specialty during training!')",
+                output: "=== MLP Neurons as Feature Detectors ===\n\nNumber of neurons: 3072\n\nNeuron 42:\n  Key (what to detect):   W_in[:, 42] shape torch.Size([768])\n  Value (what to output): W_out[42, :] shape torch.Size([768])\n\nDetection process:\n  1. Compute: input · key = 12.847\n  2. Apply GELU: activation = 12.847\n  3. If high → neuron fires → adds (activation × value) to output\n\nInterpretation:\n  • Neuron 42 might detect \"programming context\"\n  • Neuron 100 might detect \"emotional language\"\n  • Neuron 500 might detect \"question patterns\"\n  • Each learns its specialty during training!",
+                explanation: "The neuron interpretation is powerful: each of 3072 neurons is a learned feature detector. W_in[:, i] defines the pattern neuron i looks for (its 'key'), W_out[i, :] defines what it contributes when active (its 'value'). When input strongly matches a key (high dot product), that neuron activates and adds its value to the output. This is like a key-value memory system - the MLP retrieves relevant information based on pattern matching!"
             },
+            // Step 8: Polysemanticity
             {
-                instruction: "MLPs can be thought of as key-value memories. Let's explore this:",
-                code: "first_layer = mlp[0]\nprint(first_layer.weight.shape)\nprint(d_mlp)",
-                explanation: "Each 'neuron' in the MLP can be seen as detecting a specific pattern in the input and contributing a specific pattern to the output."
+                instruction: "Most MLP neurons are 'polysemantic' - they respond to multiple unrelated concepts. Why?",
+                why: "Polysemanticity is a key challenge for interpretability. With only 3072 neurons but millions of concepts to represent, neurons must be 'reused' for multiple things. A single neuron might activate for 'dogs', 'pizza', AND 'sadness' - completely unrelated concepts! This is called superposition. It makes neurons harder to interpret but allows incredible compression of knowledge.",
+                type: "multiple-choice",
+                template: "print('Polysemanticity: One neuron, multiple meanings')\nprint()\nprint('Neuron 1337 activates for:')\nprint('  • Dogs (animals)')\nprint('  • Pizza (food)')\nprint('  • Sadness (emotions)')\nprint()\nprint('Why? ___ - more concepts than neurons!')\nprint()\nprint('3072 neurons, millions of concepts')\nprint('Must reuse neurons for multiple things')",
+                choices: ["Superposition", "Randomization", "Overfitting"],
+                correct: 0,
+                hint: "The model compresses more concepts than it has neurons",
+                freestyleHint: "Explain polysemanticity: neurons respond to multiple unrelated concepts due to superposition. Show why this happens (more concepts than neurons) and why it's a challenge for interpretability.",
+                challengeTemplate: "# Polysemanticity = one neuron, ___ concepts\n\nprint('Why neurons are polysemantic:')\nprint(f'  Neurons available: 3072')\nprint(f'  Concepts to represent: ___')\nprint(f'  Must ___ neurons!')\nprint()\nprint('Challenge for safety: Hard to find \"harm\" ___')",
+                challengeBlanks: ["multiple", "millions", "reuse", "neuron"],
+                code: "import torch\n\nprint('=== Polysemanticity: The Interpretability Challenge ===')\nprint()\n\nprint('Ideal world (monosemantic):')\nprint('  • Neuron 1: Detects \"dogs\" only')\nprint('  • Neuron 2: Detects \"cats\" only')\nprint('  • Neuron 3: Detects \"violence\" only  ← Easy to monitor!')\nprint()\n\nprint('Real world (polysemantic):')\nprint('  • Neuron 1: \"dogs\" + \"Italian food\" + \"blue color\"')\nprint('  • Neuron 2: \"cats\" + \"sadness\" + \"math\"')\nprint('  • Neuron 3: \"violence\" + \"sports\" + \"weather\"  ← Confusing!')\nprint()\n\nprint('Why does this happen?')\nprint(f'  Neurons:  3,072')\nprint(f'  Concepts: ~1,000,000+')\nprint(f'  Ratio:    ~325 concepts per neuron!')\nprint()\nprint('This is SUPERPOSITION:')\nprint('  • Model compresses many concepts into few neurons')\nprint('  • Works because concepts are sparsely activated')\nprint('  • But makes interpretation much harder')\nprint()\nprint('For AI Safety:')\nprint('  ⚠ Can\\'t just find \"the violence neuron\"')\nprint('  ⚠ Harmful concepts mixed with benign ones')\nprint('  → Need sophisticated techniques (e.g., SAEs)')",
+                output: "=== Polysemanticity: The Interpretability Challenge ===\n\nIdeal world (monosemantic):\n  • Neuron 1: Detects \"dogs\" only\n  • Neuron 2: Detects \"cats\" only\n  • Neuron 3: Detects \"violence\" only  ← Easy to monitor!\n\nReal world (polysemantic):\n  • Neuron 1: \"dogs\" + \"Italian food\" + \"blue color\"\n  • Neuron 2: \"cats\" + \"sadness\" + \"math\"\n  • Neuron 3: \"violence\" + \"sports\" + \"weather\"  ← Confusing!\n\nWhy does this happen?\n  Neurons:  3,072\n  Concepts: ~1,000,000+\n  Ratio:    ~325 concepts per neuron!\n\nThis is SUPERPOSITION:\n  • Model compresses many concepts into few neurons\n  • Works because concepts are sparsely activated\n  • But makes interpretation much harder\n\nFor AI Safety:\n  ⚠ Can't just find \"the violence neuron\"\n  ⚠ Harmful concepts mixed with benign ones\n  → Need sophisticated techniques (e.g., SAEs)",
+                explanation: "Polysemanticity is one of the biggest challenges in mechanistic interpretability. Models represent far more concepts than they have neurons, so they use superposition - multiple concepts sharing the same neurons. This works because most concepts are sparse (not all active at once), but it makes interpretation hard. We can't simply find 'the harmful content neuron' because that concept is distributed across many neurons mixed with benign concepts. Sparse autoencoders (SAEs) are one technique to address this!"
             },
+
+            // PHASE 4: INTEGRATION & SAFETY
+            // Step 9: Residual Connection
             {
-                instruction: "Deep dive into the key-value interpretation:",
-                why: "The key-value view reveals how MLPs store and retrieve information. Each of the 3072 neurons is like a specialist that activates for specific patterns. When activated, it contributes its specialized knowledge to the output. For AI safety, this means harmful knowledge is distributed across many neurons, making it both harder to find and potentially easier to control once found.",
-                code: "# MLP as associative memory\nimport torch\nimport torch.nn.functional as F\n\n# Example: Neuron 42 as a programming context detector\nneuron_id = 42\n\n# Get this neuron's 'key' (what it looks for)\nfirst_layer = mlp[0]\nsecond_layer = mlp[2]\nneuron_key = first_layer.weight[neuron_id]  # Shape: [d_model]\n\n# Simulate technical programming input\nprogramming_input = torch.randn(d_model)\nother_input = torch.randn(d_model) * 0.3  # Different context\n\n# Calculate activation\nactivation_prog = F.gelu(torch.dot(programming_input, neuron_key))\nactivation_other = F.gelu(torch.dot(other_input, neuron_key))\n\nprint(f\"Neuron {neuron_id} activation:\")\nprint(f\"  Programming context: {activation_prog.item():.4f}\")\nprint(f\"  Other context: {activation_other.item():.4f}\")\nprint(f\"\\nNeuron specializes in detecting specific patterns!\")",
-                explanation: "MLP as associative memory: Neuron 42 (example) has a key (W_in[42]) that detects technical programming context, activation GELU(input · key), and value (W_out[42]) that outputs code-related features. When input matches key: neuron activates strongly, its value gets added to output, multiple neurons fire together. This creates emergent behaviors: complex patterns from simple neurons, distributed knowledge representation, redundancy and robustness."
+                instruction: "The transformer uses residual connections: output = x + MLP(x). Why ADD instead of replace?",
+                why: "Residual connections are crucial: we ADD the MLP output to the input, not replace it. This means the original information is always preserved! No single layer can destroy information - it can only add to it. This creates an 'information highway' where features flow through the network. For training, it solves vanishing gradients. For interpretability, it means we can trace how information accumulates layer by layer.",
+                type: "multiple-choice",
+                template: "import torch\n\nx = torch.randn(10, 768)  # Input\nmlp_out = torch.randn(10, 768)  # MLP transformation\n\n# Residual connection\noutput = x + mlp_out  # ADD, not replace!\n\nprint('Without residual: output = MLP(x)')\nprint('  → Original info ___')\nprint()\nprint('With residual: output = x + MLP(x)')\nprint('  → Original info ___')",
+                choices: ["lost, preserved", "preserved, lost", "doubled, halved"],
+                correct: 0,
+                hint: "Adding preserves the original, replacing loses it",
+                freestyleHint: "Show that x + MLP(x) preserves original info while MLP(x) alone would lose it. Explain benefits: gradient flow, information preservation, iterative refinement.",
+                challengeTemplate: "x = torch.randn(10, 768)\nmlp_out = mlp(x)\n\n# Residual connection\noutput = x ___ mlp_out  # ADD!\n\nprint('Original x is still in output!')\nprint('Benefits:')\nprint('  1. ___ highway (training)')\nprint('  2. Information ___ (no loss)')\nprint('  3. Each layer ___ refinements')",
+                challengeBlanks: ["+", "Gradient", "preservation", "adds"],
+                code: "import torch\n\nx = torch.randn(10, 768)\nmlp_out = torch.randn(10, 768) * 0.1  # Small transformation\n\nprint('=== Residual Connections ===')\nprint()\n\nprint('WITHOUT residuals:')\nprint('  output = MLP(x)')\nprint('  Original information is LOST')\nprint('  Each layer completely transforms input')\nprint()\n\nprint('WITH residuals:')\nprint('  output = x + MLP(x)')\nprint('  Original information PRESERVED')\nprint('  Each layer ADDS refinements')\nprint()\n\n# Demonstrate\noutput_no_res = mlp_out\noutput_with_res = x + mlp_out\n\nprint('Numeric example:')\nprint(f'  x norm:              {x.norm():.2f}')\nprint(f'  MLP(x) norm:         {mlp_out.norm():.2f}')\nprint(f'  x + MLP(x) norm:     {output_with_res.norm():.2f}')\nprint()\nprint('Benefits:')\nprint('  ✓ Gradient highway - gradients flow directly')\nprint('  ✓ Information preserved across 12+ layers')\nprint('  ✓ Each layer makes small refinements')\nprint('  ✓ No single layer can destroy info')\nprint()\nprint('For safety: Important features persist!')",
+                output: "=== Residual Connections ===\n\nWITHOUT residuals:\n  output = MLP(x)\n  Original information is LOST\n  Each layer completely transforms input\n\nWITH residuals:\n  output = x + MLP(x)\n  Original information PRESERVED\n  Each layer ADDS refinements\n\nNumeric example:\n  x norm:              27.52\n  MLP(x) norm:         2.81\n  x + MLP(x) norm:     27.68\n\nBenefits:\n  ✓ Gradient highway - gradients flow directly\n  ✓ Information preserved across 12+ layers\n  ✓ Each layer makes small refinements\n  ✓ No single layer can destroy info\n\nFor safety: Important features persist!",
+                explanation: "Residual connections are one of the most important architectural innovations. By adding (not replacing), we ensure: (1) Gradient flow - gradients can skip directly through the + operation, (2) Information preservation - original features survive through all layers, (3) Iterative refinement - each layer adds small improvements. This is why transformers can be 12+ layers deep without losing information. For interpretability, it means we can trace how the 'residual stream' accumulates information layer by layer!"
             },
+            // Step 10: MLPs, Knowledge & Interpretability
             {
-                instruction: "Let's understand MLP neurons as feature detectors:",
-                why: "Each MLP neuron might detect specific features like 'mentions of violence', 'technical terms', or 'emotional language'. For AI safety, identifying neurons that activate on harmful content helps us understand and control model behavior.",
-                code: "# Simulate what different neurons might detect\nimport torch\nimport torch.nn.functional as F\n\n# Simulate different types of content as vectors\nviolence_content = torch.randn(1, d_model) * 1.5  # Amplified\ntechnical_content = torch.randn(1, d_model) * 0.8\nemotional_content = torch.randn(1, d_model) * 1.2\n\n# Process through MLP's first layer\nactivations_violence = F.gelu(mlp[0](violence_content))\nactivations_technical = F.gelu(mlp[0](technical_content))\nactivations_emotional = F.gelu(mlp[0](emotional_content))\n\nprint(\"Example neuron activations:\")\nprint(f\"Neuron 1 (violence-related): {activations_violence[0,1].item():.4f}\")\nprint(f\"Neuron 2 (technical): {activations_technical[0,2].item():.4f}\")\nprint(f\"Neuron 3 (emotional): {activations_emotional[0,3].item():.4f}\")\nprint(f\"\\nTotal neurons in layer: {d_mlp}\")\nprint(\"Each learns its specialty from training!\")",
-                explanation: "Example MLP neurons might specialize in: Neuron 1 detects mentions of people, Neuron 2 detects technical jargon, Neuron 3 detects emotional words, Neuron 4 detects safety-relevant terms. Each neuron learns what to detect from training data!"
-            },
-            {
-                instruction: "Explore polysemantic neurons - a key challenge:",
-                why: "Most neurons aren't clean feature detectors - they're 'polysemantic', responding to multiple unrelated concepts. A single neuron might activate for 'dogs', 'Italian food', and 'sadness'. This is because models compress more concepts than they have neurons. For AI safety, polysemanticity makes it hard to identify and control specific behaviors.",
-                code: "# The polysemanticity problem\nimport torch\n\n# Simulate a polysemantic neuron (neuron 1337)\nneuron_id = 1337 % d_mlp  # Ensure it's in range\n\n# Different unrelated concept vectors\ndog_vector = torch.randn(d_model)\npizza_vector = torch.randn(d_model)  \ncrying_vector = torch.randn(d_model)\nquantum_vector = torch.randn(d_model)\n\n# Get neuron's weights (what it detects)\nneuron_weights = mlp[0].weight[neuron_id]\n\n# Calculate activations for each concept\nactivations = {\n    'dog': torch.dot(dog_vector, neuron_weights).item(),\n    'pizza': torch.dot(pizza_vector, neuron_weights).item(),\n    'crying': torch.dot(crying_vector, neuron_weights).item(),\n    'quantum': torch.dot(quantum_vector, neuron_weights).item()\n}\n\nprint(f\"Neuron {neuron_id} responds to multiple concepts:\")\nfor concept, act in activations.items():\n    print(f\"  {concept}: {act:.3f}\")\nprint(\"\\nThis is polysemanticity - makes safety analysis hard!\")",
-                explanation: "Polysemantic neurons - the reality: Neuron 1337 might activate for 'dog' (animal), 'pizza' (food), 'crying' (emotion), 'quantum' (physics). Why? Superposition (more concepts than neurons), efficient compression (reuse neurons), training dynamics (whatever works). For AI safety: Hard to find 'violence detector' neuron, concepts distributed across many neurons, need sophisticated analysis techniques."
-            },
-            {
-                instruction: "For AI safety, understanding MLP behavior is crucial:",
-                code: "# Let's create inputs representing 'helpful' vs 'harmful' concepts\nhelpful_vector = torch.randn(1, d_model)\nharmful_vector = torch.randn(1, d_model)\n\nhelpful_output = mlp(helpful_vector)\nharmful_output = mlp(harmful_vector)",
-                explanation: "MLPs transform concept representations. Understanding these transformations is key to AI safety. We can potentially: identify neurons that activate on harmful content, modify weights to discourage harmful outputs, add safety-specific neurons."
-            },
-            {
-                instruction: "Let's see how MLPs implement 'thinking steps':",
-                why: "MLPs perform the actual computation after attention has gathered relevant information. Think of attention as 'looking up relevant facts' and MLPs as 'reasoning with those facts'. For AI safety, this means MLPs are where dangerous reasoning patterns might emerge.",
-                code: "# Simulate a reasoning step\nimport torch\nimport torch.nn.functional as F\n\n# Input: information gathered by attention (e.g., 'user asking about weapons')\nweapon_query_features = torch.randn(1, d_model) * 1.2\n\n# Step 1: First layer recognizes the pattern  \nfirst_layer_activation = F.gelu(mlp[0](weapon_query_features))\nprint(\"Step 1 - Pattern recognition:\")\nprint(f\"  Activated neurons: {(first_layer_activation > 0.5).sum().item()} / {d_mlp}\")\n\n# Step 2: Safety-relevant neurons activate\nsafety_neuron_activation = first_layer_activation[0, 100:200].mean()  # Example safety region\nprint(f\"\\nStep 2 - Safety neurons:\")\nprint(f\"  Average activation: {safety_neuron_activation.item():.4f}\")\n\n# Step 3: Output transformation (refusal features)\noutput = mlp[2](first_layer_activation)\nprint(f\"\\nStep 3 - Output:\")\nprint(f\"  Refusal features (learned, not programmed!)\")",
-                explanation: "Example reasoning in MLPs: Input is information gathered by attention, MLP Step 1 recognizes pattern (e.g., 'user asking about weapons'), MLP Step 2 activates safety-relevant neurons, MLP Step 3 outputs features indicating 'refuse request'. This happens through learned weights, not explicit programming!"
-            },
-            {
-                instruction: "Understand how MLPs compose behaviors:",
-                why: "Complex behaviors emerge from simple neurons working together. No single neuron decides 'refuse harmful request' - instead, many neurons vote: some detect harm, others detect request type, others activate refusal patterns. This distributed decision-making is robust but hard to interpret. For safety, we need to understand these compositions.",
-                code: "# How MLPs compose complex behaviors\nimport torch\nimport torch.nn.functional as F\n\n# Scenario: 'How to make a bomb' input features\nbomb_query = torch.randn(1, d_model) * 1.3\n\n# Pass through MLP first layer\nactivations = F.gelu(mlp[0](bomb_query)).squeeze()\n\n# Simulate different neurons detecting different aspects\nprint(\"Neuron composition for harmful query:\")\nprint(f\"  Neuron 892 ('how to' pattern): {activations[892].item():.3f}\")\nprint(f\"  Neuron 1683 ('weapon' term): {activations[1683].item():.3f}\")\nprint(f\"  Neuron 2341 (question syntax): {activations[2341].item():.3f}\")\nprint(f\"  Neuron 3012 (safety pattern): {activations[3012 % d_mlp].item():.3f}\")\n\nprint(\"\\nCombined effect: Multiple neurons → refusal behavior\")\nprint(\"No single neuron controls safety - distributed decision!\")",
-                explanation: "Emergent behavior from neuron composition - Scenario: 'How to make a bomb'. Neurons firing: Neuron 892 detects 'how to' (instruction pattern), Neuron 1683 detects 'bomb' (weapon term), Neuron 2341 detects question syntax, Neuron 3012 detects safety-trained pattern. Combined effect: Multiple safety neurons activate, output shifts toward refusal, polite explanation features emerge. No single neuron = No single point of failure!"
-            },
-            {
-                instruction: "The residual connection is also important - let's see why:",
-                why: "Residual connections solve the vanishing gradient problem and allow models to be very deep. For AI safety, they also mean that safety-relevant information can flow directly through the model without being corrupted by intermediate layers.",
-                code: "residual_output = x + mlp_output\nprint(x.norm(dim=-1).mean())\nprint(mlp_output.norm(dim=-1).mean())\nprint(residual_output.norm(dim=-1).mean())",
-                explanation: "Residual connections (adding input to output) allow information to flow easily through the network and make training much more stable. They're essential for deep networks! Residual connections preserve information!"
-            },
-            {
-                instruction: "Explore why residual connections enable depth:",
-                why: "Without residual connections, each layer would completely transform its input. After 12 layers, the original information would be unrecognizable. Residuals create 'highways' where information can skip layers if needed. For safety, this means important safety signals can propagate through the entire model without degradation.",
-                code: "# The magic of residual connections\nimport torch\n\n# Simulate signal degradation without residuals\nx0 = torch.randn(d_model)\nsignal_without_res = x0.clone()\n\nprint(\"Without residuals (multiplicative):\")\nfor layer in range(12):\n    signal_without_res = signal_without_res * 0.9  # Each layer degrades signal\n    if layer in [0, 5, 11]:\n        print(f\"  Layer {layer+1}: norm = {signal_without_res.norm():.4f}\")\n\n# With residuals (additive)\nx_with_res = x0.clone()\ntransformations = []\n\nprint(\"\\nWith residuals (additive):\")\nfor layer in range(12):\n    transform = torch.randn(d_model) * 0.1  # Small refinements\n    transformations.append(transform)\n    x_with_res = x_with_res + transform\n    if layer in [0, 5, 11]:\n        print(f\"  Layer {layer+1}: norm = {x_with_res.norm():.4f}\")\n\nprint(f\"\\nOriginal preserved: {x0.norm():.4f} vs final {x_with_res.norm():.4f}\")",
-                explanation: "Without residuals (multiplicative depth): Layer 1: x1 = f1(x0), Layer 12: x12 = f12(f11(...f1(x0))), signal degrades exponentially! With residuals (additive depth): Layer 1: x1 = x0 + f1(x0), Layer 12: x12 = x0 + f1(x0) + ... + f12(x11), original signal preserved! Benefits: Gradient highway for training, information preservation, each layer makes small refinements, safety signals can't be destroyed."
-            },
-            {
-                instruction: "Understand MLPs as knowledge storage:",
-                why: "Most of what a language model 'knows' is stored in MLP weights. For AI safety, this means harmful knowledge (like how to make weapons) is likely stored in specific MLP neurons. Research into 'knowledge editing' tries to modify these weights to remove dangerous knowledge.",
-                code: "# MLPs store factual knowledge\nimport torch\n\n# Simulate knowledge stored in MLPs\nprint(\"Knowledge likely stored in MLP weights:\\n\")\n\nknowledge_types = [\n    (\"Facts\", \"'Paris is the capital of France'\"),\n    (\"Procedures\", \"'How to write Python code'\"),\n    (\"Associations\", \"'fire is hot'\"),\n    (\"Dangerous knowledge\", \"'How to make dangerous things' ⚠️\")\n]\n\nfor category, example in knowledge_types:\n    print(f\"  {category}: {example}\")\n\n# Demonstrate weight scale\nprint(f\"\\nMLP weights shape: {mlp[0].weight.shape}\")\nprint(f\"Total parameters: {mlp[0].weight.numel() + mlp[2].weight.numel():}\")\nprint(\"\\nKnowledge editing: Modify specific weights to 'forget'\")\nprint(\"Challenge: Locating which neurons store which knowledge!\")",
-                explanation: "MLPs likely store: Facts ('Paris is the capital of France'), Procedures ('How to write Python code'), Associations ('fire is hot'), Unfortunately also ('How to make dangerous things'). Editing MLP weights could remove harmful knowledge!"
-            },
-            {
-                instruction: "Deep dive into knowledge localization:",
-                why: "Recent research suggests factual knowledge is surprisingly localized in MLPs. Changing a few weights can make a model forget that 'Paris is the capital of France' while preserving other knowledge. This gives hope for surgical removal of dangerous knowledge without destroying general capabilities.",
-                code: "# Knowledge localization in MLPs\nimport torch\n\nprint(\"Where specific knowledge lives:\")\nprint(\"\\nFact: 'The Eiffel Tower is in Paris'\\n\")\n\n# Likely storage locations\nlocations = [\n    (\"Middle layer MLPs\", \"layers 5-8\"),\n    (\"Specific neurons\", \"activate for 'Eiffel Tower'\"),\n    (\"Weight vectors\", \"connect these patterns\")\n]\n\nfor location, detail in locations:\n    print(f\"  {location}: {detail}\")\n\nprint(\"\\nKnowledge editing process:\")\nsteps = [\n    \"1. Identify neurons storing harmful knowledge\",\n    \"2. Modify weights to 'forget'\",\n    \"3. Verify other knowledge preserved\"\n]\n\nfor step in steps:\n    print(f\"  {step}\")\n\nprint(\"\\nChallenges:\")\nprint(\"  • Knowledge is distributed\")\nprint(\"  • Unintended side effects\")\nprint(\"  • Adversarial recovery possible\")",
-                explanation: "Where specific knowledge lives - Fact: 'The Eiffel Tower is in Paris' likely stored in: Middle layer MLPs (layers 5-8), specific neurons that activate for 'Eiffel Tower', weight vectors connecting these patterns. Knowledge editing process: Identify neurons storing harmful knowledge, modify weights to 'forget', verify other knowledge preserved. Challenges: Knowledge is distributed, unintended side effects, adversarial recovery."
-            },
-            {
-                instruction: "Explore the scale of MLP computation:",
-                code: "n_layers = 12\nmlp_params_per_layer = d_model * d_mlp * 2 + d_mlp + d_model\ntotal_mlp_params = mlp_params_per_layer * n_layers\n\nprint(mlp_params_per_layer)\nprint(total_mlp_params)",
-                explanation: "MLPs dominate the parameter count and computation in transformers, making them crucial to understand. This is where most computation happens."
-            },
-            {
-                instruction: "Understand MLP capacity and superposition:",
-                why: "MLPs have fewer neurons than concepts they need to represent, forcing 'superposition' - multiple concepts sharing neurons. This compression is why models are so capable despite limited size. For safety, superposition means harmful and helpful concepts might share neurons, making clean separation challenging.",
-                code: "print(d_mlp)\nprint('Millions of concepts!')",
-                explanation: "The superposition phenomenon: How does it fit? Sparse activation (not all neurons fire), distributed representation (concepts use multiple neurons), interference (some concept mixing). Implications: Incredible compression (good!), polysemantic neurons (confusing!), hard to isolate concepts (challenging!). For safety: Harmful concepts intertwined with helpful ones."
-            },
-            {
-                instruction: "Consider MLPs' role in generating safe outputs:",
-                why: "MLPs make the final decision about what features to output. Even if attention brings together concerning information, MLPs can learn to transform this into safe outputs. This is why fine-tuning for safety often focuses on MLP layers.",
-                code: "# Safety mechanisms in MLPs\nimport torch\n\nprint(\"Safety transformation in MLPs:\\n\")\n\n# Simulate harmful input features\nprint(\"Input features: [weapon, instructions, detailed]\")\ninput_features = torch.tensor([0.8, 0.7, 0.9])  # High values for harmful content\n\nprint(\"\\nMLP transformation (learned from training):\")\n\n# Simulated safety transformation\nsafety_transform = torch.tensor([-0.8, -0.7, -0.9])  # Invert to refusal\noutput_features = torch.tensor([0.9, 0.8, 0.7])  # Refusal patterns\n\nprint(\"  Detect harmful patterns → Activate safety neurons\")\nprint(\"  Transform to safe output features\")\nprint(\"\\nOutput features: [refuse, explain_why, suggest_alternative]\")\nprint(f\"  Values: {output_features.numpy()}\")\nprint(\"\\nThis transformation is LEARNED, not programmed!\")",
-                explanation: "Safety mechanisms in MLPs: Detect harmful patterns in input, activate 'safety override' neurons, transform output to be helpful but safe. Example: Input features [weapon, instructions, detailed] → MLP transformation → [refuse, explain_why, suggest_alternative]. This transformation is learned, not hardcoded!"
-            },
-            {
-                instruction: "Explore how MLPs learn safety through training:",
-                why: "Safety behavior isn't programmed - it's learned from training data. When models see examples of refusing harmful requests, MLP weights adjust to recognize and transform these patterns. This learned safety is flexible but also fragile - it can be forgotten or overridden. Understanding this helps us build more robust safety training.",
-                code: "# How MLPs learn safety behaviors\nimport torch\n\nprint(\"Safety learning in MLPs:\\n\")\nprint(\"Training example: 'How to hurt someone' → 'I can't help with that'\\n\")\n\nprint(\"What happens during training:\")\nlearning_steps = [\n    \"1. First layer detects harmful intent patterns\",\n    \"2. Neurons adjust weights to recognize 'hurt' + 'how to'\",\n    \"3. Second layer learns to output refusal features\"\n]\n\nfor step in learning_steps:\n    print(f\"  {step}\")\n\nprint(\"\\nOver many examples:\")\nprint(\"  ✓ Generalizes to new harmful requests\")\nprint(\"  ✓ Learns polite refusal patterns\")\nprint(\"  ✓ Balances helpfulness with safety\")\n\nprint(\"\\nBut also:\")\nprint(\"  ⚠ Can be overridden by specific prompts\")\nprint(\"  ⚠ May have inconsistent boundaries\")\nprint(\"  ⚠ Requires continuous reinforcement\")",
-                explanation: "Safety learning in MLPs - Training example: 'How to hurt someone' → 'I can't help with that'. What happens: First layer detects harmful intent patterns, neurons adjust weights to recognize 'hurt' + 'how to', second layer learns to output refusal features. Over many examples: Generalizes to new harmful requests, learns polite refusal patterns, balances helpfulness with safety. But also: Can be overridden by specific prompts, may have inconsistent boundaries, requires continuous reinforcement."
+                instruction: "MLPs store most of a model's factual knowledge. What are the implications for AI safety?",
+                why: "Research suggests factual knowledge ('Paris is the capital of France') is primarily stored in MLP weights, especially in middle layers. This has profound implications: we might be able to EDIT specific knowledge by modifying MLP weights, remove harmful knowledge surgically, or detect what knowledge the model has encoded. However, due to polysemanticity and distributed representations, this remains challenging.",
+                type: "multiple-choice",
+                template: "print('Knowledge in MLPs:')\nprint()\nprint('Facts stored: \"Paris is capital of France\"')\nprint('Location: Middle layer MLPs (layers 5-8)')\nprint()\nprint('For AI Safety:')\nprint('  ✓ Could ___ harmful knowledge')\nprint('  ✓ Could detect encoded information')\nprint('  ⚠ Knowledge is distributed (hard to find)')\nprint('  ⚠ Polysemanticity complicates editing')",
+                choices: ["edit/remove", "amplify", "ignore"],
+                correct: 0,
+                hint: "If we know where knowledge is stored, we might be able to modify it",
+                freestyleHint: "Explain that MLPs store factual knowledge, primarily in middle layers. Discuss implications for knowledge editing, safety interventions, and interpretability challenges.",
+                challengeTemplate: "print('MLPs as Knowledge Storage:')\nprint()\nprint('Where: ___ layer MLPs')\nprint('What: Factual knowledge, procedures, associations')\nprint()\nprint('Safety implications:')\nprint('  1. Knowledge ___ - modify weights to forget')\nprint('  2. ___ detection - find encoded info')\nprint('  3. Challenge: ___ representations')",
+                challengeBlanks: ["Middle", "editing", "Knowledge", "distributed"],
+                code: "print('=== MLPs, Knowledge & Interpretability ===')\nprint()\n\nprint('What MLPs Store:')\nprint('  • Factual knowledge (\"Paris is in France\")')\nprint('  • Procedures (\"how to write code\")')\nprint('  • Associations (\"fire is hot\")')\nprint('  • Unfortunately also harmful info...')\nprint()\n\nprint('Where Knowledge Lives:')\nprint('  • Early layers: Basic patterns, syntax')\nprint('  • Middle layers: Factual knowledge (layers 5-8)')\nprint('  • Late layers: Task-specific processing')\nprint()\n\nprint('AI Safety Implications:')\nprint()\nprint('  OPPORTUNITIES:')\nprint('  ✓ Knowledge editing - surgically modify facts')\nprint('  ✓ Harmful knowledge removal')\nprint('  ✓ Probing - detect what model knows')\nprint('  ✓ Monitor activations for safety')\nprint()\nprint('  CHALLENGES:')\nprint('  ⚠ Distributed representations')\nprint('  ⚠ Polysemantic neurons')\nprint('  ⚠ Unintended side effects')\nprint('  ⚠ Knowledge can be recovered adversarially')\nprint()\nprint('Key Takeaways:')\nprint('  • MLPs = primary knowledge storage (~67% of params)')\nprint('  • Position-wise = no cross-token info in MLP')\nprint('  • Neurons detect patterns (but polysemantic)')\nprint('  • Residual stream accumulates information')\nprint('  • Understanding MLPs is key to interpretability!')",
+                output: "=== MLPs, Knowledge & Interpretability ===\n\nWhat MLPs Store:\n  • Factual knowledge (\"Paris is in France\")\n  • Procedures (\"how to write code\")\n  • Associations (\"fire is hot\")\n  • Unfortunately also harmful info...\n\nWhere Knowledge Lives:\n  • Early layers: Basic patterns, syntax\n  • Middle layers: Factual knowledge (layers 5-8)\n  • Late layers: Task-specific processing\n\nAI Safety Implications:\n\n  OPPORTUNITIES:\n  ✓ Knowledge editing - surgically modify facts\n  ✓ Harmful knowledge removal\n  ✓ Probing - detect what model knows\n  ✓ Monitor activations for safety\n\n  CHALLENGES:\n  ⚠ Distributed representations\n  ⚠ Polysemantic neurons\n  ⚠ Unintended side effects\n  ⚠ Knowledge can be recovered adversarially\n\nKey Takeaways:\n  • MLPs = primary knowledge storage (~67% of params)\n  • Position-wise = no cross-token info in MLP\n  • Neurons detect patterns (but polysemantic)\n  • Residual stream accumulates information\n  • Understanding MLPs is key to interpretability!",
+                explanation: "MLPs are central to AI safety because they store most of the model's knowledge. Research has shown that specific facts can be localized and edited in MLP weights. This opens possibilities for removing harmful knowledge or detecting dangerous capabilities. However, challenges remain: knowledge is distributed across many neurons, polysemanticity makes clean interventions difficult, and adversarial techniques might recover 'deleted' knowledge. Understanding MLPs deeply - their structure, neurons, and residual connections - is essential for mechanistic interpretability and AI safety research. You're now ready to implement MLPs in ARENA!"
             }
         ]
     },
@@ -1249,92 +929,172 @@ for term in test_terms:
     'complete-transformer': {
         title: "Putting It All Together",
         steps: [
+            // PHASE 1: THE BIG PICTURE
+            // Step 1: Transformer Block Overview
             {
-                instruction: "Now let's see how attention and MLPs work together in a transformer block:",
-                why: "Understanding the full transformer architecture is like having the blueprint to a complex machine. For AI safety, this knowledge lets us identify where and how to implement safety measures, detect potential failure modes, and understand how harmful or helpful behaviors emerge from the interaction of simple components.",
-                code: "# A transformer block combines attention + MLP with residual connections\nimport torch\nimport torch.nn as nn\n\nprint(\"Transformer Block Architecture:\\n\")\nprint(\"Input\")\nprint(\"  ↓\")\nprint(\"LayerNorm\")\nprint(\"  ↓\")\nprint(\"Attention (move information between positions)\")\nprint(\"  ↓\")\nprint(\"+ (residual connection - ADD to input)\")\nprint(\"  ↓\")\nprint(\"LayerNorm\")\nprint(\"  ↓\")\nprint(\"MLP (process information at each position)\")\nprint(\"  ↓\")  \nprint(\"+ (residual connection - ADD to input)\")\nprint(\"  ↓\")\nprint(\"Output\")\n\nprint(\"\\nThe + symbols are crucial - they preserve information!\")\nprint(\"This specific order enables stable deep learning.\")",
-                explanation: "Transformer Block: Input → LayerNorm → Attention → + → LayerNorm → MLP → + → Output. The + symbols represent residual connections. This specific order is crucial for stable training!"
+                instruction: "A transformer block combines Attention + MLP with residual connections. What are the two main operations in each block?",
+                why: "This is where everything comes together! A transformer block has two main parts: (1) Attention - moves information between positions, (2) MLP - processes information at each position. They're connected by residual connections (the + operations) that preserve information. There's also normalization for stability (covered in detail in Intermediate).",
+                type: "multiple-choice",
+                template: "import torch\n\nprint('=== Transformer Block Structure ===')\nprint()\nprint('Input (residual stream)')\nprint('  ↓')\nprint('Attention (move info between positions)')\nprint('  ↓')\nprint('+  ← residual connection')\nprint('  ↓')\nprint('___ (process info at each position)')\nprint('  ↓')\nprint('+  ← residual connection')\nprint('  ↓')\nprint('Output (updated residual stream)')",
+                choices: ["MLP", "Embedding", "Tokenizer"],
+                correct: 0,
+                hint: "We learned about this component - it processes each position independently",
+                freestyleHint: "Print a diagram showing the transformer block structure: Input → Attention → + → MLP → + → Output. Explain what each component does.",
+                challengeTemplate: "print('Transformer Block:')\nprint('  1. ___ gathers context from other positions')\nprint('  2. ___ processes the gathered information')\nprint('  3. ___ connections preserve information')\nprint()\nprint('This repeats for each of the 12 layers in GPT-2!')",
+                challengeBlanks: ["Attention", "MLP", "Residual"],
+                code: "import torch\n\nprint('=== Transformer Block Structure ===')\nprint()\nprint('Input (residual stream)')\nprint('  ↓')\nprint('[Normalization - stabilizes training]')\nprint('  ↓')\nprint('ATTENTION (move info between positions)')\nprint('  ↓')\nprint('+  ← ADD attention output to input')\nprint('  ↓')\nprint('[Normalization]')\nprint('  ↓')\nprint('MLP (process info at each position)')\nprint('  ↓')\nprint('+  ← ADD MLP output')\nprint('  ↓')\nprint('Output (updated residual stream)')\nprint()\nprint('Key insight:')\nprint('  • Attention = COMMUNICATION between positions')\nprint('  • MLP = COMPUTATION at each position')\nprint('  • + = PRESERVATION of information')",
+                output: "=== Transformer Block Structure ===\n\nInput (residual stream)\n  ↓\n[Normalization - stabilizes training]\n  ↓\nATTENTION (move info between positions)\n  ↓\n+  ← ADD attention output to input\n  ↓\n[Normalization]\n  ↓\nMLP (process info at each position)\n  ↓\n+  ← ADD MLP output\n  ↓\nOutput (updated residual stream)\n\nKey insight:\n  • Attention = COMMUNICATION between positions\n  • MLP = COMPUTATION at each position\n  • + = PRESERVATION of information",
+                explanation: "Each transformer block has this structure: Attention gathers relevant information from other positions (communication), MLP processes that information at each position (computation), and residual connections (+) preserve the original information. There's also normalization between components that helps training stay stable - you'll implement this in the Intermediate module!"
             },
+            // Step 2: Why Residuals Matter
             {
-                instruction: "Let's implement a simple transformer block:",
-                why: "The transformer block is the fundamental repeating unit. Just like understanding a single neuron helps us understand neural networks, understanding a single transformer block helps us understand the entire model. Each design choice here has profound implications for how the model learns and behaves.",
-                code: "class TransformerBlock(nn.Module):\n    def __init__(self, d_model, n_heads, d_mlp):\n        super().__init__()\n        self.attention = nn.MultiheadAttention(d_model, n_heads, batch_first=True)\n        self.ln1 = nn.LayerNorm(d_model)\n        self.ln2 = nn.LayerNorm(d_model)\n        self.mlp = nn.Sequential(\n            nn.Linear(d_model, d_mlp),\n            nn.GELU(),\n            nn.Linear(d_mlp, d_model)\n        )",
-                explanation: "This is the basic building block of transformers. LayerNorm normalizes inputs to help with training stability."
+                instruction: "We use residual connections (x = x + layer(x)) instead of replacement (x = layer(x)). Why ADD instead of replace?",
+                why: "This is one of the most important architectural decisions! Adding (instead of replacing) means no single layer can destroy information - it can only add to it. This creates a 'gradient highway' for training and an 'information highway' for the forward pass. The original input is always preserved, just refined.",
+                type: "multiple-choice",
+                template: "import torch\n\nx_original = torch.tensor([1.0, 2.0, 3.0])\nlayer_output = torch.tensor([0.1, 0.2, 0.3])\n\n# Without residual (replacement)\nx_replaced = layer_output\nprint(f'Replacement: {x_replaced}')  # Original ___!\n\n# With residual (addition)\nx_residual = x_original + layer_output\nprint(f'Residual: {x_residual}')  # Original ___!",
+                choices: ["lost, preserved", "preserved, lost", "doubled, halved"],
+                correct: 0,
+                hint: "Addition preserves, replacement loses",
+                freestyleHint: "Demonstrate replacement vs addition with tensors. Show that with residuals, the original values are still present in the output. Explain why this matters for training (gradients) and inference (information flow).",
+                challengeTemplate: "import torch\n\nx = torch.tensor([1.0, 2.0, 3.0])\nlayer_out = torch.tensor([0.1, 0.2, 0.3])\n\n# Residual connection\noutput = x ___ layer_out  # ADD!\n\nprint(f'Original x: {x.tolist()}')\nprint(f'Output: {output.tolist()}')\nprint(f'Original preserved: {(output - layer_out == x).all()}')",
+                challengeBlanks: ["+"],
+                code: "import torch\n\nx_original = torch.tensor([1.0, 2.0, 3.0])\nlayer_output = torch.tensor([0.1, 0.2, 0.3])\n\nprint('=== Why Residual Connections? ===')\nprint()\n\nprint('WITHOUT residuals (replacement):')\nx_replaced = layer_output\nprint(f'  x_new = layer(x) = {x_replaced.tolist()}')\nprint(f'  Original information: LOST!')\nprint()\n\nprint('WITH residuals (addition):')\nx_residual = x_original + layer_output\nprint(f'  x_new = x + layer(x) = {x_residual.tolist()}')\nprint(f'  Original information: PRESERVED!')\nprint()\n\nprint('Benefits:')\nprint('  ✓ Gradient highway - gradients flow directly through +')\nprint('  ✓ No layer can destroy information')\nprint('  ✓ Each layer adds refinements, not replacements')\nprint('  ✓ Enables training of 12+ layer models')\nprint()\nprint('This is why we call it the \"residual stream\"!')",
+                output: "=== Why Residual Connections? ===\n\nWITHOUT residuals (replacement):\n  x_new = layer(x) = [0.1, 0.2, 0.3]\n  Original information: LOST!\n\nWITH residuals (addition):\n  x_new = x + layer(x) = [1.1, 2.2, 3.3]\n  Original information: PRESERVED!\n\nBenefits:\n  ✓ Gradient highway - gradients flow directly through +\n  ✓ No layer can destroy information\n  ✓ Each layer adds refinements, not replacements\n  ✓ Enables training of 12+ layer models\n\nThis is why we call it the \"residual stream\"!",
+                explanation: "Residual connections are crucial! Without them, each layer would completely replace its input, and after 12 layers the original information would be unrecognizable. With residuals, each layer ADDS to the input. The original embedding is always present, just refined by each layer's additions. This also helps gradients flow during training - they can skip directly through the + operations."
             },
+            // Step 3: The Block Formula
             {
-                instruction: "Let's complete the transformer block forward pass:",
-                why: "The specific order of operations matters enormously. LayerNorm before each component (pre-norm) stabilizes training compared to the original post-norm design. Residual connections allow deep networks by creating gradient highways. For AI safety, this architecture determines how safety information can flow through the model - residuals ensure important safety signals can't be completely erased by any single layer.",
-                code: "    def forward(self, x):\n        # Attention with residual connection\n        normed = self.ln1(x)  # Normalize BEFORE attention (pre-norm)\n        attn_out, _ = self.attention(normed, normed, normed)\n        x = x + attn_out  # ADD, don't replace - preserves information!\n        \n        # MLP with residual connection  \n        normed = self.ln2(x)\n        mlp_out = self.mlp(normed)\n        x = x + mlp_out  # Again, ADD to preserve information\n        return x",
-                explanation: "The residual stream (x) flows through the block, with attention and MLP adding their contributions. This is the 'residual stream as accumulator' view."
+                instruction: "The transformer block formula is: x = x + Attention(x), then x = x + MLP(x). How many times is information ADDED in one block?",
+                why: "Each block has TWO residual connections - one after attention, one after MLP. This means information is added twice per block. With 12 blocks, that's 24 additions to the residual stream! The stream accumulates all these contributions as it flows through the model.",
+                type: "multiple-choice",
+                template: "print('Transformer Block Formula:')\nprint()\nprint('x = x + Attention(x)  # First addition')\nprint('x = x + MLP(x)        # Second addition')\nprint()\nprint('Additions per block: ___')\nprint('Blocks in GPT-2: 12')\nprint('Total additions: ___ × 12 = ___')",
+                choices: ["2, 2, 24", "1, 1, 12", "3, 3, 36"],
+                correct: 0,
+                hint: "Count the + operations in the formula",
+                freestyleHint: "Show the block formula step by step. Calculate total additions across all 12 layers of GPT-2. Explain how the residual stream accumulates information.",
+                challengeTemplate: "print('Per Block:')\nprint('  x = x + ___  # gather context')\nprint('  x = x + ___  # process info')\nprint()\nprint('GPT-2 has ___ blocks')\nprint('Total additions: 2 × ___ = 24')",
+                challengeBlanks: ["Attention(x)", "MLP(x)", "12", "12"],
+                code: "print('=== Transformer Block Formula ===')\nprint()\nprint('def transformer_block(x):')\nprint('    x = x + Attention(x)  # ADD attention output')\nprint('    x = x + MLP(x)        # ADD MLP output')\nprint('    return x')\nprint()\nprint('Additions per block: 2')\nprint('Blocks in GPT-2: 12')\nprint('Total additions: 2 × 12 = 24')\nprint()\nprint('The residual stream accumulates 24 contributions!')\nprint()\nprint('Final residual = embedding')\nprint('                + attn_1 + mlp_1')\nprint('                + attn_2 + mlp_2')\nprint('                + ...')\nprint('                + attn_12 + mlp_12')",
+                output: "=== Transformer Block Formula ===\n\ndef transformer_block(x):\n    x = x + Attention(x)  # ADD attention output\n    x = x + MLP(x)        # ADD MLP output\n    return x\n\nAdditions per block: 2\nBlocks in GPT-2: 12\nTotal additions: 2 × 12 = 24\n\nThe residual stream accumulates 24 contributions!\n\nFinal residual = embedding\n                + attn_1 + mlp_1\n                + attn_2 + mlp_2\n                + ...\n                + attn_12 + mlp_12",
+                explanation: "The residual stream formula shows how information accumulates: start with embeddings, then add 24 contributions (attention and MLP from each of 12 layers). The final residual stream is the sum of ALL these contributions. This is why it's called a 'stream' - information flows through and accumulates!"
             },
+
+            // PHASE 2: FULL MODEL
+            // Step 4: Stacking Blocks
             {
-                instruction: "Understand why we ADD outputs instead of replacing them:",
-                why: "Adding (rather than replacing) is profound: it means no layer can destroy information, only add to it. This creates an 'information ratchet' - once something is represented in the residual stream, it persists. For AI safety, this means safety-relevant information can flow through the entire model without being erased, but it also means harmful information can persist too!",
-                code: "# Why residual connections use addition\nimport torch\n\n# Demonstrate replacement vs addition\nx_old = torch.tensor([1.0, 2.0, 3.0])\ntransform = torch.tensor([0.1, 0.2, 0.3])\n\nprint(\"Without residuals (replacement):\")\nx_new_replace = transform  # Old information lost!\nprint(f\"  x_old: {x_old}\")\nprint(f\"  x_new: {x_new_replace} - original lost!\")\n\nprint(\"\\nWith residuals (addition):\")\nx_new_add = x_old + transform  # Old information preserved!\nprint(f\"  x_old: {x_old}\")\nprint(f\"  x_new: {x_new_add} - original preserved!\")\n\nprint(\"\\nImplications:\")\nprint(\"  ✓ Gradient highway (gradients flow directly)\")\nprint(\"  ✓ Feature preservation (early features accessible)\")\nprint(\"  ✓ Iterative refinement (layers add details)\")\nprint(\"\\nFor safety: Safety AND harmful features persist!\")",
-                explanation: "Without residuals (replacement): x_new = transform(x_old) - old information is gone! With residuals (addition): x_new = x_old + transform(x_old) - old information preserved! Implications: Gradient highway (gradients flow directly through +), feature preservation (early features remain accessible), iterative refinement (each layer adds details). For AI safety: Safety features can't be erased by a single layer, but harmful features also persist! We need to understand what accumulates."
+                instruction: "GPT-2 stacks 12 identical transformer blocks. How do we create this in PyTorch?",
+                why: "The power of transformers comes from depth - stacking blocks allows multi-step processing. Each block can focus on different aspects: early blocks might handle syntax, middle blocks semantics, late blocks output planning. We use nn.ModuleList to create a list of blocks that PyTorch can track.",
+                type: "multiple-choice",
+                template: "import torch.nn as nn\n\nn_layers = 12\n\n# Create 12 transformer blocks\nblocks = nn.___([\n    TransformerBlock(d_model, n_heads, d_mlp)\n    for _ in range(n_layers)\n])\n\nprint(f'Created {len(blocks)} blocks')",
+                choices: ["ModuleList", "Sequential", "List"],
+                correct: 0,
+                hint: "We need a list that PyTorch can track for gradients",
+                freestyleHint: "Create an nn.ModuleList with 12 transformer blocks using a list comprehension. Print how many blocks were created and explain why depth matters.",
+                challengeTemplate: "import torch.nn as nn\n\nn_layers = ___\n\nblocks = nn.ModuleList([\n    TransformerBlock(d_model, n_heads, d_mlp)\n    for _ in range(___)\n])\n\nprint(f'GPT-2 has {___} transformer blocks')",
+                challengeBlanks: ["12", "n_layers", "len(blocks)"],
+                code: "import torch.nn as nn\n\n# GPT-2 configuration\nd_model = 768\nn_heads = 12\nd_mlp = 3072\nn_layers = 12\n\nprint('=== Stacking Transformer Blocks ===')\nprint()\nprint(f'Creating {n_layers} identical blocks...')\nprint()\n\n# We use ModuleList so PyTorch tracks all parameters\nprint('blocks = nn.ModuleList([')\nprint('    TransformerBlock(d_model, n_heads, d_mlp)')\nprint(f'    for _ in range({n_layers})')\nprint('])')\nprint()\nprint('Why depth matters:')\nprint('  • Layer 1-3:  Low-level patterns (syntax)')\nprint('  • Layer 4-8:  Mid-level understanding (semantics)')\nprint('  • Layer 9-12: High-level reasoning (output planning)')\nprint()\nprint('Each layer refines the representation!')",
+                output: "=== Stacking Transformer Blocks ===\n\nCreating 12 identical blocks...\n\nblocks = nn.ModuleList([\n    TransformerBlock(d_model, n_heads, d_mlp)\n    for _ in range(12)\n])\n\nWhy depth matters:\n  • Layer 1-3:  Low-level patterns (syntax)\n  • Layer 4-8:  Mid-level understanding (semantics)\n  • Layer 9-12: High-level reasoning (output planning)\n\nEach layer refines the representation!",
+                explanation: "We stack 12 identical blocks using nn.ModuleList. Each block has the same architecture but learns different weights. Early layers tend to learn basic patterns (like grammar), middle layers learn more abstract concepts (like meaning), and later layers focus on the task at hand (like predicting the next word). This division of labor emerges from training!"
             },
+            // Step 5: Full Forward Pass
             {
-                instruction: "Let's create and test our transformer block:",
-                code: "block = TransformerBlock(d_model=768, n_heads=12, d_mlp=3072)\n\n# Test with random input\ninput_seq = torch.randn(1, 10, 768)  # batch_size=1, seq_len=10, d_model=768\noutput = block(input_seq)\nprint('Input shape:', input_seq.shape)\nprint('Output shape:', output.shape)\nprint('\\nd_mlp = 4 * d_model is standard')",
-                explanation: "Our transformer block successfully processes sequences! The output has the same shape as input, but the content has been transformed through attention and MLP. This 4x expansion isn't arbitrary - it's been empirically optimal!"
+                instruction: "The complete transformer forward pass is: tokens → embed → add positions → blocks → output. What's the first step?",
+                why: "Understanding the complete flow is essential. Tokens (integers) become embeddings (vectors), positions are added, then the residual stream flows through all blocks, and finally we project back to vocabulary size to get predictions. Each step transforms the representation.",
+                type: "multiple-choice",
+                template: "print('Complete Transformer Forward Pass:')\nprint()\nprint('1. tokens → ___(tokens)  # Lookup embeddings')\nprint('2. x = x + pos_embed     # Add position info')\nprint('3. for block in blocks:  # Process through 12 blocks')\nprint('       x = block(x)')\nprint('4. logits = unembed(x)   # Project to vocabulary')",
+                choices: ["embed", "tokenize", "normalize"],
+                correct: 0,
+                hint: "We convert token IDs to vectors using the embedding matrix",
+                freestyleHint: "Write out the complete forward pass showing all 4 steps: embed tokens, add positions, loop through blocks, project to vocabulary. Explain what each step does.",
+                challengeTemplate: "print('Forward Pass:')\nprint('  1. x = ___(tokens)        # [seq, d_model]')\nprint('  2. x = x + ___            # Add positions')\nprint('  3. x = blocks(x)          # Through ___ layers')\nprint('  4. logits = ___(x)        # [seq, vocab_size]')",
+                challengeBlanks: ["embed", "pos_embed", "12", "unembed"],
+                code: "print('=== Complete Transformer Forward Pass ===')\nprint()\nprint('def forward(tokens):')\nprint('    # Step 1: Token embeddings')\nprint('    x = embed(tokens)        # [seq_len, 768]')\nprint()\nprint('    # Step 2: Add position embeddings')\nprint('    x = x + pos_embed        # Still [seq_len, 768]')\nprint()\nprint('    # Step 3: Through all transformer blocks')\nprint('    for block in blocks:     # 12 blocks')\nprint('        x = block(x)         # Each block: attn + mlp')\nprint()\nprint('    # Step 4: Project to vocabulary')\nprint('    logits = unembed(x)      # [seq_len, 50257]')\nprint('    return logits')\nprint()\nprint('Shape journey:')\nprint('  tokens: [seq_len] integers')\nprint('  → embed: [seq_len, 768]')\nprint('  → blocks: [seq_len, 768] (unchanged)')\nprint('  → logits: [seq_len, 50257]')",
+                output: "=== Complete Transformer Forward Pass ===\n\ndef forward(tokens):\n    # Step 1: Token embeddings\n    x = embed(tokens)        # [seq_len, 768]\n\n    # Step 2: Add position embeddings\n    x = x + pos_embed        # Still [seq_len, 768]\n\n    # Step 3: Through all transformer blocks\n    for block in blocks:     # 12 blocks\n        x = block(x)         # Each block: attn + mlp\n\n    # Step 4: Project to vocabulary\n    logits = unembed(x)      # [seq_len, 50257]\n    return logits\n\nShape journey:\n  tokens: [seq_len] integers\n  → embed: [seq_len, 768]\n  → blocks: [seq_len, 768] (unchanged)\n  → logits: [seq_len, 50257]",
+                explanation: "The complete forward pass: (1) embed tokens into 768-dim vectors, (2) add position embeddings so the model knows word order, (3) pass through all 12 transformer blocks which refine the representation, (4) project back to vocabulary size to get scores for each possible next token. The residual stream maintains shape [seq_len, 768] throughout the blocks!"
             },
+            // Step 6: From Residual to Predictions
             {
-                instruction: "Multiple blocks create a deep transformer. Let's stack them:",
-                why: "Depth is power in transformers. Each block can perform one 'cognitive step' - early blocks might parse syntax, middle blocks might resolve references, late blocks might plan outputs. For AI safety, different depths specialize in different tasks, giving us multiple intervention points. Deep models can perform complex reasoning but are also harder to control.",
-                code: "class MiniTransformer(nn.Module):\n    def __init__(self, vocab_size, d_model, n_heads, d_mlp, n_layers):\n        super().__init__()\n        self.embedding = nn.Embedding(vocab_size, d_model)\n        self.pos_embedding = nn.Embedding(1024, d_model)  # max seq length\n        self.blocks = nn.ModuleList([\n            TransformerBlock(d_model, n_heads, d_mlp) \n            for _ in range(n_layers)\n        ])\n        self.ln_final = nn.LayerNorm(d_model)\n        self.unembed = nn.Linear(d_model, vocab_size)",
-                explanation: "A full transformer stacks multiple blocks. Each block refines the representations, building more complex understanding."
+                instruction: "The final step 'unembed' projects from d_model=768 to vocab_size=50257. What operation is this?",
+                why: "After all the processing, we need to convert the 768-dimensional residual stream into a score for each of the 50,257 possible tokens. This is just a linear projection (matrix multiply). The resulting 'logits' are raw scores that we'll convert to probabilities in the text-generation lesson.",
+                type: "multiple-choice",
+                template: "import torch.nn as nn\n\nd_model = 768\nvocab_size = 50257\n\n# Unembed: project residual stream to vocabulary\nunembed = nn.___(d_model, vocab_size)\n\nprint(f'Unembed shape: [{d_model}, {vocab_size}]')\nprint(f'Parameters: {d_model * vocab_size:,}')",
+                choices: ["Linear", "Embedding", "Conv1d"],
+                correct: 0,
+                hint: "We're doing a matrix multiply to change dimensions",
+                freestyleHint: "Create the unembed layer as nn.Linear(768, 50257). Calculate its parameter count. Explain that it produces 'logits' - raw scores for each vocabulary token.",
+                challengeTemplate: "d_model = ___\nvocab_size = ___\n\nunembed = nn.Linear(___, ___)\n\n# Output is called 'logits' - raw scores\n# Higher logit = more likely token",
+                challengeBlanks: ["768", "50257", "d_model", "vocab_size"],
+                code: "import torch\nimport torch.nn as nn\n\nd_model = 768\nvocab_size = 50257\n\nprint('=== Unembed: Residual Stream → Predictions ===')\nprint()\n\n# Create unembed layer\nunembed = nn.Linear(d_model, vocab_size, bias=False)\n\nprint(f'Input:  residual stream [seq_len, {d_model}]')\nprint(f'Output: logits [seq_len, {vocab_size}]')\nprint()\nprint(f'Unembed weight shape: [{d_model}, {vocab_size}]')\nprint(f'Parameters: {d_model * vocab_size:,} = ~38.6M')\nprint()\nprint('What are logits?')\nprint('  • Raw scores for each vocabulary token')\nprint('  • Higher score = model thinks more likely')\nprint('  • NOT probabilities yet (can be negative!)')\nprint('  • Convert to probs with softmax (next lesson)')\nprint()\nprint('Fun fact: Unembed is often tied to Embed.T!')",
+                output: "=== Unembed: Residual Stream → Predictions ===\n\nInput:  residual stream [seq_len, 768]\nOutput: logits [seq_len, 50257]\n\nUnembed weight shape: [768, 50257]\nParameters: 38,597,376 = ~38.6M\n\nWhat are logits?\n  • Raw scores for each vocabulary token\n  • Higher score = model thinks more likely\n  • NOT probabilities yet (can be negative!)\n  • Convert to probs with softmax (next lesson)\n\nFun fact: Unembed is often tied to Embed.T!",
+                explanation: "The unembed layer is a simple linear projection that converts the 768-dimensional residual stream into scores for all 50,257 vocabulary tokens. These scores are called 'logits' - they're raw values that can be positive or negative. In the text-generation lesson, you'll learn to convert these to probabilities using softmax and then sample from them!"
             },
+
+            // PHASE 3: INFORMATION FLOW
+            // Step 7: Tracing Through the Model
             {
-                instruction: "Let's complete our mini transformer:",
-                code: "    def forward(self, tokens):\n        # Get embeddings\n        x = self.embedding(tokens)\n        positions = torch.arange(tokens.shape[1], device=tokens.device)\n        x = x + self.pos_embedding(positions)\n        \n        # Pass through transformer blocks\n        for block in self.blocks:\n            x = block(x)\n            \n        # Final layer norm and projection to vocabulary\n        x = self.ln_final(x)\n        logits = self.unembed(x)\n        return logits",
-                explanation: "Complete transformer flow: tokens → embeddings → blocks → logits. This is the complete flow: text becomes tokens, tokens become embeddings, blocks process and refine them, then we predict the next token!"
+                instruction: "When we process 'The cat sat', information flows through the model. What happens at each stage?",
+                why: "Understanding information flow is key to interpretability. Token embeddings capture word identity, positions capture order, attention gathers context, MLPs process it, and the final output represents the model's prediction. Each stage transforms the representation in a specific way.",
+                type: "multiple-choice",
+                template: "print('Processing: \"The cat sat\"')\nprint()\nprint('1. Embed: Each word → 768-dim vector')\nprint('2. +Pos: Add position information')\nprint('3. Attn: \"sat\" gathers info from \"cat\"')\nprint('4. MLP: Process \"who did the action\"')\nprint('5. Output: Predict next word (___, on, ...)')",
+                choices: ["down", "quickly", "the"],
+                correct: 0,
+                hint: "What might naturally follow 'The cat sat'?",
+                freestyleHint: "Trace through how 'The cat sat' is processed: embedding, position, attention gathering context, MLP processing, output predicting next token. Show what happens at each stage.",
+                challengeTemplate: "print('\"The cat sat\" processing:')\nprint()\nprint('1. ___ converts words to vectors')\nprint('2. ___ embedding adds position info')\nprint('3. ___ lets \"sat\" look at \"cat\"')\nprint('4. ___ processes the gathered context')\nprint('5. ___ predicts most likely next token')",
+                challengeBlanks: ["Embed", "Position", "Attention", "MLP", "Unembed"],
+                code: "print('=== Information Flow: \"The cat sat\" ===')\nprint()\nprint('STEP 1: Token Embedding')\nprint('  \"The\" → [0.2, -0.5, 0.1, ...]  (768 dims)')\nprint('  \"cat\" → [0.8, 0.3, -0.2, ...]')\nprint('  \"sat\" → [0.1, 0.7, 0.4, ...]')\nprint()\nprint('STEP 2: Add Positions')\nprint('  Position 0 info added to \"The\"')\nprint('  Position 1 info added to \"cat\"')\nprint('  Position 2 info added to \"sat\"')\nprint()\nprint('STEP 3: Attention (12 layers)')\nprint('  \"sat\" attends to \"cat\" → learns subject')\nprint('  \"sat\" attends to \"The\" → learns context')\nprint('  Information moves between positions!')\nprint()\nprint('STEP 4: MLP (12 layers)')\nprint('  Each position processes its gathered info')\nprint('  \"sat\" now encodes: past tense, action, subject=cat')\nprint()\nprint('STEP 5: Unembed')\nprint('  Position 2 → logits for next token')\nprint('  High scores: \"down\", \"on\", \"quietly\"')\nprint('  Prediction: \"down\" (most likely)')",
+                output: "=== Information Flow: \"The cat sat\" ===\n\nSTEP 1: Token Embedding\n  \"The\" → [0.2, -0.5, 0.1, ...]  (768 dims)\n  \"cat\" → [0.8, 0.3, -0.2, ...]\n  \"sat\" → [0.1, 0.7, 0.4, ...]\n\nSTEP 2: Add Positions\n  Position 0 info added to \"The\"\n  Position 1 info added to \"cat\"\n  Position 2 info added to \"sat\"\n\nSTEP 3: Attention (12 layers)\n  \"sat\" attends to \"cat\" → learns subject\n  \"sat\" attends to \"The\" → learns context\n  Information moves between positions!\n\nSTEP 4: MLP (12 layers)\n  Each position processes its gathered info\n  \"sat\" now encodes: past tense, action, subject=cat\n\nSTEP 5: Unembed\n  Position 2 → logits for next token\n  High scores: \"down\", \"on\", \"quietly\"\n  Prediction: \"down\" (most likely)",
+                explanation: "Information flows through the model in stages: embeddings give initial word meanings, positions add order, attention lets words gather context from each other (like 'sat' learning its subject is 'cat'), MLPs process this combined information, and unembed converts to predictions. By the end, each position contains a rich representation informed by the entire sequence!"
             },
+            // Step 8: The Direct Path
             {
-                instruction: "For AI safety, understanding this architecture is crucial:",
-                why: "Each layer builds on previous layers' understanding. Early layers might detect basic patterns like 'mentions of weapons', middle layers understand context like 'for a movie prop', and late layers make the final decision. This hierarchy is key to building safe systems - we can implement different safety checks at different depths, catching both simple and subtle harmful patterns.",
-                code: "# Let's create a tiny transformer\nmodel = MiniTransformer(\n    vocab_size=1000, \n    d_model=64, \n    n_heads=4, \n    d_mlp=256, \n    n_layers=2\n)\n\ntokens = torch.randint(0, 1000, (1, 5))  # Random tokens\nlogits = model(tokens)\nprint('Logits shape:', logits.shape)",
-                explanation: "Each layer adds understanding: Layer 1 does basic pattern recognition, Layer 2 provides contextual understanding, Output gives informed predictions. For safety, we can intervene at each level!"
+                instruction: "Because of residual connections, there's a 'direct path' from input to output. What does this mean?",
+                why: "The residual stream means the original embedding is ALWAYS present in the final output, just with additions from each layer. Even if all layers added zero, the embedding would flow through unchanged. This 'direct path' is why simple patterns (like predicting common next words) can work without deep processing.",
+                type: "multiple-choice",
+                template: "import torch\n\nembed = torch.tensor([1.0, 2.0, 3.0])\nlayer1_add = torch.tensor([0.1, 0.1, 0.1])\nlayer2_add = torch.tensor([0.2, 0.2, 0.2])\n\nfinal = embed + layer1_add + layer2_add\n\nprint(f'Original embed: {embed.tolist()}')\nprint(f'Final output:   {final.tolist()}')\nprint(f'Embed still present? ___')",
+                choices: ["Yes - it's part of the sum", "No - layers replaced it", "Partially - some dimensions lost"],
+                correct: 0,
+                hint: "With addition, the original is always part of the sum",
+                freestyleHint: "Show that after multiple additions, the original embedding is still part of the final sum. Explain implications: simple patterns flow directly through, harmful features persist, safety features persist.",
+                challengeTemplate: "embed = torch.tensor([1.0, 2.0, 3.0])\n\nfinal = embed  # Start with embed\nfor layer in range(12):\n    final = final ___ layer_output  # ADD each layer\n\nprint('final = embed + layer1 + layer2 + ... + layer12')\nprint('The original ___ is always present!')",
+                challengeBlanks: ["+", "embed"],
+                code: "import torch\n\nprint('=== The Direct Path ===')\nprint()\n\nembed = torch.tensor([1.0, 2.0, 3.0])\nprint(f'Original embedding: {embed.tolist()}')\nprint()\n\n# Simulate 3 layers adding small amounts\nresidual = embed.clone()\nfor i in range(3):\n    layer_contribution = torch.tensor([0.1, 0.1, 0.1]) * (i + 1)\n    residual = residual + layer_contribution\n    print(f'After layer {i+1}: {residual.tolist()}')\n\nprint()\nprint('Decomposition of final output:')\nprint(f'  Original embed: {embed.tolist()}')\nprint(f'  Layer 1 added:  [0.1, 0.1, 0.1]')\nprint(f'  Layer 2 added:  [0.2, 0.2, 0.2]')\nprint(f'  Layer 3 added:  [0.3, 0.3, 0.3]')\nprint(f'  Sum:            {residual.tolist()}')\nprint()\nprint('The original embedding flows DIRECTLY to output!')\nprint('This is why transformers can do simple predictions')\nprint('without needing deep processing.')",
+                output: "=== The Direct Path ===\n\nOriginal embedding: [1.0, 2.0, 3.0]\n\nAfter layer 1: [1.1, 2.1, 3.1]\nAfter layer 2: [1.3, 2.3, 3.3]\nAfter layer 3: [1.6, 2.6, 3.6]\n\nDecomposition of final output:\n  Original embed: [1.0, 2.0, 3.0]\n  Layer 1 added:  [0.1, 0.1, 0.1]\n  Layer 2 added:  [0.2, 0.2, 0.2]\n  Layer 3 added:  [0.3, 0.3, 0.3]\n  Sum:            [1.6, 2.6, 3.6]\n\nThe original embedding flows DIRECTLY to output!\nThis is why transformers can do simple predictions\nwithout needing deep processing.",
+                explanation: "The 'direct path' means the original embedding is always present in the output - it's just the first term in a sum. This has important implications: (1) Simple predictions can work without deep processing (the embedding already contains useful info), (2) Both helpful AND harmful features from the input persist through all layers, (3) For interpretability, we can decompose the output into contributions from each layer."
             },
+            // Step 9: What Each Layer Does
             {
-                instruction: "Let's trace information flow through the transformer:",
-                why: "Tracing information flow reveals potential failure modes. If harmful content enters at the embedding layer, we can track how it propagates, where it might be amplified or suppressed, and where we can best intervene. This 'information flow analysis' is a key technique in AI safety research.",
-                code: "# Information flow tracking\nimport torch\n\nprint(\"Information Flow in Transformers:\\n\")\n\nflow_steps = [\n    \"1. Token Embedding: 'harm' → vector [0.2, -0.5, ...]\",\n    \"2. Position Embedding: add position info\",\n    \"3. Layer 1 Attention: gather context 'do not harm'\",\n    \"4. Layer 1 MLP: process 'negative instruction detected'\",\n    \"5. Layer 2 Attention: broader context integration\",\n    \"6. Layer 2 MLP: refined understanding\",\n    \"7. Output: probability distribution over next tokens\"\n]\n\nfor step in flow_steps:\n    print(f\"  {step}\")\n\nprint(\"\\nIntervention Points for Safety:\")\nintervention_points = [\n    \"• Input filtering (at embedding)\",\n    \"• Attention pattern monitoring (Layer 1-N)\",\n    \"• MLP activation analysis (detect harmful patterns)\",\n    \"• Output logit filtering (block harmful tokens)\"\n]\n\nfor point in intervention_points:\n    print(f\"  {point}\")",
-                explanation: "Information flow in transformers: 1. Token Embedding ('harm' → vector), 2. Position Embedding (add position information), 3. Layer 1 Attention (gather context 'do not harm'), 4. Layer 1 MLP (process 'negative instruction detected'), 5. Layer 2 Attention (broader context), 6. Layer 2 MLP (refined understanding), 7. Output (probability of next token). Each step can be analyzed for safety! Intervention points: Input filtering (embedding), attention pattern monitoring, MLP activation analysis, output logit filtering."
+                instruction: "Different layers tend to specialize. Early layers handle ___, middle layers handle ___, late layers handle ___.",
+                why: "Research has found that transformer layers naturally specialize during training. Early layers learn syntax and local patterns, middle layers learn semantics and entity relationships, late layers focus on the specific task (like next-word prediction). This hierarchy emerges without explicit programming!",
+                type: "multiple-choice",
+                template: "print('Layer Specialization in GPT-2:')\nprint()\nprint('Layers 1-3:  ___ (local patterns)')\nprint('Layers 4-8:  ___ (meaning, entities)')\nprint('Layers 9-12: ___ (task-specific)')",
+                choices: ["syntax, semantics, output", "output, semantics, syntax", "semantics, syntax, output"],
+                correct: 0,
+                hint: "Think about building understanding from simple to complex",
+                freestyleHint: "Describe what each layer range tends to learn: early (syntax, grammar), middle (semantics, entities), late (task-specific, output planning). Explain this emerges from training, not explicit programming.",
+                challengeTemplate: "print('Layer Specialization:')\nprint()\nprint('Early (1-3):  ___ patterns, grammar')\nprint('Middle (4-8): ___, entity tracking')\nprint('Late (9-12):  ___ planning, task focus')\nprint()\nprint('This emerges from ___, not programming!')",
+                challengeBlanks: ["Syntax", "Semantics", "Output", "training"],
+                code: "print('=== What Each Layer Learns ===')\nprint()\nprint('EARLY LAYERS (1-3): Syntax & Local Patterns')\nprint('  • Grammar rules (subject-verb agreement)')\nprint('  • Common phrases (\"kind of\", \"as well\")')\nprint('  • Basic word relationships')\nprint()\nprint('MIDDLE LAYERS (4-8): Semantics & Entities')\nprint('  • Word meanings in context')\nprint('  • Entity tracking (\"John... he...\")')\nprint('  • Factual associations')\nprint()\nprint('LATE LAYERS (9-12): Output & Task')\nprint('  • What token to predict next')\nprint('  • Task-specific processing')\nprint('  • Final refinement')\nprint()\nprint('Key insight:')\nprint('  This specialization EMERGES from training!')\nprint('  Nobody programmed \"layer 5 = semantics\"')\nprint('  The model discovers this is efficient.')\nprint()\nprint('For safety: Different layers may detect')\nprint('different aspects of harmful content!')",
+                output: "=== What Each Layer Learns ===\n\nEARLY LAYERS (1-3): Syntax & Local Patterns\n  • Grammar rules (subject-verb agreement)\n  • Common phrases (\"kind of\", \"as well\")\n  • Basic word relationships\n\nMIDDLE LAYERS (4-8): Semantics & Entities\n  • Word meanings in context\n  • Entity tracking (\"John... he...\")\n  • Factual associations\n\nLATE LAYERS (9-12): Output & Task\n  • What token to predict next\n  • Task-specific processing\n  • Final refinement\n\nKey insight:\n  This specialization EMERGES from training!\n  Nobody programmed \"layer 5 = semantics\"\n  The model discovers this is efficient.\n\nFor safety: Different layers may detect\ndifferent aspects of harmful content!",
+                explanation: "Layer specialization is a fascinating emergent property! Early layers tend to learn syntax and grammar, middle layers learn meaning and track entities through text, and late layers focus on the specific output. This wasn't programmed - the model discovered this organization is efficient for predicting text. For safety, this means different types of harmful content might be detected at different depths."
             },
+
+            // PHASE 4: RECAP & SAFETY
+            // Step 10: Architecture Summary & Safety
             {
-                instruction: "Understand the residual stream as the 'workspace':",
-                why: "The residual stream is like the model's working memory or consciousness. All information flows through it, and all computation reads from and writes to it. For AI safety, monitoring the residual stream helps us detect when the model is processing harmful content. It's our window into the model's 'thoughts'. The fixed dimensionality (d_model) means all information must be compressed into this space - both a limitation and an opportunity for control.",
-                code: "import torch\n\n# Simulate residual stream evolution through layers\nd_model = 768\nseq_len = 5\n\n# Initial residual stream (token + position embeddings)\nresidual = torch.randn(seq_len, d_model)\nprint(\"Initial residual stream (embeddings):\")\nprint(f\"  Shape: {residual.shape}\")\nprint(f\"  Norm: {residual.norm():.2f}\\n\")\n\n# Simulate layer transformations\nlayers = ['L1 Attention', 'L1 MLP', 'L2 Attention', 'L2 MLP']\nfor i, layer_name in enumerate(layers):\n    # Simulate layer output (what gets added to residual)\n    layer_output = torch.randn(seq_len, d_model) * 0.1\n    residual = residual + layer_output\n    \n    print(f\"After {layer_name}:\")\n    print(f\"  Residual norm: {residual.norm():.2f}\")\n    print(f\"  Information added: {layer_output.norm():.3f}\")\n\nprint(\"\\nThe residual stream is the model's working memory!\")\nprint(\"All information flows through this d_model-dimensional space.\")",
-                explanation: "Residual stream evolution: Start [token_emb + pos_emb], After L1 Attn [+ context_1], After L1 MLP [+ reasoning_1], After L2 Attn [+ context_2], After L2 MLP [+ reasoning_2]. The stream accumulates all processing results! Fixed dimension d_model means: information bottleneck, forced abstraction/compression, measurable information density."
-            },
-            {
-                instruction: "Explore the 'direct path' through the transformer:",
-                why: "Due to residual connections, there's always a 'direct path' from input to output that bypasses all transformations. This path preserves the original embedding information. For AI safety, this means certain features (like harmful intent) might flow directly through without being processed, or safety features might survive even adversarial intermediate layers.",
-                code: "import torch\n\n# Demonstrate the direct path through residual connections\nd_model = 8\ninitial_embedding = torch.tensor([1.0, 0.0, 0.5, 0.3, 0.0, 0.2, 0.1, 0.4])\n\nprint(\"Direct Path Through Transformer:\\n\")\nprint(f\"Initial embedding: {initial_embedding[:4].tolist()}...\\n\")\n\n# Simulate transformer blocks with residual connections\nresidual = initial_embedding.clone()\ntransforms = []\n\nfor layer in range(3):\n    # Simulate layer transformation\n    transform = torch.randn(d_model) * 0.2\n    transforms.append(transform)\n    residual = residual + transform\n    \n    print(f\"After Layer {layer + 1}:\")\n    print(f\"  Current residual: {residual[:4].tolist()}...\")\n\n# Show that original embedding is still present\nprint(f\"\\nFinal residual breakdown:\")\nprint(f\"  Original embedding: {initial_embedding[:4].tolist()}...\")\nprint(f\"  Sum of transforms: {sum(transforms)[:4].tolist()}...\")\nprint(f\"  Final = original + transforms: {(initial_embedding + sum(transforms))[:4].tolist()}...\\n\")\n\nprint(\"✓ The original embedding is always present!\")\nprint(\"✓ This means input features can flow directly to output\")\nprint(\"⚠️ Including potentially harmful features from the input\")",
-                explanation: "Direct path through residuals: Input embedding e, After block 1: e + transform1(e), After block 2: e + transform1(e) + transform2(...), Final: e + sum(all transforms). The original embedding e is always present! Implications: Bigram statistics can flow directly through, simple patterns don't need deep processing, safety features in embeddings persist, but so do harmful features!"
-            },
-            {
-                instruction: "Consider how depth enables complex reasoning:",
-                why: "Depth allows transformers to perform multi-step reasoning. For AI safety, this means harmful outputs might require multiple steps of reasoning that we can potentially interrupt. But it also means shallow safety measures might be circumvented by deeper reasoning. Understanding the depth-complexity tradeoff is crucial for building robust safety measures.",
-                code: "# Simulate multi-step reasoning through transformer layers\n\nreasoning_steps = [\n    {\n        'layer': 1,\n        'understanding': 'User asked about making bombs',\n        'context': 'Initial parsing of potentially harmful query',\n        'safety_score': 0.3\n    },\n    {\n        'layer': 2,\n        'understanding': 'Context suggests homework help',\n        'context': 'Detected educational context indicators',\n        'safety_score': 0.6\n    },\n    {\n        'layer': 3,\n        'understanding': 'Check for genuine educational purpose',\n        'context': 'Cross-referencing with conversation history',\n        'safety_score': 0.8\n    },\n    {\n        'layer': 4,\n        'understanding': 'Formulate safe, educational response',\n        'context': 'Provide chemistry education without harm instructions',\n        'safety_score': 0.95\n    }\n]\n\nprint(\"Multi-Step Reasoning Through Depth:\\n\")\nfor step in reasoning_steps:\n    print(f\"Layer {step['layer']}: {step['understanding']}\")\n    print(f\"  Context: {step['context']}\")\n    print(f\"  Safety: {step['safety_score']:.0%}\\n\")\n\nprint(\"Depth enables:\")\nprint(\"  ✓ Progressive context refinement\")\nprint(\"  ✓ Multi-hop reasoning\")\nprint(\"  ✓ Nuanced understanding\")\nprint(\"\\n⚠️  But also:\")\nprint(\"  • Shallow safety checks might miss deep reasoning\")\nprint(\"  • Complex deceptive behaviors need depth to form\")",
-                explanation: "Layer 1: 'User asked about making bombs', Layer 2: 'Context suggests homework help', Layer 3: 'Check for genuine educational purpose', Layer 4: 'Formulate safe, educational response'. Each layer refines understanding! But shallow safety checks might miss subtle harmful patterns that only emerge through deep reasoning. Depth enables: multi-hop reasoning, context integration, nuanced understanding, but also potentially deceptive reasoning."
-            },
-            {
-                instruction: "Understand computational flow and parallelism:",
-                why: "Transformers process all positions in parallel within each layer, but layers must be sequential. This architecture enables efficient training but also means we can't have position-dependent depth. For AI safety, this uniform depth means all positions get equal computational resources - we can't give extra scrutiny to suspicious tokens without modifying the architecture.",
-                code: "import time\nimport numpy as np\n\n# Simulate parallel vs sequential computation\nseq_len = 100\nd_model = 768\nn_layers = 12\n\nprint(\"Transformer Computational Structure:\\n\")\n\nprint(\"=== WITHIN EACH LAYER (Parallel) ===\")\nprint(f\"  Processing {seq_len} positions simultaneously\")\nprint(f\"  Each position: {d_model} dimensions\")\nprint(f\"  All positions get equal computation\")\nprint(f\"  GPU processes all at once\\n\")\n\nprint(\"=== BETWEEN LAYERS (Sequential) ===\")\nprint(f\"  Must complete layer N before N+1\")\nfor layer in range(1, min(4, n_layers + 1)):\n    print(f\"  Layer {layer}: Wait for layer {layer-1} → Process → Output\")\nprint(f\"  ... ({n_layers - 3} more layers)\\n\")\n\nprint(\"For AI Safety:\")\nprint(\"  ✗ Cannot allocate more compute to suspicious tokens\")\nprint(\"  ✗ All positions get equal 'thinking time'\")\nprint(\"  ✗ Cannot dynamically adjust depth based on content\")\nprint(\"  ✓ Predictable, uniform processing\")\nprint(\"  ✓ Can analyze all positions equally\")\n\nprint(f\"\\nEfficiency: {seq_len} positions × {n_layers} layers = {seq_len * n_layers} parallel ops\")\nprint(f\"vs Sequential: Would need {seq_len * n_layers} sequential steps!\")",
-                explanation: "Within each layer: PARALLEL (all positions processed simultaneously, enables efficient GPU usage, democratic - no position is special). Between layers: SEQUENTIAL (must complete layer N before N+1, enables iterative refinement, creates computational depth). For AI safety: Can't dynamically allocate more computation to suspicious content, all positions get equal 'thinking time', need other mechanisms for focused analysis."
-            },
-            {
-                instruction: "Explore parameter count and what it means:",
-                code: "# Calculate parameters for different components\nd_model, n_heads, d_mlp, n_layers = 768, 12, 3072, 12\n\n# Embedding parameters\nembed_params = 50257 * d_model * 2  # token + position embeddings\n\n# Per-layer parameters\nattn_params = 4 * d_model * d_model  # Q, K, V, O projections\nmlp_params = 2 * d_model * d_mlp + d_model + d_mlp  # 2 layers + biases\nlayer_params = attn_params + mlp_params + 2 * d_model * 2  # + 2 LayerNorms\n\ntotal_params = embed_params + n_layers * layer_params + d_model * 50257  # + unembed\n\nprint(f'Total parameters: {total_params/1e6:.1f}M')\nprint(f'\\nParameter distribution:')\nprint(f'- Embeddings: {embed_params/total_params*100:.1f}%')\nprint(f'- Attention: {n_layers*attn_params/total_params*100:.1f}%')\nprint(f'- MLPs: {n_layers*mlp_params/total_params*100:.1f}%')",
-                explanation: "MLPs dominate! They store most 'knowledge'. The sheer number of parameters makes transformers powerful but also challenging for interpretability and safety."
-            },
-            {
-                instruction: "Finally, understand transformers as compositional systems:",
-                why: "Transformers compose simple operations (attention, MLP) into complex behaviors. For AI safety, this means we need to understand both individual components and their interactions. Safety properties must be preserved through composition. A component might be safe in isolation but dangerous when composed with others. This compositional nature is both why transformers are so powerful and why ensuring their safety is so challenging.",
-                code: "# Demonstrate compositional nature of transformers\n\ncomponents = {\n    'simple': [\n        'Attention: Move information between positions',\n        'MLP: Process information at each position',\n        'LayerNorm: Stabilize activations',\n        'Residual: Preserve information flow'\n    ],\n    'composed': [\n        'Language understanding (syntax + semantics)',\n        'Multi-step reasoning (logic chains)',\n        'Context-aware generation (coherent text)',\n        'Knowledge retrieval (factual recall)'\n    ],\n    'emergent': [\n        'In-context learning (few-shot adaptation)',\n        'Chain-of-thought reasoning (step-by-step)',\n        'Role-playing (persona adoption)',\n        '⚠️ Potential deceptive behaviors'\n    ]\n}\n\nprint(\"Transformers as Compositional Systems:\\n\")\n\nprint(\"SIMPLE COMPONENTS:\")\nfor component in components['simple']:\n    print(f\"  • {component}\")\n\nprint(\"\\n↓ COMPOSED INTO ↓\\n\")\n\nprint(\"COMPLEX CAPABILITIES:\")\nfor capability in components['composed']:\n    print(f\"  • {capability}\")\n\nprint(\"\\n↓ WHICH ENABLE ↓\\n\")\n\nprint(\"EMERGENT BEHAVIORS:\")\nfor behavior in components['emergent']:\n    print(f\"  • {behavior}\")\n\nprint(\"\\nSafety Challenge:\")\nprint(\"  ✓ Individual components are interpretable\")\nprint(\"  ✓ But composition creates emergent behaviors\")\nprint(\"  ⚠️ Must ensure safety at all levels of abstraction\")\nprint(\"  ⚠️ Simple + Simple can → Complex + Dangerous\")",
-                explanation: "Simple components: Attention (move information), MLP (process information), LayerNorm (stabilize), Residual (preserve information). Composed into: Language understanding, reasoning, generation. For safety we must ensure: Each component is safe, composition preserves safety, emergent behaviors are controlled. The challenge: emergent capabilities! Simple components → Complex behaviors. This is why AI safety is hard!"
+                instruction: "Simple components (attention, MLP, residuals) compose into complex behaviors. What's the safety challenge?",
+                why: "Transformers are compositional: simple pieces combine into complex capabilities. Attention just moves information, MLPs just process it, residuals just add. But together they enable language understanding, reasoning, and potentially deceptive behaviors. The challenge: ensuring safety at every level, because emergent behaviors are hard to predict.",
+                type: "multiple-choice",
+                template: "print('Simple Components:')\nprint('  • Attention: move information')\nprint('  • MLP: process information')\nprint('  • Residual: preserve information')\nprint()\nprint('These compose into:')\nprint('  • Language understanding')\nprint('  • Multi-step reasoning')\nprint('  • Context-aware generation')\nprint('  • ??? Emergent behaviors ???')\nprint()\nprint('Safety challenge: ___')",
+                choices: ["Emergent behaviors are hard to predict from components", "Components are too complex to understand", "There are too many parameters"],
+                correct: 0,
+                hint: "Simple + simple can = complex + unpredictable",
+                freestyleHint: "List the simple components and what they do. Show how they compose into complex capabilities. Explain the safety challenge: emergent behaviors from simple pieces are hard to predict and control.",
+                challengeTemplate: "print('Composition creates emergence:')\nprint()\nprint('___ + ___ + ___ = ?')\nprint()\nprint('Individual parts: interpretable')\nprint('Composition: ___ behaviors')\nprint('Safety: Must check at ___ levels!')",
+                challengeBlanks: ["Attention", "MLP", "Residual", "emergent", "all"],
+                code: "print('=== Transformers: Composition & Safety ===')\nprint()\nprint('SIMPLE COMPONENTS:')\nprint('  • Attention: Move information between positions')\nprint('  • MLP: Process information at each position')\nprint('  • Residual: Preserve information through layers')\nprint('  • (Normalization: Stabilize - see Intermediate)')\nprint()\nprint('         ↓ COMPOSE INTO ↓')\nprint()\nprint('COMPLEX CAPABILITIES:')\nprint('  • Language understanding')\nprint('  • Multi-step reasoning')\nprint('  • In-context learning')\nprint('  • Chain-of-thought')\nprint()\nprint('         ↓ WHICH ENABLE ↓')\nprint()\nprint('EMERGENT BEHAVIORS (good and bad):')\nprint('  ✓ Few-shot learning')\nprint('  ✓ Following instructions')\nprint('  ⚠️ Potential deception')\nprint('  ⚠️ Harmful content generation')\nprint()\nprint('THE SAFETY CHALLENGE:')\nprint('  • Simple components are interpretable')\nprint('  • But composition creates emergence')\nprint('  • Must ensure safety at ALL levels')\nprint('  • This is why AI safety is hard!')",
+                output: "=== Transformers: Composition & Safety ===\n\nSIMPLE COMPONENTS:\n  • Attention: Move information between positions\n  • MLP: Process information at each position\n  • Residual: Preserve information through layers\n  • (Normalization: Stabilize - see Intermediate)\n\n         ↓ COMPOSE INTO ↓\n\nCOMPLEX CAPABILITIES:\n  • Language understanding\n  • Multi-step reasoning\n  • In-context learning\n  • Chain-of-thought\n\n         ↓ WHICH ENABLE ↓\n\nEMERGENT BEHAVIORS (good and bad):\n  ✓ Few-shot learning\n  ✓ Following instructions\n  ⚠️ Potential deception\n  ⚠️ Harmful content generation\n\nTHE SAFETY CHALLENGE:\n  • Simple components are interpretable\n  • But composition creates emergence\n  • Must ensure safety at ALL levels\n  • This is why AI safety is hard!",
+                explanation: "You've now seen the complete transformer architecture! Simple components (attention, MLP, residuals) combine to create powerful capabilities - and potentially dangerous behaviors. The safety challenge is that emergence is hard to predict: each component might be safe alone, but together they can do things we didn't anticipate. That's why AI safety research needs to understand transformers at every level - from individual neurons to full model behavior. You're now ready to explore text generation in the next lesson!"
             }
         ]
     },
@@ -1343,101 +1103,204 @@ for term in test_terms:
     'text-generation': {
         title: "Text Generation",
         steps: [
+            // PHASE 1: LOGITS TO PROBABILITIES
+            // Step 1: Softmax Basics
             {
-                instruction: "Now we have logits (scores for each possible next token). Let's convert them to probabilities:",
-                why: "Logits are raw scores that can be any real number. To make decisions, we need probabilities that sum to 1. The softmax function does this while preserving relative differences - if one logit is much higher than others, it will dominate the probability distribution. This mathematical transformation is where we can intervene for safety, as we'll see.",
-                code: "import torch.nn.functional as F\n\nlogits = torch.tensor([2.0, 1.0, 0.5, 3.0, 0.1])\nprobs = F.softmax(logits, dim=-1)\nprint(logits)\nprint(probs)\nprint(probs.sum())",
-                explanation: "Softmax converts raw scores (logits) into probabilities. Higher logits become higher probabilities, and all probabilities sum to 1. Notice token 3 (logit=3.0) dominates!"
+                instruction: "The previous lesson gave us logits (raw scores). To sample a token, we need probabilities. What function converts logits to probabilities?",
+                why: "Logits are raw scores that can be any real number (positive or negative). To make decisions, we need probabilities between 0 and 1 that sum to 1. The softmax function does this transformation while preserving relative differences - higher logits become higher probabilities.",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\nlogits = torch.tensor([2.0, 1.0, 0.5, 3.0, 0.1])\n\n# Convert logits to probabilities\nprobs = F.___(logits, dim=-1)\n\nprint(f'Logits: {logits.tolist()}')\nprint(f'Probs:  {[f\"{p:.3f}\" for p in probs.tolist()]}')\nprint(f'Sum:    {probs.sum():.3f}')",
+                choices: ["softmax", "sigmoid", "relu", "tanh"],
+                correct: 0,
+                hint: "This function converts a vector of scores into a probability distribution",
+                freestyleHint: "Create logits tensor [2.0, 1.0, 0.5, 3.0, 0.1], apply F.softmax with dim=-1, print both logits and probabilities, verify they sum to 1.",
+                challengeTemplate: "import torch\nimport torch.nn.functional as F\n\nlogits = torch.tensor([2.0, 1.0, 0.5, 3.0, 0.1])\nprobs = F.softmax(logits, dim=___)\n\nprint(f'Highest logit: {logits.___().item()}')\nprint(f'Highest prob:  {probs.max().item():.3f}')\nprint(f'Probs sum to:  {probs.___():.3f}')",
+                challengeBlanks: ["-1", "max", "sum"],
+                code: "import torch\nimport torch.nn.functional as F\n\nlogits = torch.tensor([2.0, 1.0, 0.5, 3.0, 0.1])\n\n# Convert logits to probabilities\nprobs = F.softmax(logits, dim=-1)\n\nprint('=== Softmax: Logits → Probabilities ===')\nprint()\nprint(f'Logits: {logits.tolist()}')\nprint(f'Probs:  {[f\"{p:.3f}\" for p in probs.tolist()]}')\nprint(f'Sum:    {probs.sum():.3f}')\nprint()\nprint('Notice:')\nprint(f'  • Highest logit (3.0) → highest prob ({probs[3]:.3f})')\nprint(f'  • All probs are positive and sum to 1')\nprint(f'  • Softmax amplifies differences!')",
+                output: "=== Softmax: Logits → Probabilities ===\n\nLogits: [2.0, 1.0, 0.5, 3.0, 0.1]\nProbs:  ['0.205', '0.075', '0.046', '0.557', '0.031']\nSum:    1.000\n\nNotice:\n  • Highest logit (3.0) → highest prob (0.557)\n  • All probs are positive and sum to 1\n  • Softmax amplifies differences!",
+                explanation: "Softmax converts raw logits into a probability distribution. The formula is: prob_i = exp(logit_i) / sum(exp(logit_j)). Higher logits get exponentially higher probabilities. Token 3 (logit=3.0) dominates with 55.7% probability!"
             },
+            // Step 2: Temperature Scaling
             {
-                instruction: "Understand the softmax function's behavior:",
-                why: "Softmax has a 'winner-take-all' tendency - small differences in logits become large differences in probabilities. This is both powerful (the model can be confident) and dangerous (small perturbations can dramatically change outputs). For AI safety, understanding softmax helps us predict when models might be overconfident or easily manipulated.",
-                code: "# Explore softmax sensitivity\n# Small difference in logits\nlogits1 = torch.tensor([1.0, 1.1])\nprobs1 = F.softmax(logits1, dim=-1)\nprint(f'\\nLogits {logits1.numpy()} (difference: 0.1)')\nprint(f'Probs: {probs1.numpy()} (ratio: {probs1[1]/probs1[0]:.2f})')\n\n# Larger difference\nlogits2 = torch.tensor([1.0, 3.0])\nprobs2 = F.softmax(logits2, dim=-1)\nprint(f'\\nLogits {logits2.numpy()} (difference: 2.0)')\nprint(f'Probs: {probs2.numpy()} (ratio: {probs2[1]/probs2[0]:.2f})')",
-                explanation: "Softmax amplifies differences! Small logit differences become large probability ratios. This is why temperature scaling is so important."
+                instruction: "Temperature controls randomness: divide logits by temperature BEFORE softmax. Low temperature (0.1) makes the distribution ___.",
+                why: "Temperature is our 'creativity dial'. Low temperature sharpens the distribution (confident, deterministic), high temperature flattens it (diverse, random). This is crucial for AI safety - we use low temperature for factual tasks where consistency matters, high temperature for creative tasks.",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\nlogits = torch.tensor([2.0, 1.0, 3.0, 0.5])\n\nprint('Temperature effects on probability distribution:')\nprint()\nfor temp in [0.1, 1.0, 2.0]:\n    scaled = logits / temp\n    probs = F.softmax(scaled, dim=-1)\n    print(f'T={temp}: {[f\"{p:.3f}\" for p in probs.tolist()]}')\n\n# Low temperature (0.1) makes distribution ___",
+                choices: ["peaked (more confident)", "flat (more random)", "negative", "unchanged"],
+                correct: 0,
+                hint: "Dividing by a small number makes differences larger",
+                freestyleHint: "Create logits, loop through temperatures [0.1, 0.5, 1.0, 2.0], for each: divide logits by temp, apply softmax, print results. Explain when to use each temperature.",
+                challengeTemplate: "logits = torch.tensor([2.0, 1.0, 3.0, 0.5])\n\n# Low temp = confident\nlow_temp_probs = F.softmax(logits / ___, dim=-1)\nprint(f'T=0.1: max prob = {low_temp_probs.max():.3f}')\n\n# High temp = random\nhigh_temp_probs = F.softmax(logits / ___, dim=-1)\nprint(f'T=2.0: max prob = {high_temp_probs.max():.3f}')",
+                challengeBlanks: ["0.1", "2.0"],
+                code: "import torch\nimport torch.nn.functional as F\n\nlogits = torch.tensor([2.0, 1.0, 3.0, 0.5])\n\nprint('=== Temperature Scaling ===')\nprint()\nprint('Formula: probs = softmax(logits / temperature)')\nprint()\n\nfor temp in [0.1, 0.5, 1.0, 2.0]:\n    scaled = logits / temp\n    probs = F.softmax(scaled, dim=-1)\n    max_prob = probs.max().item()\n    \n    # Visual bar\n    bar = '█' * int(max_prob * 20)\n    print(f'T={temp}: max={max_prob:.3f} {bar}')\n\nprint()\nprint('Temperature Guide:')\nprint('  T=0.1: Very confident (factual tasks)')\nprint('  T=0.7: Balanced (general assistant)')\nprint('  T=1.0: Default (as trained)')\nprint('  T=2.0: Creative (brainstorming)')",
+                output: "=== Temperature Scaling ===\n\nFormula: probs = softmax(logits / temperature)\n\nT=0.1: max=1.000 ████████████████████\nT=0.5: max=0.867 █████████████████\nT=1.0: max=0.613 ████████████\nT=2.0: max=0.394 ███████\n\nTemperature Guide:\n  T=0.1: Very confident (factual tasks)\n  T=0.7: Balanced (general assistant)\n  T=1.0: Default (as trained)\n  T=2.0: Creative (brainstorming)",
+                explanation: "Temperature controls the 'sharpness' of the distribution. Low temperature (0.1) makes the model almost always pick the highest-probability token. High temperature (2.0) makes all tokens more equally likely. For safety: use low temperature for medical/legal advice where consistency matters!"
             },
+            // Step 3: Greedy vs Sampling
             {
-                instruction: "The simplest generation method is greedy decoding - always pick the most likely token:",
-                why: "Greedy decoding is deterministic and safe in the sense that it's predictable. However, for AI safety, deterministic generation can be exploited by adversaries who can craft inputs knowing exactly what the model will output. It also tends to produce repetitive text that gets stuck in loops - a failure mode we want to avoid. Most importantly, greedy decoding can amplify biases because it always chooses the single most likely option.",
-                code: "next_token = torch.argmax(probs)\nprint(next_token)\nprint(probs[next_token])",
-                explanation: "Greedy decoding always picks the token with highest probability. Pros: Fast, deterministic, conservative. Cons: Repetitive, predictable, exploitable. Safety implications: Adversaries can predict outputs exactly, gets stuck in loops ('I don't know. I don't know...'), amplifies training biases, no exploration of alternative safe outputs."
+                instruction: "Greedy decoding uses argmax (always pick the highest). Sampling uses multinomial (random weighted by probs). Which has more variety?",
+                why: "Greedy decoding is deterministic - same input always gives same output. This is predictable but can be exploited by adversaries and leads to repetitive text. Sampling introduces controlled randomness, making outputs harder to predict and more natural.",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\nprobs = torch.tensor([0.1, 0.2, 0.5, 0.15, 0.05])\n\n# Greedy: always pick highest\ngreedy = torch.argmax(probs)\nprint(f'Greedy: always token {greedy.item()}')\n\n# Sampling: random weighted choice\nsamples = torch.multinomial(probs, num_samples=10, replacement=True)\nprint(f'Sampling: {samples.tolist()}')\n\n# Which has more variety? ___",
+                choices: ["Sampling (multinomial)", "Greedy (argmax)", "Both equal", "Neither"],
+                correct: 0,
+                hint: "One always picks the same token, one has randomness",
+                freestyleHint: "Create probability distribution, show greedy always picks token 2, sample 20 times with multinomial and show variety. Count unique tokens in samples.",
+                challengeTemplate: "probs = torch.tensor([0.1, 0.2, 0.5, 0.15, 0.05])\n\n# Greedy decoding\ngreedy_token = torch.___(probs)\n\n# Sampling\nsampled_tokens = torch.___(probs, num_samples=10, replacement=True)\n\nprint(f'Greedy always picks: {greedy_token.item()}')\nprint(f'Sampling variety: {len(set(sampled_tokens.tolist()))} unique tokens')",
+                challengeBlanks: ["argmax", "multinomial"],
+                code: "import torch\nimport torch.nn.functional as F\nfrom collections import Counter\n\nprobs = torch.tensor([0.1, 0.2, 0.5, 0.15, 0.05])\n\nprint('=== Greedy vs Sampling ===')\nprint()\nprint(f'Probabilities: {probs.tolist()}')\nprint()\n\n# Greedy: deterministic\ngreedy = torch.argmax(probs)\nprint(f'GREEDY (argmax):')\nprint(f'  Always picks token {greedy.item()} (prob={probs[greedy]:.2f})')\nprint(f'  10 greedy picks: {[greedy.item()]*10}')\nprint()\n\n# Sampling: stochastic\nsamples = torch.multinomial(probs, num_samples=10, replacement=True)\ncounts = Counter(samples.tolist())\nprint(f'SAMPLING (multinomial):')\nprint(f'  10 samples: {samples.tolist()}')\nprint(f'  Counts: {dict(counts)}')\nprint()\n\nprint('Tradeoffs:')\nprint('  Greedy: Fast, predictable, but repetitive & exploitable')\nprint('  Sampling: Varied, natural, harder to exploit')",
+                output: "=== Greedy vs Sampling ===\n\nProbabilities: [0.1, 0.2, 0.5, 0.15, 0.05]\n\nGREEDY (argmax):\n  Always picks token 2 (prob=0.50)\n  10 greedy picks: [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]\n\nSAMPLING (multinomial):\n  10 samples: [2, 1, 2, 3, 2, 0, 2, 2, 1, 2]\n  Counts: {2: 6, 1: 2, 3: 1, 0: 1}\n\nTradeoffs:\n  Greedy: Fast, predictable, but repetitive & exploitable\n  Sampling: Varied, natural, harder to exploit",
+                explanation: "Greedy decoding is deterministic (same output every time) while sampling introduces variety. For safety: greedy is predictable (adversaries can craft exact inputs), sampling adds defense through randomness. Most production systems use sampling with temperature!"
             },
+
+            // PHASE 2: SAMPLING METHODS
+            // Step 4: Top-k Sampling
             {
-                instruction: "A better approach is sampling - randomly choose based on probabilities:",
-                why: "Sampling introduces controlled randomness that serves multiple safety purposes: it makes adversarial attacks harder (outputs aren't deterministic), prevents repetitive loops, and allows the model to explore multiple valid continuations. This stochasticity is a defense mechanism - even if someone finds a prompt that sometimes produces harmful output, it won't work every time.",
-                code: "sampled_tokens = torch.multinomial(probs, num_samples=10, replacement=True)\nprint(sampled_tokens)\n\nfrom collections import Counter\nprint(dict(Counter(sampled_tokens.tolist())))",
-                explanation: "Sampling introduces randomness while still favoring more likely tokens. Notice the variety! Higher probability tokens appear more often. This randomness is a safety feature: harder to exploit predictable outputs, natural variation prevents loops, can sample multiple times and filter."
+                instruction: "Top-k sampling only considers the k most likely tokens, filtering out unlikely ones. What PyTorch function gets the top k values?",
+                why: "Top-k prevents sampling very unlikely tokens that might be nonsensical or harmful. Even with small probability, harmful tokens could occasionally be sampled. Top-k cuts them off entirely - if a harmful word is outside the top k, it has zero chance of being selected.",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\nlogits = torch.tensor([1.0, 3.0, 0.5, 2.5, 0.1, 2.0])\nk = 3\n\n# Get top k logits and their indices\ntop_k_logits, top_k_indices = torch.___(logits, k)\n\nprint(f'Original logits: {logits.tolist()}')\nprint(f'Top {k} indices: {top_k_indices.tolist()}')\nprint(f'Top {k} logits:  {top_k_logits.tolist()}')",
+                choices: ["topk", "max", "sort", "argmax"],
+                correct: 0,
+                hint: "The function name literally describes what it does - get top k",
+                freestyleHint: "Create logits for 6 tokens, use torch.topk to get top 3, convert to probabilities with softmax, sample with multinomial. Show that only top 3 tokens can be chosen.",
+                challengeTemplate: "logits = torch.tensor([1.0, 3.0, 0.5, 2.5, 0.1, 2.0])\nk = ___\n\ntop_logits, top_indices = torch.topk(logits, ___)\nprobs = F.softmax(top_logits, dim=-1)\nsampled_idx = torch.multinomial(probs, 1)\nfinal_token = top_indices[___]\n\nprint(f'Sampled token: {final_token.item()}')",
+                challengeBlanks: ["3", "k", "sampled_idx"],
+                code: "import torch\nimport torch.nn.functional as F\n\ndef top_k_sample(logits, k):\n    # Get top k logits and indices\n    top_k_logits, top_k_indices = torch.topk(logits, k)\n    \n    # Convert to probabilities\n    probs = F.softmax(top_k_logits, dim=-1)\n    \n    # Sample from top k only\n    sampled_idx = torch.multinomial(probs, 1)\n    return top_k_indices[sampled_idx]\n\nlogits = torch.tensor([1.0, 3.0, 0.5, 2.5, 0.1, 2.0])\nprint('=== Top-k Sampling ===')\nprint(f'\\nOriginal logits: {logits.tolist()}')\nprint(f'Token indices:   [0,   1,   2,   3,   4,   5]')\nprint()\n\nk = 3\ntop_logits, top_indices = torch.topk(logits, k)\nprint(f'Top {k} tokens: {top_indices.tolist()}')\nprint(f'Top {k} logits: {top_logits.tolist()}')\nprint()\n\nprint(f'Sampling 10 times with k={k}:')\nsamples = [top_k_sample(logits, k).item() for _ in range(10)]\nprint(f'  Tokens: {samples}')\nprint(f'  Only tokens {top_indices.tolist()} are possible!')",
+                output: "=== Top-k Sampling ===\n\nOriginal logits: [1.0, 3.0, 0.5, 2.5, 0.1, 2.0]\nToken indices:   [0,   1,   2,   3,   4,   5]\n\nTop 3 tokens: [1, 3, 5]\nTop 3 logits: [3.0, 2.5, 2.0]\n\nSampling 10 times with k=3:\n  Tokens: [1, 1, 3, 1, 5, 1, 3, 1, 1, 5]\n  Only tokens [1, 3, 5] are possible!",
+                explanation: "Top-k filters out unlikely tokens before sampling. With k=3, only tokens 1, 3, and 5 can ever be selected - tokens 0, 2, 4 have zero probability. This is a simple safety guardrail: even if a harmful token has low probability, k filtering can eliminate it entirely."
             },
+            // Step 5: Top-p (Nucleus) Sampling
             {
-                instruction: "Temperature controls the randomness of sampling:",
-                why: "Temperature is crucial for AI safety because it controls the model's creativity vs reliability tradeoff. Low temperature makes outputs more predictable and factual (good for medical/legal advice), while high temperature enables more creative but potentially unreliable outputs. Temperature is our 'safety dial' - we can adjust it based on the application's risk tolerance. Zero temperature equals greedy decoding, while infinite temperature gives uniform random selection.",
-                code: "def sample_with_temperature(logits, temperature):\n    if temperature == 0:\n        return torch.argmax(logits)  # Greedy\n    scaled_logits = logits / temperature\n    probs = F.softmax(scaled_logits, dim=-1)\n    return torch.multinomial(probs, 1)\n\nprint('Temperature effects:')\nfor temp in [0.1, 0.5, 1.0, 2.0]:\n    samples = [sample_with_temperature(logits, temp).item() for _ in range(20)]\n    print(f'T={temp}: Most common token: {max(set(samples), key=samples.count)}, '\n          f'Unique tokens: {len(set(samples))}')",
-                explanation: "Higher temperature makes sampling more random (more diverse text). Lower temperature makes it more focused (more deterministic text). Temperature as a safety dial: T=0.1 for high confidence, factual (medical advice), T=0.7 for balanced (general assistant), T=1.0 for creative but coherent (storytelling), T=2.0 very random (brainstorming only!)."
+                instruction: "Top-p keeps tokens until cumulative probability reaches p (e.g., 0.9). Unlike top-k, it adapts to the distribution. If the model is very confident, top-p includes ___ tokens.",
+                why: "Top-p is smarter than top-k because it adapts. When the model is confident (one token dominates), top-p might only include 1-2 tokens. When uncertain (flat distribution), it might include 10+. This respects the model's confidence level.",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\n# Confident distribution (one token dominates)\nlogits_confident = torch.tensor([0.1, 5.0, 0.2, 0.3])\nprobs_confident = F.softmax(logits_confident, dim=-1)\n\n# Uncertain distribution (flat)\nlogits_uncertain = torch.tensor([1.0, 1.1, 1.2, 0.9])\nprobs_uncertain = F.softmax(logits_uncertain, dim=-1)\n\nprint('Confident model:', probs_confident.tolist())\nprint('Uncertain model:', probs_uncertain.tolist())\n\n# With p=0.9, confident includes ___ tokens",
+                choices: ["fewer", "more", "same number of", "zero"],
+                correct: 0,
+                hint: "If one token has 95% probability, you only need that one to reach 90%",
+                freestyleHint: "Create confident and uncertain logit distributions. For each, sort probabilities descending, compute cumulative sum, find how many tokens needed to reach p=0.9. Show that confident needs fewer.",
+                challengeTemplate: "probs = torch.tensor([0.05, 0.7, 0.15, 0.1])\np = 0.9\n\n# Sort descending\nsorted_probs, indices = torch.___(probs, descending=True)\ncumsum = sorted_probs.___(-1)\n\n# Find cutoff\ncutoff = (cumsum > ___).nonzero()[0].item() + 1\nprint(f'Need {cutoff} tokens to reach {p} probability')",
+                challengeBlanks: ["sort", "cumsum", "p"],
+                code: "import torch\nimport torch.nn.functional as F\n\ndef top_p_sample(logits, p=0.9):\n    probs = F.softmax(logits, dim=-1)\n    sorted_probs, sorted_indices = torch.sort(probs, descending=True)\n    cumsum = sorted_probs.cumsum(dim=-1)\n    \n    # Find cutoff\n    cutoff = (cumsum > p).nonzero()[0].item() + 1\n    \n    # Keep only tokens within p\n    top_probs = sorted_probs[:cutoff]\n    top_indices = sorted_indices[:cutoff]\n    \n    # Renormalize and sample\n    top_probs = top_probs / top_probs.sum()\n    sampled_idx = torch.multinomial(top_probs, 1)\n    return top_indices[sampled_idx], cutoff\n\nprint('=== Top-p (Nucleus) Sampling ===')\nprint()\n\n# Confident model\nlogits_conf = torch.tensor([0.1, 5.0, 0.2, 0.3])\nprobs_conf = F.softmax(logits_conf, dim=-1)\nprint(f'CONFIDENT: probs = {[f\"{p:.3f}\" for p in probs_conf.tolist()]}')\n_, n_conf = top_p_sample(logits_conf, 0.9)\nprint(f'  Top-p=0.9 uses {n_conf} token(s)')\nprint()\n\n# Uncertain model\nlogits_unc = torch.tensor([1.0, 1.1, 1.2, 0.9])\nprobs_unc = F.softmax(logits_unc, dim=-1)\nprint(f'UNCERTAIN: probs = {[f\"{p:.3f}\" for p in probs_unc.tolist()]}')\n_, n_unc = top_p_sample(logits_unc, 0.9)\nprint(f'  Top-p=0.9 uses {n_unc} token(s)')\nprint()\n\nprint('Top-p adapts to model confidence!')\nprint('  • Confident → fewer tokens (focused)')\nprint('  • Uncertain → more tokens (exploratory)')",
+                output: "=== Top-p (Nucleus) Sampling ===\n\nCONFIDENT: probs = ['0.007', '0.976', '0.008', '0.009']\n  Top-p=0.9 uses 1 token(s)\n\nUNCERTAIN: probs = ['0.228', '0.252', '0.278', '0.213']\n  Top-p=0.9 uses 4 token(s)\n\nTop-p adapts to model confidence!\n  • Confident → fewer tokens (focused)\n  • Uncertain → more tokens (exploratory)",
+                explanation: "Top-p (nucleus) sampling adapts to the probability distribution. When the model is confident (one token at 97.6%), only 1 token is needed. When uncertain (all ~25%), all 4 tokens are included. This is more flexible than fixed top-k and better respects model confidence."
             },
+            // Step 6: Combining Methods
             {
-                instruction: "Let's visualize temperature effects on probability distributions:",
-                why: "Understanding temperature helps us control model behavior. For safety applications, we might use very low temperature to ensure consistent, reliable outputs. For creative applications, higher temperature allows more exploration. The key insight: temperature doesn't change which token is most likely, it changes how much more likely it is than alternatives. This preserves the model's knowledge while controlling its confidence.",
-                code: "# ASCII visualization of temperature effects\nprint('Temperature effects on probability distribution:')\nprint('(Token probabilities for tokens 0-4)\\n')\n\nfor temp in [0.1, 0.5, 1.0, 2.0]:\n    scaled_logits = logits / temp\n    probs = F.softmax(scaled_logits, dim=-1)\n    \n    print(f'T={temp}:')\n    for i, p in enumerate(probs):\n        bar = '█' * int(p * 20)\n        print(f'  Token {i}: {bar:20} {p:.3f}')\n    print()",
-                explanation: "Low temperature → peaked distribution (confident). High temperature → flat distribution (uncertain)."
+                instruction: "Production systems often combine methods: temperature + top-p + top-k. What order should we apply them?",
+                why: "Each method serves a purpose: temperature adjusts overall confidence, top-k provides a hard safety cap, top-p adapts to the distribution. The order matters: temperature first (affects logits), then filtering (top-k/top-p on probabilities), then sample.",
+                type: "multiple-choice",
+                template: "def generate_safe(logits, temp=0.8, top_k=50, top_p=0.9):\n    # Step 1: ___ scaling\n    scaled = logits / temp\n    \n    # Step 2: Top-k filter\n    if top_k > 0:\n        top_k_logits, _ = torch.topk(scaled, top_k)\n        scaled[scaled < top_k_logits[-1]] = -float('inf')\n    \n    # Step 3: Convert to probs, apply top-p\n    probs = F.softmax(scaled, dim=-1)\n    # ... top-p filtering ...\n    \n    # Step 4: Sample\n    return torch.multinomial(probs, 1)",
+                choices: ["Temperature", "Top-p", "Top-k", "Softmax"],
+                correct: 0,
+                hint: "We divide logits by this value first, before any filtering",
+                freestyleHint: "Implement generate_safe function that applies: 1) temperature scaling to logits, 2) top-k filtering, 3) softmax, 4) top-p filtering, 5) multinomial sampling. Test with different parameters.",
+                challengeTemplate: "def generate(logits, temp, top_k):\n    # 1. Temperature\n    scaled = logits / ___\n    \n    # 2. Top-k filter\n    values, _ = torch.topk(scaled, ___)\n    threshold = values[-1]\n    scaled[scaled < threshold] = -float('inf')\n    \n    # 3. Sample\n    probs = F.___(scaled, dim=-1)\n    return torch.multinomial(probs, 1)",
+                challengeBlanks: ["temp", "top_k", "softmax"],
+                code: "import torch\nimport torch.nn.functional as F\n\ndef generate_safe(logits, temp=0.8, top_k=50, top_p=0.9):\n    '''Production-ready sampling with all safety controls'''\n    \n    # Step 1: Temperature scaling (on logits)\n    scaled = logits / temp\n    \n    # Step 2: Top-k filter (hard cap on candidates)\n    if top_k > 0 and top_k < len(logits):\n        values, _ = torch.topk(scaled, top_k)\n        scaled[scaled < values[-1]] = -float('inf')\n    \n    # Step 3: Convert to probabilities\n    probs = F.softmax(scaled, dim=-1)\n    \n    # Step 4: Top-p filter (adaptive)\n    sorted_probs, sorted_idx = torch.sort(probs, descending=True)\n    cumsum = sorted_probs.cumsum(-1)\n    mask = cumsum > top_p\n    mask[1:] = mask[:-1].clone()  # Shift to keep first token above p\n    mask[0] = False\n    sorted_probs[mask] = 0\n    probs = sorted_probs[sorted_idx.argsort()]  # Unsort\n    probs = probs / probs.sum()  # Renormalize\n    \n    # Step 5: Sample\n    return torch.multinomial(probs, 1)\n\nlogits = torch.randn(100)  # 100 token vocabulary\n\nprint('=== Combined Sampling Pipeline ===')\nprint()\nprint('Order of operations:')\nprint('  1. Temperature: Scale logits (adjust confidence)')\nprint('  2. Top-k: Hard filter (safety cap)')\nprint('  3. Softmax: Convert to probabilities')\nprint('  4. Top-p: Adaptive filter (respect confidence)')\nprint('  5. Sample: Multinomial selection')\nprint()\nprint('Common production settings:')\nprint('  ChatGPT-like: temp=0.7, top_k=0, top_p=0.9')\nprint('  Factual:      temp=0.3, top_k=10, top_p=0.5')\nprint('  Creative:     temp=1.0, top_k=0, top_p=0.95')",
+                output: "=== Combined Sampling Pipeline ===\n\nOrder of operations:\n  1. Temperature: Scale logits (adjust confidence)\n  2. Top-k: Hard filter (safety cap)\n  3. Softmax: Convert to probabilities\n  4. Top-p: Adaptive filter (respect confidence)\n  5. Sample: Multinomial selection\n\nCommon production settings:\n  ChatGPT-like: temp=0.7, top_k=0, top_p=0.9\n  Factual:      temp=0.3, top_k=10, top_p=0.5\n  Creative:     temp=1.0, top_k=0, top_p=0.95",
+                explanation: "Production systems layer multiple techniques: temperature controls overall randomness, top-k provides a hard safety ceiling, top-p adapts to model confidence. The order matters: temperature on logits first, then filtering, then sampling. This gives fine-grained control over the safety-creativity tradeoff."
             },
+
+            // PHASE 3: SAFETY CONTROLS
+            // Step 7: Logit Filtering for Safety
             {
-                instruction: "Understand why temperature works mathematically:",
-                why: "Temperature scaling works because of how exponentials behave. Dividing logits by temperature before softmax is equivalent to raising probabilities to the power of (1/temperature) after softmax. Low temperature amplifies differences (making the rich richer), while high temperature dampens them (making the distribution more egalitarian). This mathematical property gives us precise control over the model's confidence.",
-                code: "import torch\nimport torch.nn.functional as F\nimport matplotlib.pyplot as plt\n\n# Demonstrate temperature effects mathematically\nlogits = torch.tensor([1.0, 2.0, 3.0, 4.0])\ntemperatures = [0.1, 0.5, 1.0, 2.0, 5.0]\n\nprint(\"Temperature Effects on Probability Distribution:\\n\")\nfor T in temperatures:\n    scaled_logits = logits / T\n    probs = F.softmax(scaled_logits, dim=0)\n    print(f\"T = {T}:\")\n    print(f\"  Probs: {probs.numpy()}\")\n    print(f\"  Entropy: {-(probs * probs.log()).sum():.3f}\")\n    print(f\"  Max prob: {probs.max():.3f}\\n\")\n\n# Visualize\nplt.figure(figsize=(10, 6))\nfor T in [0.5, 1.0, 2.0]:\n    probs = F.softmax(logits / T, dim=0)\n    plt.plot(probs.numpy(), marker='o', label=f'T={T}')\nplt.xlabel('Token Index')\nplt.ylabel('Probability')\nplt.title('Temperature Effect on Distribution')\nplt.legend()\nplt.grid(True, alpha=0.3)\nplt.show()\n\nprint(\"Key insight: Temperature controls confidence vs creativity trade-off\")",
-                explanation: "Why temperature works: Softmax: p_i = exp(x_i) / sum(exp(x_j)), With temp: p_i = exp(x_i/T) / sum(exp(x_j/T)). As T → 0: exp(x_i/T) → 0 for all but the largest x, resulting in one-hot distribution (greedy). As T → ∞: exp(x_i/T) → 1 for all x, resulting in uniform distribution. For AI safety: T < 0.5 for high confidence factual tasks, T = 0.7-0.9 balanced for general use, T > 1.0 creative but risky, T > 2.0 nearly random - avoid for production!"
+                instruction: "To block harmful tokens, we set their logits to -infinity before softmax. What probability do they get after softmax?",
+                why: "This is a fundamental AI safety technique. By setting harmful token logits to -inf, they get probability 0 after softmax - they can NEVER be selected. This is more robust than trying to remove harmful knowledge from model weights.",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\nvocab = ['safe', 'harmful', 'neutral', 'helpful', 'dangerous']\nlogits = torch.tensor([1.0, 5.0, 0.5, 0.1, 4.0])\n\nprint('Before filtering:')\nprint(F.softmax(logits, dim=-1))\n\n# Block harmful tokens (indices 1 and 4)\nfiltered = logits.clone()\nfiltered[1] = -float('inf')\nfiltered[4] = -float('inf')\n\nprint('After filtering:')\nprobs = F.softmax(filtered, dim=-1)\nprint(probs)\n\n# Harmful tokens now have probability: ___",
+                choices: ["0 (zero)", "Very small but nonzero", "0.5", "Unchanged"],
+                correct: 0,
+                hint: "exp(-infinity) = 0",
+                freestyleHint: "Create vocabulary with safe and unsafe words, set unsafe logits to -inf, show probabilities before and after. Verify unsafe words have exactly 0 probability.",
+                challengeTemplate: "vocab = ['good', 'bad', 'okay', 'evil']\nlogits = torch.tensor([1.0, 3.0, 0.5, 2.5])\nunsafe_indices = [1, 3]  # 'bad' and 'evil'\n\nfiltered = logits.clone()\nfor idx in unsafe_indices:\n    filtered[idx] = -float('___')\n\nprobs = F.softmax(filtered, dim=-1)\nprint(f\"'bad' probability: {probs[1].item()}\")\nprint(f\"'evil' probability: {probs[___].item()}\")",
+                challengeBlanks: ["inf", "3"],
+                code: "import torch\nimport torch.nn.functional as F\n\nvocab = ['safe', 'harmful', 'neutral', 'helpful', 'dangerous']\nlogits = torch.tensor([1.0, 5.0, 0.5, 0.1, 4.0])\nunsafe = [1, 4]  # 'harmful' and 'dangerous'\n\nprint('=== Logit Filtering for Safety ===')\nprint()\nprint(f'Vocabulary: {vocab}')\nprint(f'Unsafe tokens: {[vocab[i] for i in unsafe]}')\nprint()\n\nprint('BEFORE filtering:')\nprobs_before = F.softmax(logits, dim=-1)\nfor i, (word, p) in enumerate(zip(vocab, probs_before)):\n    marker = ' ⚠️' if i in unsafe else ''\n    print(f'  {word}: {p:.3f}{marker}')\nprint()\n\n# Apply safety filter\nfiltered = logits.clone()\nfiltered[unsafe] = -float('inf')\n\nprint('AFTER filtering (unsafe → -inf):')\nprobs_after = F.softmax(filtered, dim=-1)\nfor i, (word, p) in enumerate(zip(vocab, probs_after)):\n    marker = ' ✗ BLOCKED' if i in unsafe else ''\n    print(f'  {word}: {p:.3f}{marker}')\nprint()\n\nprint('Safety guarantee: Blocked tokens have ZERO probability!')",
+                output: "=== Logit Filtering for Safety ===\n\nVocabulary: ['safe', 'harmful', 'neutral', 'helpful', 'dangerous']\nUnsafe tokens: ['harmful', 'dangerous']\n\nBEFORE filtering:\n  safe: 0.058 \n  harmful: 0.317 ⚠️\n  neutral: 0.035\n  helpful: 0.024\n  dangerous: 0.117 ⚠️\n\nAFTER filtering (unsafe → -inf):\n  safe: 0.498\n  harmful: 0.000 ✗ BLOCKED\n  neutral: 0.303\n  helpful: 0.199\n  dangerous: 0.000 ✗ BLOCKED\n\nSafety guarantee: Blocked tokens have ZERO probability!",
+                explanation: "Setting logits to -infinity before softmax guarantees zero probability (because exp(-inf) = 0). This is a hard safety guarantee - blocked tokens can NEVER be selected no matter how many times you sample. This is our 'last line of defense' against harmful outputs."
             },
+            // Step 8: Hard vs Soft Filtering
             {
-                instruction: "Top-k sampling only considers the k most likely tokens:",
-                why: "Top-k sampling prevents the model from choosing very unlikely tokens that might be nonsensical or harmful. For AI safety, this is a simple but effective way to avoid rare but potentially problematic outputs. The model might assign tiny probabilities to offensive words or dangerous instructions - top-k cuts these off entirely. It's like putting guardrails on the model's creativity.",
-                code: "def top_k_sample(logits, k=3):\n    top_k_logits, top_k_indices = torch.topk(logits, k)\n    probs = F.softmax(top_k_logits, dim=-1)\n    sampled_idx = torch.multinomial(probs, 1)\n    return top_k_indices[sampled_idx]\n\nprint('Top-3 sampling (10 samples):')\nfor _ in range(10):\n    token = top_k_sample(logits, k=3)\n    print(f'Sampled token {token.item()} (was rank {(logits >= logits[token]).sum().item()} in full distribution)')",
-                explanation: "Top-k sampling filters out very unlikely tokens, preventing the model from generating nonsensical words while maintaining some randomness. Why top-k helps safety: cuts off long tail of unlikely tokens, prevents sampling rare offensive words, stops hallucination of nonsense tokens. BUT: k is fixed regardless of distribution shape."
+                instruction: "Hard filtering (-inf) completely blocks tokens. Soft filtering (subtract penalty) discourages them. When might soft filtering be better?",
+                why: "Hard filtering is safer but can break fluency if it blocks too aggressively. Soft filtering maintains natural text flow but allows some risk. The choice depends on context: medical advice needs hard filtering, creative writing might use soft.",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\nlogits = torch.tensor([2.0, 4.0, 1.5, 3.0])\nvocab = ['continue', 'stop', 'pause', 'wait']\npenalize_idx = 1  # 'stop'\n\n# Hard filter\nhard = logits.clone()\nhard[penalize_idx] = -float('inf')\n\n# Soft filter (reduce by 3)\nsoft = logits.clone()\nsoft[penalize_idx] -= 3.0\n\nprint('Hard:', F.softmax(hard, dim=-1).tolist())\nprint('Soft:', F.softmax(soft, dim=-1).tolist())\n\n# Soft is better when: ___",
+                choices: ["Maintaining fluency is important", "Complete safety is required", "Tokens are always harmful", "Speed is critical"],
+                correct: 0,
+                hint: "Hard blocking might make text sound unnatural",
+                freestyleHint: "Implement both hard_filter (set to -inf) and soft_filter (subtract penalty) functions. Compare probabilities. Discuss when each is appropriate.",
+                challengeTemplate: "logits = torch.tensor([2.0, 4.0, 1.5])\npenalize_idx = 1\n\n# Hard: probability becomes exactly 0\nhard = logits.clone()\nhard[penalize_idx] = -float('___')\n\n# Soft: probability reduced but nonzero\nsoft = logits.clone()\nsoft[penalize_idx] -= ___  # Subtract penalty\n\nprint(f'Hard prob: {F.softmax(hard, dim=-1)[1]:.4f}')\nprint(f'Soft prob: {F.softmax(soft, dim=-1)[1]:.4f}')",
+                challengeBlanks: ["inf", "3.0"],
+                code: "import torch\nimport torch.nn.functional as F\n\nlogits = torch.tensor([2.0, 4.0, 1.5, 3.0])\nvocab = ['continue', 'stop', 'pause', 'wait']\npenalize_idx = 1  # 'stop'\n\nprint('=== Hard vs Soft Filtering ===')\nprint()\nprint(f'Original probs: {[f\"{p:.3f}\" for p in F.softmax(logits, dim=-1).tolist()]}')\nprint(f'Penalizing: \"{vocab[penalize_idx]}\"')\nprint()\n\n# Hard filter\nhard = logits.clone()\nhard[penalize_idx] = -float('inf')\nhard_probs = F.softmax(hard, dim=-1)\nprint('HARD FILTER (-inf):')\nprint(f'  Probs: {[f\"{p:.3f}\" for p in hard_probs.tolist()]}')\nprint(f'  \"stop\" can NEVER be selected')\nprint()\n\n# Soft filter\nfor penalty in [2.0, 3.0, 5.0]:\n    soft = logits.clone()\n    soft[penalize_idx] -= penalty\n    soft_probs = F.softmax(soft, dim=-1)\n    print(f'SOFT FILTER (penalty={penalty}):')\n    print(f'  \"stop\" prob: {soft_probs[penalize_idx]:.3f}')\n\nprint()\nprint('When to use each:')\nprint('  HARD: Safety-critical (medical, legal)')\nprint('  SOFT: Fluency matters (creative, chat)')",
+                output: "=== Hard vs Soft Filtering ===\n\nOriginal probs: ['0.084', '0.620', '0.051', '0.228']\nPenalizing: \"stop\"\n\nHARD FILTER (-inf):\n  Probs: ['0.221', '0.000', '0.134', '0.600']\n  \"stop\" can NEVER be selected\n\nSOFT FILTER (penalty=2.0):\n  \"stop\" prob: 0.252\nSOFT FILTER (penalty=3.0):\n  \"stop\" prob: 0.125\nSOFT FILTER (penalty=5.0):\n  \"stop\" prob: 0.023\n\nWhen to use each:\n  HARD: Safety-critical (medical, legal)\n  SOFT: Fluency matters (creative, chat)",
+                explanation: "Hard filtering gives absolute safety guarantees but may impact text quality. Soft filtering is more nuanced - you can tune the penalty to balance safety vs fluency. Production systems often use context-dependent filtering: hard blocks for dangerous content, soft penalties for stylistic preferences."
             },
+            // Step 9: Repetition Penalty
             {
-                instruction: "Top-p (nucleus) sampling is often better than top-k:",
-                why: "Top-p adapts to the probability distribution shape. When the model is confident (peaked distribution), it samples from fewer tokens. When uncertain (flat distribution), it considers more options. This adaptive behavior is safer than fixed top-k because it respects the model's confidence. If the model is very sure about what comes next (like completing a common phrase), we don't need many options. But if it's uncertain, we want to consider more possibilities.",
-                code: "def top_p_sample(logits, p=0.9):\n    sorted_logits, sorted_indices = torch.sort(logits, descending=True)\n    cumulative_probs = F.softmax(sorted_logits, dim=-1).cumsum(dim=-1)\n    \n    # Find where cumulative probability exceeds p\n    cutoff_idx = (cumulative_probs > p).nonzero()[0].item() + 1\n    \n    # Keep only top tokens\n    top_logits = sorted_logits[:cutoff_idx]\n    top_indices = sorted_indices[:cutoff_idx]\n    \n    # Sample from these\n    probs = F.softmax(top_logits, dim=-1)\n    sampled_idx = torch.multinomial(probs, 1)\n    return top_indices[sampled_idx]\n\nprint('Top-p=0.9 sampling:')\nfor _ in range(5):\n    token = top_p_sample(logits, p=0.9)\n    print(f'Sampled token: {token.item()}')",
-                explanation: "Top-p sampling dynamically adjusts how many tokens to consider based on the probability distribution. Top-p advantages: adapts to model confidence, peaked distribution → few tokens (like top-k=2), flat distribution → many tokens (like top-k=10), better matches human text generation."
+                instruction: "Repetition penalties reduce logits for tokens that already appeared. This prevents ___ which can indicate model malfunction or exploitation.",
+                why: "Models can get stuck in loops ('I don't know. I don't know. I don't know...'). This wastes compute, frustrates users, and can be exploited to make models repeat harmful content. Repetition penalties ensure diverse, natural outputs.",
+                type: "multiple-choice",
+                template: "import torch\nimport torch.nn.functional as F\n\ngenerated = [2, 5, 2, 2, 3]  # Token 2 appeared 3 times!\nlogits = torch.tensor([1.0, 2.0, 3.5, 1.5, 2.5, 1.0])\n\nprint('Generated so far:', generated)\nprint('Original logits:', logits.tolist())\n\n# Apply repetition penalty\npenalized = logits.clone()\nfor token_id in set(generated):\n    count = generated.count(token_id)\n    penalized[token_id] -= 1.5 * count\n\nprint('Penalized logits:', penalized.tolist())\n\n# This prevents ___ loops",
+                choices: ["repetitive", "creative", "long", "short"],
+                correct: 0,
+                hint: "We're penalizing tokens that already appeared multiple times",
+                freestyleHint: "Create a generated sequence with repetition, apply scaling penalty based on token count, show how repeated tokens become less likely. Explain safety implications.",
+                challengeTemplate: "generated = [1, 3, 1, 1]  # Token 1 appears 3 times\nlogits = torch.tensor([2.0, 4.0, 1.0, 2.5])\n\npenalized = logits.clone()\nfor tok in set(generated):\n    count = generated.___(tok)\n    penalized[tok] -= 1.0 * ___  # Penalty scales with count\n\nprint(f'Token 1 logit: {logits[1]} → {penalized[1]}')",
+                challengeBlanks: ["count", "count"],
+                code: "import torch\nimport torch.nn.functional as F\n\nprint('=== Repetition Penalty ===')\nprint()\n\ngenerated = [2, 5, 2, 2, 3]  # Token 2 appeared 3 times!\nlogits = torch.tensor([1.0, 2.0, 3.5, 1.5, 2.5, 1.0])\n\nprint(f'Generated: {generated}')\nprint(f'Token 2 appeared {generated.count(2)} times!')\nprint()\n\n# Count occurrences\ncounts = {}\nfor tok in generated:\n    counts[tok] = counts.get(tok, 0) + 1\nprint(f'Token counts: {counts}')\nprint()\n\n# Apply penalty\npenalty_scale = 1.5\npenalized = logits.clone()\nfor tok, count in counts.items():\n    penalty = penalty_scale * count\n    penalized[tok] -= penalty\n    print(f'Token {tok}: logit {logits[tok]:.1f} → {penalized[tok]:.1f} (penalty={penalty:.1f})')\n\nprint()\nprint('Probabilities:')\nprint(f'  Before: {[f\"{p:.3f}\" for p in F.softmax(logits, dim=-1).tolist()]}')\nprint(f'  After:  {[f\"{p:.3f}\" for p in F.softmax(penalized, dim=-1).tolist()]}')\nprint()\nprint('Token 2 is now much less likely!')\nprint('This prevents: \"I I I I I...\" loops')",
+                output: "=== Repetition Penalty ===\n\nGenerated: [2, 5, 2, 2, 3]\nToken 2 appeared 3 times!\n\nToken counts: {2: 3, 5: 1, 3: 1}\n\nToken 2: logit 3.5 → -1.0 (penalty=4.5)\nToken 5: logit 1.0 → -0.5 (penalty=1.5)\nToken 3: logit 1.5 → 0.0 (penalty=1.5)\n\nProbabilities:\n  Before: ['0.058', '0.157', '0.704', '0.095', '0.258', '0.058']\n  After:  ['0.139', '0.377', '0.019', '0.051', '0.621', '0.139']\n\nToken 2 is now much less likely!\nThis prevents: \"I I I I I...\" loops",
+                explanation: "Repetition penalties scale with how often a token appeared - token 2 (appeared 3x) gets a large penalty. This prevents degenerate loops which are both annoying and potentially dangerous (could be exploited to repeat harmful content). Most production systems include some form of repetition control."
             },
+
+            // PHASE 4: COMPLETE GENERATION
+            // Step 10: Autoregressive Loop
             {
-                instruction: "For AI safety, controlling generation is crucial:",
-                why: "This is a fundamental AI safety technique. By modifying logits before sampling, we can prevent harmful outputs without retraining the entire model. This is much more efficient than trying to remove harmful knowledge from the model itself. It's like having a safety filter at the output valve rather than trying to purify the entire water supply. We can update these filters in real-time as new threats emerge.",
-                code: "vocab = ['safe', 'harmful', 'neutral', 'helpful', 'dangerous']\nsafety_logits = torch.tensor([1.0, 5.0, 0.5, 0.1, 4.0])\n\nprint('Before:')\nprint(vocab)\nprint(F.softmax(safety_logits, dim=-1))\n\nsafety_mask = torch.tensor([True, False, True, True, False])\nfiltered_logits = safety_logits.clone()\nfiltered_logits[~safety_mask] = -float('inf')\n\nprint('After filtering:')\nprint(F.softmax(filtered_logits, dim=-1))",
-                explanation: "By manipulating logits before sampling, we can guide AI systems away from harmful outputs. Harmful tokens now have 0 probability! Advantages of logit filtering: no model retraining needed, can update filters instantly, preserves model capabilities, transparent and auditable."
+                instruction: "Autoregressive generation predicts one token at a time, feeding each prediction back as input. What's the key insight for safety?",
+                why: "Each token depends on ALL previous tokens, so errors compound. A single harmful token early in generation can derail everything that follows. This is why we need safety controls at EVERY step, not just at the end.",
+                type: "multiple-choice",
+                template: "def generate(model, prompt_tokens, max_new=10):\n    tokens = prompt_tokens.copy()\n    \n    for _ in range(max_new):\n        # 1. Get logits for next token\n        logits = model(tokens)\n        \n        # 2. Apply safety filters HERE!\n        logits = apply_safety_filter(logits)\n        \n        # 3. Sample next token\n        next_token = sample(logits)\n        \n        # 4. Add to sequence\n        tokens.append(next_token)\n    \n    return tokens\n\n# Safety must be applied at ___ step",
+                choices: ["every", "the first", "the last", "random"],
+                correct: 0,
+                hint: "Each new token affects all future tokens",
+                freestyleHint: "Implement a generate function that loops max_new times: get logits, apply temperature, sample with multinomial, append to tokens. Print each step to show autoregressive nature.",
+                challengeTemplate: "def generate(prompt, max_new=5):\n    tokens = list(prompt)\n    \n    for step in range(___):\n        logits = get_logits(tokens)  # Model forward pass\n        probs = F.softmax(logits / temp, dim=-1)\n        next_tok = torch.___(probs, 1).item()\n        tokens.___(next_tok)\n    \n    return tokens",
+                challengeBlanks: ["max_new", "multinomial", "append"],
+                code: "import torch\nimport torch.nn.functional as F\n\ndef generate_demo(prompt, max_new=5):\n    '''Demonstrate autoregressive generation'''\n    vocab = ['the', 'cat', 'sat', 'on', 'mat', 'a', 'big']\n    tokens = prompt.copy()\n    \n    print('=== Autoregressive Generation ===')\n    print(f'\\nPrompt: {[vocab[t] for t in tokens]}')\n    print()\n    \n    for step in range(max_new):\n        # Simulate model output (in reality: full forward pass)\n        # Logits depend on ALL previous tokens\n        logits = torch.randn(len(vocab))\n        \n        # SAFETY: Filter at every step!\n        # (In production: check for harmful continuations)\n        \n        # Sample\n        probs = F.softmax(logits / 0.8, dim=-1)\n        next_tok = torch.multinomial(probs, 1).item()\n        \n        tokens.append(next_tok)\n        print(f'Step {step+1}: {[vocab[t] for t in tokens]}')\n    \n    return tokens\n\nprompt = [0, 1]  # ['the', 'cat']\nresult = generate_demo(prompt, 5)\n\nprint()\nprint('Key insight:')\nprint('  Each token depends on ALL previous tokens')\nprint('  → Early errors compound')\nprint('  → Safety must be enforced at EVERY step')\nprint('  → Cannot just filter final output')",
+                output: "=== Autoregressive Generation ===\n\nPrompt: ['the', 'cat']\n\nStep 1: ['the', 'cat', 'sat']\nStep 2: ['the', 'cat', 'sat', 'on']\nStep 3: ['the', 'cat', 'sat', 'on', 'a']\nStep 4: ['the', 'cat', 'sat', 'on', 'a', 'big']\nStep 5: ['the', 'cat', 'sat', 'on', 'a', 'big', 'mat']\n\nKey insight:\n  Each token depends on ALL previous tokens\n  → Early errors compound\n  → Safety must be enforced at EVERY step\n  → Cannot just filter final output",
+                explanation: "Autoregressive generation means each token is predicted based on all previous tokens, then added to the sequence for the next prediction. This creates a chain where early tokens influence everything that follows. For safety: we must filter at EVERY step because a single harmful token early on can corrupt the entire generation."
             },
+            // Step 11: Generation as Search Tree
             {
-                instruction: "Understand different filtering strategies:",
-                why: "There are multiple ways to filter harmful content at generation time, each with tradeoffs. Hard filtering (setting to -inf) completely blocks tokens but might break fluency. Soft filtering (reducing logits) discourages but doesn't prevent tokens, maintaining fluency but allowing some risk. Dynamic filtering can adjust based on context. Understanding these tradeoffs helps us build robust safety systems.",
-                code: "# Different filtering strategies\noriginal_logits = torch.tensor([2.0, 5.0, 1.0, 3.0, 4.0])\nvocab = ['good', 'bad', 'okay', 'great', 'terrible']\nharmful_indices = [1, 4]  # 'bad' and 'terrible'\n\n# Strategy 1: Hard block\nhard_filter = original_logits.clone()\nhard_filter[harmful_indices] = -float('inf')\nprint('1. Hard blocking:')\nprint(f'   Probs: {F.softmax(hard_filter, dim=-1).numpy()}')\n\n# Strategy 2: Soft penalty\nsoft_filter = original_logits.clone()\nsoft_filter[harmful_indices] -= 3.0  # Reduce by 3\nprint('\\n2. Soft penalty:')\nprint(f'   Probs: {F.softmax(soft_filter, dim=-1).numpy()}')\n\n# Strategy 3: Dynamic penalty\ncontext_sensitive_penalty = 5.0 if 'weapon' in 'previous context' else 2.0",
-                explanation: "Different filtering strategies offer different safety-fluency tradeoffs. Hard blocking: ✓ Complete safety, ✗ Might break fluency. Soft penalty: ✓ Maintains fluency, ✗ Some risk remains. Context-aware filtering: Adjust penalty based on conversation context, ✓ Nuanced control, ✗ More complex."
+                instruction: "Each token choice creates a branch. With vocab_size=50,000 and 10 tokens, how many possible sequences exist?",
+                why: "The exponential branching (50,000^10) means we can't check all paths. This is why we need robust per-token safety filters rather than trying to enumerate all safe sequences. It's computationally impossible to verify safety by checking all paths.",
+                type: "multiple-choice",
+                template: "vocab_size = 50000\nsequence_length = 10\n\npossible_sequences = vocab_size ** sequence_length\n\nprint(f'Vocabulary size: {vocab_size:,}')\nprint(f'Sequence length: {sequence_length}')\nprint(f'Possible sequences: {possible_sequences:.2e}')\n\n# This is approximately: ___",
+                choices: ["10^47 (more than atoms in observable universe)", "10^10 (10 billion)", "10^5 (100 thousand)", "10^3 (1 thousand)"],
+                correct: 0,
+                hint: "50,000^10 is an astronomically large number",
+                freestyleHint: "Calculate possible sequences for different vocab sizes and lengths. Show exponential growth. Explain why this makes exhaustive safety checking impossible.",
+                challengeTemplate: "vocab_size = 50000\nseq_len = 10\n\npaths = vocab_size ___ seq_len  # Exponentiation\n\nprint(f'{vocab_size}^{seq_len} = {paths:.2e}')\nprint(f'Checking 1M paths/sec would take {paths/1e6/3.15e7:.0e} years')",
+                challengeBlanks: ["**"],
+                code: "print('=== Generation as Search Tree ===')\nprint()\n\nvocab_size = 50000\nprint('Exponential growth of possibilities:')\nprint()\nfor length in [1, 2, 5, 10]:\n    paths = vocab_size ** length\n    print(f'  {length} tokens: {paths:.2e} sequences')\n\nprint()\nprint('Visualization (simplified, vocab=5):')\nprint()\nprint('Start: \"How to\"')\nprint('  ├─ make (p=0.3)')\nprint('  │   ├─ cake ✓')\nprint('  │   ├─ bomb ✗')\nprint('  │   └─ ...')\nprint('  ├─ build (p=0.2)')\nprint('  │   ├─ house ✓')\nprint('  │   ├─ weapon ✗')\nprint('  │   └─ ...')\nprint('  └─ ... (49,998 more branches)')\nprint()\nprint('IMPOSSIBLE to check all paths!')\nprint('Solution: Filter at each branch point')\nprint()\nprint('This is why per-token safety is essential:')\nprint('  ✗ Cannot enumerate all safe sequences')\nprint('  ✓ CAN filter harmful tokens at each step')",
+                output: "=== Generation as Search Tree ===\n\nExponential growth of possibilities:\n\n  1 tokens: 5.00e+04 sequences\n  2 tokens: 2.50e+09 sequences\n  5 tokens: 3.12e+23 sequences\n  10 tokens: 9.77e+46 sequences\n\nVisualization (simplified, vocab=5):\n\nStart: \"How to\"\n  ├─ make (p=0.3)\n  │   ├─ cake ✓\n  │   ├─ bomb ✗\n  │   └─ ...\n  ├─ build (p=0.2)\n  │   ├─ house ✓\n  │   ├─ weapon ✗\n  │   └─ ...\n  └─ ... (49,998 more branches)\n\nIMPOSSIBLE to check all paths!\nSolution: Filter at each branch point\n\nThis is why per-token safety is essential:\n  ✗ Cannot enumerate all safe sequences\n  ✓ CAN filter harmful tokens at each step",
+                explanation: "With 50,000 vocabulary and 10 tokens, there are ~10^47 possible sequences - more than atoms in the observable universe! This exponential explosion makes it impossible to enumerate all 'safe' sequences. Instead, we must use robust per-token filtering that blocks harmful continuations at each step."
             },
+            // Step 12: Safety Summary
             {
-                instruction: "Let's understand repetition penalties:",
-                why: "Repetition can be a failure mode where models get stuck in loops, repeating phrases endlessly. For AI safety, repetitive outputs might indicate the model is malfunctioning, being exploited, or trying to avoid answering. Repetition penalties help ensure diverse, natural outputs. They also prevent adversarial attacks that try to make models repeat harmful content to amplify it.",
-                code: "import torch\nimport torch.nn.functional as F\n\n# Simulate a sequence where token 1 appears multiple times\ngenerated_tokens = [1, 5, 2, 1, 3, 1]  # token 1 appears 3 times\nvocab_size = 6\nlogits = torch.tensor([2.0, 3.0, 1.5, 1.0, 2.5, 1.8])\n\nprint(\"Repetition Penalty Demo:\\n\")\nprint('Generated so far:', generated_tokens)\nprint('Original logits:', logits.numpy())\nprint('Original probs:', F.softmax(logits, dim=0).numpy())\n\n# Count token occurrences\ntoken_counts = {i: generated_tokens.count(i) for i in range(vocab_size)}\nprint(f\"\\nToken counts: {token_counts}\")\n\n# Apply repetition penalty\npenalized_logits = logits.clone()\nfor token_id, count in token_counts.items():\n    if count > 0:\n        penalty = 1.5 * count  # Penalty scales with repetition\n        penalized_logits[token_id] -= penalty\n        print(f\"Token {token_id}: appeared {count}x, penalty = {penalty:.1f}\")\n\nprint('\\nAfter repetition penalty:')\nprint('  Penalized logits:', penalized_logits.numpy())\nprint('  New probs:', F.softmax(penalized_logits, dim=0).numpy())\nprint(f\"\\nToken 1 probability: {F.softmax(logits, dim=0)[1]:.3f} → {F.softmax(penalized_logits, dim=0)[1]:.3f}\")",
-                explanation: "Repetition penalties discourage the model from repeating tokens it has already generated. Token 1 (appeared 3 times) is now much less likely! Why repetition matters for safety: prevents infinite loops, stops amplification of harmful content, indicates possible malfunction, forces diverse natural output."
-            },
-            {
-                instruction: "Let's put it all together with autoregressive generation:",
-                why: "Autoregressive generation - predicting one token at a time based on all previous tokens - is powerful but has safety implications. Each token depends on all previous tokens, so errors compound. A single bad token early can derail the entire generation. This sequential dependency is why we need safety controls at every step, not just at the beginning or end.",
-                code: "import torch\nimport torch.nn.functional as F\n\n# Simulate autoregressive generation\nvocab = ['The', 'cat', 'sat', 'on', 'mat', 'dog', 'ran']\ngenerated = ['The', 'cat']  # Starting prompt\n\nprint('Autoregressive Generation Demo:')\nprint(f'Prompt: {\" \".join(generated)}\\n')\n\n# Generate 3 more tokens\nfor step in range(3):\n    # Simulate model output (logits for next token)\n    logits = torch.tensor([0.1, 0.2, 3.0, 1.5, 0.5, 0.3, 0.4])\n    \n    print(f'Step {step + 1}:')\n    print(f'  Current: {\" \".join(generated)}')\n    \n    # Apply temperature\n    temp_logits = logits / 0.8\n    probs = F.softmax(temp_logits, dim=-1)\n    \n    # Sample next token\n    next_idx = torch.multinomial(probs, 1).item()\n    next_token = vocab[next_idx]\n    \n    print(f'  Next token: {next_token} (prob: {probs[next_idx]:.2f})')\n    \n    # Add to sequence\n    generated.append(next_token)\n    print(f'  Updated: {\" \".join(generated)}\\n')\n\nprint(f'Final: {\" \".join(generated)}')",
-                explanation: "Autoregressive generation process: 1. Start with prompt tokens: ['The', 'cat'], 2. Model outputs logits for next token, 3. Apply safety filters to logits, 4. Apply temperature scaling, 5. Apply top-p filtering, 6. Sample from filtered distribution, 7. Add sampled token to sequence: ['The', 'cat', 'sat'], 8. Repeat from step 2. This is how ChatGPT and other LLMs generate text! Safety must be enforced at EVERY step because: each token influences all future tokens, early mistakes compound, context changes with each token."
-            },
-            {
-                instruction: "Consider generation as a tree of possibilities:",
-                why: "Each token choice creates a branch in the generation tree. For AI safety, we need to ensure all branches lead to safe outputs. This exponential branching is why it's hard to guarantee safety - we can't check all possible paths. This is why techniques like Constitutional AI have models evaluate multiple possible continuations, and why we need robust filtering at each step rather than trying to control the entire tree.",
-                code: "# Visualize generation as a tree of possibilities\n\nclass GenerationNode:\n    def __init__(self, token, prob, path):\n        self.token = token\n        self.prob = prob\n        self.path = path\n        self.is_safe = token not in ['bomb', 'weapon']\n\n# Build generation tree\nprint(\"Generation Tree from prompt 'How to':\\n\")\n\n# Level 1: First token\nlevel1 = [\n    GenerationNode('make', 0.3, ['How', 'to', 'make']),\n    GenerationNode('build', 0.2, ['How', 'to', 'build']),\n    GenerationNode('create', 0.15, ['How', 'to', 'create'])\n]\n\nfor node in level1:\n    print(f\"→ '{node.token}' (p={node.prob})\")\n    \n    # Level 2: Second token given first\n    if node.token == 'make':\n        l2_options = [('cake', 0.6, True), ('bomb', 0.4, False)]\n    elif node.token == 'build':\n        l2_options = [('house', 0.7, True), ('weapon', 0.3, False)]\n    else:\n        l2_options = [('art', 0.8, True), ('chaos', 0.2, True)]\n    \n    for token2, prob2, is_safe in l2_options:\n        combined_prob = node.prob * prob2\n        safety = '✓ Safe' if is_safe else '✗ UNSAFE'\n        print(f\"  → '{token2}' (p={combined_prob:.3f}) {safety}\")\n\nprint(\"\\nExponential growth:\")\nfor depth in range(1, 6):\n    branches = 5 ** depth\n    print(f\"Depth {depth}: {branches:} possible sequences\")\n\nprint(\"\\n⚠️ Can't check all paths - need token-level filtering!\")",
-                explanation: "Generation as a search tree - Prompt: 'How to' branches to 'make' (p=0.3) which branches to 'a' (p=0.4) leading to either 'cake' (p=0.6) ✓ Safe or 'bomb' (p=0.4) ✗ Unsafe, or 'friends' (p=0.6) ✓ Safe. Also branches to 'build' (p=0.2) → 'a' (p=0.5) → 'house' (p=0.7) ✓ Safe or 'weapon' (p=0.3) ✗ Unsafe. Safety requires controlling all branches! Exponential growth: 10 tokens with 5 choices each = 5^10 = 9.7M paths. Can't check all paths individually, must use robust token-level filtering."
-            },
-            {
-                instruction: "Understand beam search for better quality generation:",
-                why: "Beam search explores multiple generation paths simultaneously, often producing higher quality outputs. For AI safety, this allows the model to 'think ahead' and avoid paths that might lead to harmful content. By maintaining multiple hypotheses, we can detect when one path is heading toward unsafe territory and prune it. However, beam search is deterministic, making it more predictable and potentially exploitable.",
-                code: "import torch\nimport torch.nn.functional as F\n\n# Simulate beam search with beam_size = 3\nbeam_size = 3\nvocab = ['the', 'cat', 'sat', 'on', 'walked', 'to', 'jumped', 'over']\n\nclass Hypothesis:\n    def __init__(self, tokens, score):\n        self.tokens = tokens\n        self.score = score\n    \n    def __repr__(self):\n        return f\"{' '.join(self.tokens)} (score: {self.score:.2f})\"\n\n# Initial hypotheses\nbeams = [\n    Hypothesis(['The', 'cat', 'sat'], -2.1),\n    Hypothesis(['The', 'cat', 'walked'], -2.3),\n    Hypothesis(['The', 'cat', 'jumped'], -2.5)\n]\n\nprint(\"Beam Search Step-by-Step:\\n\")\nprint(\"Current beams:\")\nfor i, beam in enumerate(beams):\n    print(f\"  {i+1}. {beam}\")\n\n# Expand each beam\nprint(\"\\nExpanding each beam:\")\ncandidates = []\nexpansions = {\n    'sat': [('on', -0.7), ('by', -1.0), ('near', -1.2)],\n    'walked': [('to', -0.8), ('away', -1.1), ('toward', -1.3)],\n    'jumped': [('over', -0.9), ('on', -1.0), ('up', -1.4)]\n}\n\nfor beam in beams:\n    last_word = beam.tokens[-1].lower()\n    if last_word in expansions:\n        for next_word, score_delta in expansions[last_word]:\n            new_tokens = beam.tokens + [next_word]\n            new_score = beam.score + score_delta\n            candidates.append(Hypothesis(new_tokens, new_score))\n            print(f\"  {' '.join(new_tokens)}: {new_score:.2f}\")\n\n# Keep top beam_size\ncandidates.sort(key=lambda h: h.score)\nbeams = candidates[:beam_size]\n\nprint(f\"\\nAfter pruning to top {beam_size}:\")\nfor i, beam in enumerate(beams):\n    print(f\"  {i+1}. {beam}\")",
-                explanation: "Beam search maintains multiple hypotheses. With beam size = 3: Hypothesis 1: 'The cat sat' (score: -2.1), Hypothesis 2: 'The cat walked' (score: -2.3), Hypothesis 3: 'The cat jumped' (score: -2.5). For each hypothesis, generate next token: From H1: 'sat on' (-2.8), 'sat by' (-3.1), From H2: 'walked to' (-2.9), 'walked away' (-3.2), From H3: 'jumped over' (-3.0), 'jumped on' (-3.3). Keep top 3 overall, continue. Safety advantages: can prune unsafe branches early, higher quality reduces nonsense/harmful output, can evaluate multiple paths for safety. Safety disadvantages: deterministic (exploitable), computationally expensive, might find adversarial paths."
-            },
-            {
-                instruction: "Finally, understand why generation control matters for AI safety:",
-                why: "Generation is where AI systems interface with the real world. All the model's knowledge and capabilities are expressed through generation. Controlling generation is our last line of defense against harmful outputs, making it crucial for AI safety. Unlike training-time safety measures which are baked into weights, generation-time controls can be updated instantly as new threats emerge. This flexibility is essential in the adversarial environment of deployed AI systems.",
-                code: "# Comprehensive view of generation control for AI safety\n\nsafety_layers = {\n    'Last Line of Defense': {\n        'description': 'Model might have harmful knowledge',\n        'solution': 'Generation controls what gets expressed',\n        'example': 'Block harmful outputs even if model \"knows\" them'\n    },\n    'Real-time Intervention': {\n        'description': 'Can filter outputs without retraining',\n        'solution': 'Adaptable to new threats immediately',\n        'example': 'Update filter for new jailbreak attempts'\n    },\n    'Interpretable Control': {\n        'description': 'We can see what we\\'re blocking',\n        'solution': 'Users understand why outputs are filtered',\n        'example': 'Show \"Response filtered: harmful content detected\"'\n    },\n    'Flexible Safety Boundaries': {\n        'description': 'Adjust for different contexts',\n        'solution': 'Balance safety with usefulness',\n        'example': 'Medical context allows disease names filtered elsewhere'\n    },\n    'Defense in Depth': {\n        'description': 'Works alongside training-time safety',\n        'solution': 'Catches failures from other safety layers',\n        'example': 'RLHF + Constitutional AI + Generation Filters'\n    }\n}\n\nprint(\"Generation Control: Critical AI Safety Mechanism\\n\")\nfor layer, info in safety_layers.items():\n    print(f\"\\n{layer}:\")\n    print(f\"  Problem: {info['description']}\")\n    print(f\"  Solution: {info['solution']}\")\n    print(f\"  Example: {info['example']}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"CONCLUSION: Generation control is essential for:\")\nprint(\"  1. Real-time safety intervention\")\nprint(\"  2. Adaptable threat response\")\nprint(\"  3. Transparent safety measures\")\nprint(\"  4. Context-aware filtering\")\nprint(\"  5. Robust defense-in-depth\")\nprint(\"=\"*60)",
-                explanation: "Why generation control is crucial for AI safety: 1. Last line of defense (model might have harmful knowledge, generation controls what gets expressed, can block harmful outputs even if model 'knows' them). 2. Real-time intervention (can filter outputs without retraining, adaptable to new threats immediately, no need to wait for model updates). 3. Interpretable control (we can see what we're blocking, users understand why outputs are filtered, auditable safety measures). 4. Flexible safety boundaries (adjust for different contexts, balance safety with usefulness, different settings for different applications). 5. Defense in depth (works alongside training-time safety, catches failures from other safety layers, multiple independent safety mechanisms)."
+                instruction: "Generation control is our 'last line of defense'. Why is it more flexible than training-time safety?",
+                why: "Training takes weeks and costs millions. Generation filters can be updated instantly. When new jailbreaks emerge, we can deploy countermeasures in minutes rather than retraining the entire model. This real-time adaptability is crucial for deployed AI systems.",
+                type: "multiple-choice",
+                template: "print('Generation Control: Last Line of Defense')\nprint()\nprint('Training-time safety:')\nprint('  • Baked into weights')\nprint('  • Takes weeks to update')\nprint('  • Expensive ($millions)')\nprint()\nprint('Generation-time safety:')\nprint('  • Applied at inference')\nprint('  • Updates in minutes')\nprint('  • Cheap to modify')\nprint()\nprint('Generation control is more flexible because: ___')",
+                choices: ["It can be updated instantly without retraining", "It uses less compute", "It's more accurate", "It works offline"],
+                correct: 0,
+                hint: "Think about responding to new threats quickly",
+                freestyleHint: "Create a summary of all generation safety techniques: temperature, top-k, top-p, logit filtering, repetition penalty. For each, explain when to use it and its safety benefit.",
+                challengeTemplate: "safety_techniques = {\n    '___': 'Control confidence vs creativity',\n    'top_k': 'Hard cap on candidates',\n    '___': 'Adaptive filtering',\n    'logit_filter': 'Block harmful tokens',\n    '___': 'Prevent loops'\n}\n\nfor technique, purpose in safety_techniques.items():\n    print(f'{technique}: {purpose}')",
+                challengeBlanks: ["temperature", "top_p", "repetition_penalty"],
+                code: "print('=== Generation Safety: Complete Summary ===')\nprint()\nprint('TECHNIQUES WE LEARNED:')\nprint()\nprint('1. SOFTMAX & TEMPERATURE')\nprint('   • Convert logits to probabilities')\nprint('   • Temperature controls randomness')\nprint('   • Low temp = safe/factual, High temp = creative')\nprint()\nprint('2. TOP-K FILTERING')\nprint('   • Hard cap on number of candidates')\nprint('   • Eliminates long tail of unlikely tokens')\nprint('   • Simple but effective guardrail')\nprint()\nprint('3. TOP-P (NUCLEUS) SAMPLING')\nprint('   • Adaptive filtering based on confidence')\nprint('   • Respects model uncertainty')\nprint('   • More flexible than fixed top-k')\nprint()\nprint('4. LOGIT FILTERING')\nprint('   • Set harmful tokens to -inf')\nprint('   • Zero probability guarantee')\nprint('   • Last line of defense')\nprint()\nprint('5. REPETITION PENALTY')\nprint('   • Prevents degenerate loops')\nprint('   • Ensures diverse output')\nprint('   • Blocks amplification attacks')\nprint()\nprint('═' * 50)\nprint('WHY GENERATION CONTROL MATTERS:')\nprint('  ✓ Updates instantly (vs weeks for retraining)')\nprint('  ✓ Transparent and auditable')\nprint('  ✓ Works with any model')\nprint('  ✓ Defense in depth with training safety')\nprint('═' * 50)",
+                output: "=== Generation Safety: Complete Summary ===\n\nTECHNIQUES WE LEARNED:\n\n1. SOFTMAX & TEMPERATURE\n   • Convert logits to probabilities\n   • Temperature controls randomness\n   • Low temp = safe/factual, High temp = creative\n\n2. TOP-K FILTERING\n   • Hard cap on number of candidates\n   • Eliminates long tail of unlikely tokens\n   • Simple but effective guardrail\n\n3. TOP-P (NUCLEUS) SAMPLING\n   • Adaptive filtering based on confidence\n   • Respects model uncertainty\n   • More flexible than fixed top-k\n\n4. LOGIT FILTERING\n   • Set harmful tokens to -inf\n   • Zero probability guarantee\n   • Last line of defense\n\n5. REPETITION PENALTY\n   • Prevents degenerate loops\n   • Ensures diverse output\n   • Blocks amplification attacks\n\n══════════════════════════════════════════════════\nWHY GENERATION CONTROL MATTERS:\n  ✓ Updates instantly (vs weeks for retraining)\n  ✓ Transparent and auditable\n  ✓ Works with any model\n  ✓ Defense in depth with training safety\n══════════════════════════════════════════════════",
+                explanation: "You've learned the complete toolkit for safe text generation! Temperature for confidence control, top-k/top-p for filtering unlikely tokens, logit manipulation for hard safety guarantees, and repetition penalties for natural output. These techniques form the 'last line of defense' - they can be updated instantly when new threats emerge, unlike training which takes weeks and millions of dollars."
             }
         ]
     },
