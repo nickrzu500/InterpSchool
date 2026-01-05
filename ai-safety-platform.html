@@ -308,6 +308,10 @@
             padding: 4px 8px;
             border-radius: 4px;
             transition: background 0.2s;
+            display: block;
+            text-align: left;
+            white-space: normal;
+            word-wrap: break-word;
         }
         
         .code-example label:hover {
@@ -588,8 +592,9 @@
                     <p class="card-meta">13 lessons • Basic to Advanced</p>
                 </div>
                 
-                <div class="card" onclick="showAgenda('developmental-interpretability')">
+                <div class="card" style="opacity: 0.5; cursor: not-allowed; pointer-events: none;">
                     <h2 class="card-title">Developmental Interpretability</h2>
+                    <span style="background: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; margin-left: 8px;">Under Construction</span>
                     <p class="card-description">
                         Study how AI systems learn and develop capabilities over time using Singular Learning Theory.
                         Track training dynamics and detect phase transitions.
@@ -675,18 +680,18 @@
                         Learn about the feed-forward networks where transformers do their computational processing.
                     </p>
                 </div>
-                
-                <div class="card" data-lesson="complete-transformer" onclick="showLesson('complete-transformer')">
-                    <h2 class="card-title">Putting It All Together</h2>
-                    <p class="card-description">
-                        See how all transformer components work together to process and generate text.
-                    </p>
-                </div>
 
                 <div class="card" data-lesson="text-generation" onclick="showLesson('text-generation')">
                     <h2 class="card-title">Text Generation</h2>
                     <p class="card-description">
                         Understand how transformers convert internal representations back into human-readable text.
+                    </p>
+                </div>
+
+                <div class="card" data-lesson="putting-it-together" onclick="showLesson('putting-it-together')">
+                    <h2 class="card-title">Putting It All Together</h2>
+                    <p class="card-description">
+                        See how transformer blocks combine attention and MLP layers into a complete system.
                     </p>
                 </div>
             </div>
@@ -1235,7 +1240,7 @@
             }
         }, true);
     </script>
-    <script src="lessons-content.js?v=3"></script>
+    <script src="lessons-content.js?v=7"></script>
 
     <script>
         // Verify LESSONS object loaded
@@ -1297,13 +1302,16 @@
                     exerciseLabel.innerHTML = '<strong>Choose the correct option:</strong>';
                     let choicesHtml = `<pre style="margin: 0; white-space: pre-wrap;">${step.template.replace(/___/g, '<span style="background: #ffe4b5; padding: 2px 8px; border-radius: 3px;">___</span>')}</pre><br>`;
                     step.choices.forEach((choice, i) => {
-                        choicesHtml += `<label style="display: block; margin: 5px 0; cursor: pointer;">
+                        choicesHtml += `<label style="display: block; margin: 5px 0; cursor: pointer; text-align: left; word-wrap: break-word;">
                             <input type="radio" name="mc-choice" value="${i}" style="margin-right: 8px;" onchange="fillMCChoice(${i})">
                             ${String.fromCharCode(97 + i)}) ${choice}
                         </label>`;
                     });
                     if (step.hint) {
-                        choicesHtml += `<div style="margin-top: 10px; font-size: 0.85rem; color: #718096;"><em>Hint: ${step.hint}</em></div>`;
+                        choicesHtml += `<div style="margin-top: 4px; display: flex; flex-direction: column; align-items: flex-start;">
+                            <button onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.textContent = this.nextElementSibling.style.display === 'none' ? 'hint' : 'hide hint';" style="background: #3b82f6; color: white; border: none; padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; cursor: pointer;">hint</button>
+                            <div style="display: none; margin-top: 4px; font-size: 0.85rem; color: #718096;"><em>${step.hint}</em></div>
+                        </div>`;
                     }
                     codeExample.innerHTML = choicesHtml;
                 } else if (exerciseMode === 'challenge') {
@@ -1388,7 +1396,10 @@
             html += '</pre>';
 
             if (step.hint) {
-                html += `<div style="margin-top: 10px; font-size: 0.85rem; color: #718096;"><em>Hint: ${step.hint}</em></div>`;
+                html += `<div style="margin-top: 4px; display: flex; flex-direction: column; align-items: flex-start;">
+                    <button onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.textContent = this.nextElementSibling.style.display === 'none' ? 'hint' : 'hide hint';" style="background: #3b82f6; color: white; border: none; padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; cursor: pointer;">hint</button>
+                    <div style="display: none; margin-top: 4px; font-size: 0.85rem; color: #718096;"><em>${step.hint}</em></div>
+                </div>`;
             }
 
             return html;
@@ -1581,8 +1592,8 @@
         aboutButton.style.display = 'block';
     }
             
-            const basicLessons = ['tokenization-basics', 'embeddings-positional', 'attention-mechanism', 'mlp-layers', 'complete-transformer', 'text-generation'];
-            const interpretabilityLessons = ['attention-patterns', 'logit-lens', 'activation-patching', 'probing-experiments', 'finding-features'];
+            const basicLessons = ['tokenization-basics', 'embeddings-positional', 'attention-mechanism', 'mlp-layers', 'text-generation', 'putting-it-together'];
+            const interpretabilityLessons = ['attention-patterns', 'logit-lens', 'activation-patching', 'activation-analysis', 'probing-experiments', 'finding-features'];
             const advancedLessons = ['gradient-checkpointing', 'mixed-precision-training', 'memory-optimization', 'distributed-training-basics', 'data-parallelism', 'model-parallelism', 'pipeline-parallelism', 'training-at-scale'];
             const advancedInterpretabilityLessons = ['circuits-discovery', 'superposition-polysemanticity', 'sparse-autoencoders', 'induction-heads', 'path-patching', 'feature-visualization', 'mechanistic-interpretability-scale', 'safety-critical-circuits'];
             const devinterpLessons = ['devinterp-intro', 'slt-foundations', 'learning-coefficient', 'phase-transitions', 'devinterp-setup', 'llc-estimation', 'llc-calibration', 'llc-tracking', 'detecting-transitions', 'devinterp-safety'];
@@ -2214,10 +2225,8 @@
                 currentStep = 0;
             }
             originalShowLesson(lessonId, resetStep);
-            // Update URL to match current state
-            const targetUrl = currentStep > 0
-                ? `?lesson=${lessonId}&step=${currentStep + 1}`
-                : `?lesson=${lessonId}`;
+            // Update URL to match current state (always include step parameter)
+            const targetUrl = `?lesson=${lessonId}&step=${currentStep + 1}`;
             if (window.location.search !== targetUrl) {
                 window.history.pushState({}, '', targetUrl);
             }
